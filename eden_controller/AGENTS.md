@@ -114,6 +114,10 @@ jugadores sobrantes quedan `connected=false`.
 - EmuDeck deja `SIDevice0 = 6` y `SIDevice1..3 = 0`: **solo el puerto 1 de
   GameCube está activo**. Hay que poner `SIDeviceN = 6` para los jugadores del
   plan y `0` para el resto; `12` es el adaptador GC real y no se toca.
+- Dolphin asigna el id de `SDL/<id>/<nombre>` por **(backend, nombre)**, no por
+  el índice global de SDL: el primer mando de cada nombre es `0`. Por eso el
+  driver usa `PLAN_INDICE_NOMBRE` y no `PLAN_INDICE`. Con un DualSense y el
+  integrado, el integrado debe ser `SDL/0/Asus…`, no `SDL/1/Asus…`.
 - `WiimoteNew.ini` no trae líneas `Source`. Dolphin por defecto pone
   **Wiimote1 = Emulated (1)** y **Wiimote2..4 = None (0)**. Hay que **insertar**
   `Source = 1` en los Wiimotes del plan (y `0` para el resto); `2` es un Wiimote
@@ -176,7 +180,11 @@ Orden de llamada: despachador (según `--sistema`) → driver → `main` → `lo
 - Formato de cada mando (8 campos desde 2026-11):
   `NOMBRE|GUID|PUERTO|TIPO|ES_GAMEPAD|NOMBRE_SDL|SERIE|INDICE_SDL`.
   `PUERTO` es el "n-ésimo con ese guid" (Eden); `INDICE_SDL` es el índice global
-  de SDL, que es lo que usa Dolphin (`SDL/<indice>/<nombre>`).
+  de SDL. **Dolphin NO usa ese índice global**: asigna el id por
+  `(backend, nombre)`, así que hay que usar el n-ésimo con ese **mismo nombre**
+  (`NUCLEO_IND_NOMBRE` / `PLAN_INDICE_NOMBRE`). Si se usa el global, P1 acierta
+  (suele ser 0) pero P2 con otro nombre falla (`SDL/1/Asus…` cuando Dolphin
+  espera `SDL/0/Asus…`).
 - Dialecto del GUID (`SDL_GUID_MODO`): Eden guarda el CRC de los bytes 2-3 a
   cero; Cemu lo guarda **real**. Por eso el driver de Cemu llama al ayudante con
   `SDL_FUENTE=sistema SDL_GUID_MODO=cemu` (SDL del sistema sin normalizar y

@@ -76,10 +76,14 @@ d_en_ejecucion() {
 # La lista y el plan los pone el nucleo (igual que Eden y Cemu).
 d_planificar() { nucleo_planificar eden; }
 
-# Devuelve el valor de Device para el jugador N (1..)
+# Devuelve el valor de Device para el jugador N (1..).
+# OJO: Dolphin no usa el indice global de SDL; asigna el id por nombre de
+# dispositivo. Por eso se usa el n-esimo con ese mismo nombre (INDICE_NOMBRE).
 d_device() {
     local n="$1"
-    printf 'SDL/%s/%s' "${PLAN_INDICE[$((n - 1))]}" "${PLAN_SDL[$((n - 1))]}"
+    local i=$((n - 1))
+    printf 'SDL/%s/%s' \
+        "${PLAN_INDICE_NOMBRE[$i]:-${PLAN_INDICE[$i]}}" "${PLAN_SDL[$i]}"
 }
 
 d_njugadores() { printf '%s' "${#PLAN_NOMBRE[@]}"; }
@@ -492,6 +496,9 @@ d_cmd_aplicar() {
         d_asignaciones GCPad >"$bk/.asg.$$"
         if d_parchear "$dir/GCPadNew.ini" "$bk/.asg.$$"; then
             d_say "GCPadNew.ini actualizado"
+            for i in $(seq 1 "$n"); do
+                nucleo_log "dolphin aplicar: GCPad$i Device = $(d_device "$i")"
+            done
         else
             rm -f "$bk/.asg.$$"
             d_err "no pude actualizar GCPadNew.ini (backup en $bk/GCPadNew.ini.$stamp)"
@@ -503,6 +510,9 @@ d_cmd_aplicar() {
         d_asignaciones Wiimote >"$bk/.asg.$$"
         if d_parchear "$dir/WiimoteNew.ini" "$bk/.asg.$$"; then
             d_say "WiimoteNew.ini actualizado"
+            for i in $(seq 1 "$n"); do
+                nucleo_log "dolphin aplicar: Wiimote$i Device = $(d_device "$i")"
+            done
         else
             rm -f "$bk/.asg.$$"
             d_err "no pude actualizar WiimoteNew.ini (backup en $bk/WiimoteNew.ini.$stamp)"
@@ -517,6 +527,7 @@ d_cmd_aplicar() {
             d_calcular_si "$dir"
             if d_parchear_si "$dir/Dolphin.ini"; then
                 d_say "Dolphin.ini: puertos GC 1-$n activos"
+                nucleo_log "dolphin aplicar: SIDevice0..3 = ${D_SI[0]},${D_SI[1]},${D_SI[2]},${D_SI[3]}"
             else
                 fallo=1
             fi
@@ -532,6 +543,7 @@ d_cmd_aplicar() {
         d_calcular_wii "$dir"
         if d_parchear_source "$dir/WiimoteNew.ini"; then
             d_say "WiimoteNew.ini: Wiimote 1-$n emulados"
+            nucleo_log "dolphin aplicar: Source Wiimote1..4 = ${D_WII[1]},${D_WII[2]},${D_WII[3]},${D_WII[4]}"
         else
             fallo=1
         fi
@@ -542,6 +554,7 @@ d_cmd_aplicar() {
         if d_tiene_seccion "$dir/Hotkeys.ini" Hotkeys; then
             if d_parchear_hotkeys "$dir/Hotkeys.ini" "$(d_device 1)"; then
                 d_say "Hotkeys.ini: mandos del jugador 1"
+                nucleo_log "dolphin aplicar: Hotkeys Device = $(d_device 1)"
             else
                 fallo=1
             fi

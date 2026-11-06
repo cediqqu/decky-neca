@@ -779,10 +779,16 @@ async def main():
     check("Dolphin: aplicar ok", r.returncode == 0, r.stdout + r.stderr)
 
     gc = leer_dolphin("GCPadNew.ini")
-    check("Dolphin: P1 en SDL/2",
+    check("Dolphin: P1 = id 0 de su nombre",
           ini_valor(gc, "GCPad1", "Device")
-          == "SDL/2/DualSense Wireless Controller", ini_valor(gc, "GCPad1", "Device"))
-    check("Dolphin: P4 = integrado SDL/0",
+          == "SDL/0/DualSense Wireless Controller", ini_valor(gc, "GCPad1", "Device"))
+    check("Dolphin: 2.o DualSense = id 1 por nombre",
+          ini_valor(gc, "GCPad2", "Device")
+          == "SDL/1/DualSense Wireless Controller", ini_valor(gc, "GCPad2", "Device"))
+    check("Dolphin: 3.o DualSense = id 2 por nombre",
+          ini_valor(gc, "GCPad3", "Device")
+          == "SDL/2/DualSense Wireless Controller", ini_valor(gc, "GCPad3", "Device"))
+    check("Dolphin: P4 = integrado SDL/0 (nombre unico)",
           ini_valor(gc, "GCPad4", "Device") == "SDL/0/Asus Rog Ally Controller",
           ini_valor(gc, "GCPad4", "Device"))
 
@@ -801,7 +807,7 @@ async def main():
     check("Dolphin: 4 puertos GC activos", puertos == ["6"] * 4, puertos)
     check("Dolphin: Hotkeys al P1",
           ini_valor(leer_dolphin("Hotkeys.ini"), "Hotkeys", "Device")
-          == "SDL/2/DualSense Wireless Controller")
+          == "SDL/0/DualSense Wireless Controller")
 
     stock = os.path.join(base, "backups", "dolphin", "stock")
     check("Dolphin: guarda el original",
@@ -835,6 +841,38 @@ async def main():
     for nombre, texto in ORIG.items():
         check("Dolphin: %s vuelve al original" % nombre,
               leer_dolphin(nombre) == texto)
+
+    # caso real del usuario: DualSense global 0 + Asus global 1.
+    # Dolphin asigna id por nombre, asi que el Asus debe ser SDL/0, no SDL/1.
+    fake_real = os.path.join(tmp, "sdl_real.txt")
+    with open(fake_real, "w", encoding="utf-8") as fh:
+        fh.write(
+            "DualSense Wireless Controller 1|050000004c050000e60c000000010000"
+            "|0|6|1|DualSense Wireless Controller 1|4c:b9:9b:e9:bc:26|0\n"
+            "Asus Rog Ally Controller|03000000bd1200001501000011010000"
+            "|0|1|1|Asus Rog Ally Controller||1\n"
+        )
+    env_dol["EDEN_FAKE_SDL"] = fake_real
+    r = correr_dolphin(maximo=2)
+    check("Dolphin: caso real aplicar ok", r.returncode == 0,
+          r.stdout + r.stderr)
+    gc = leer_dolphin("GCPadNew.ini")
+    check("Dolphin: P1 real = DualSense id 0",
+          ini_valor(gc, "GCPad1", "Device")
+          == "SDL/0/DualSense Wireless Controller 1",
+          ini_valor(gc, "GCPad1", "Device"))
+    check("Dolphin: P2 integrado = SDL/0, no SDL/1",
+          ini_valor(gc, "GCPad2", "Device")
+          == "SDL/0/Asus Rog Ally Controller", ini_valor(gc, "GCPad2", "Device"))
+    with open(os.path.join(base, "log.txt"), encoding="utf-8") as fh:
+        log = fh.read()
+    check("Dolphin: el log muestra el Device escrito",
+          "GCPad2 Device = SDL/0/Asus Rog Ally Controller" in log, log[-500:])
+
+    r = correr_dolphin("--restore", "stock")
+    check("Dolphin: vuelve al original tras el caso real", r.returncode == 0,
+          r.stdout + r.stderr)
+    env_dol["EDEN_FAKE_SDL"] = fake_dol
 
     # adaptador GC real: no se pisa SIDevice0 = 12
     escribir_dolphin(12)

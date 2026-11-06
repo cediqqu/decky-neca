@@ -70,9 +70,13 @@ SDL_OK=0
 SDL_ERR=""
 SDL_LIB=""
 NUCLEO_RAW=()
+# indice global de SDL -> n-esimo dispositivo con ESE MISMO nombre.
+# Dolphin no usa el indice global: asigna el id por (backend, nombre).
+NUCLEO_IND_NOMBRE=()
 
 nucleo_mandos() {
     NUCLEO_RAW=()
+    NUCLEO_IND_NOMBRE=()
     local modo="${1:-eden}" helper out err tmp errc
     SDL_OK=0; SDL_ERR=""; SDL_LIB=""
     helper="$(nucleo_helper_sdl)" || { SDL_ERR="no encuentro eden-mandos-sdl.sh"; return 1; }
@@ -91,8 +95,18 @@ nucleo_mandos() {
     fi
     SDL_OK=1
     SDL_LIB="$(printf '%s\n' "$out" | grep -m1 '^#lib ' | sed 's/^#lib //')"
+    local -A vistos=()
+    local seq=0 sdl_eff ind cuenta
     while IFS='|' read -r nombre guid puerto tipo esgp sdl serie indice; do
         case "$nombre" in ''|'#'*) continue ;; esac
+        sdl_eff="${sdl:-$nombre}"
+        ind="${indice:-$seq}"
+        # Cuenta TODOS los joysticks (tambien los que no son gamepad), que es
+        # lo que enumera Dolphin; luego se filtra para el plan.
+        cuenta="${vistos["$sdl_eff"]:-0}"
+        vistos["$sdl_eff"]=$((cuenta + 1))
+        NUCLEO_IND_NOMBRE[$ind]=$cuenta
+        seq=$((seq + 1))
         [ "${esgp:-0}" = "1" ] || continue
         local clase="otro"
         # "Wireless Controller" vale para DualShock/DualSense, pero un
@@ -103,7 +117,7 @@ nucleo_mandos() {
         elif nucleo_coincide "$nombre" "${INTEGRADO_PATRON:-}"; then
             clase="integrado"
         fi
-        NUCLEO_RAW+=("$nombre|${sdl:-$nombre}|${serie:-}|${indice:-0}|$clase|${puerto:-0}_${guid}")
+        NUCLEO_RAW+=("$nombre|$sdl_eff|${serie:-}|$ind|$clase|${puerto:-0}_${guid}")
     done <<<"$out"
 
     # Si no hay integrado pero Steam expone un unico pad virtual suelto (el
@@ -124,7 +138,8 @@ nucleo_mandos() {
 }
 
 # Rellena el plan y todo lo necesario para explicarlo:
-#   PLAN_NOMBRE/SDL/SERIE/INDICE/CLASE/UUID   -> los asignados (en orden)
+#   PLAN_NOMBRE/SDL/SERIE/INDICE/INDICE_NOMBRE/CLASE/UUID -> los asignados
+#   (INDICE = indice global de SDL; INDICE_NOMBRE = n-esimo con ese nombre)
 #   NUCLEO_TODOS    -> todos los detectados ("nombre|sdl|serie|indice|clase|uuid")
 #   NUCLEO_ASIGNADO -> 1/0 por cada uno de NUCLEO_TODOS
 #   NUCLEO_FUERA    -> "nombre|motivo" de los que no entran
@@ -134,7 +149,7 @@ nucleo_planificar() { # $1 = eden|cemu
     local modo="${1:-eden}" linea nombre sdl serie indice clase uuid
     nucleo_prefs
     PLAN_NOMBRE=(); PLAN_SDL=(); PLAN_SERIE=(); PLAN_INDICE=()
-    PLAN_CLASE=(); PLAN_UUID=()
+    PLAN_INDICE_NOMBRE=(); PLAN_CLASE=(); PLAN_UUID=()
     NUCLEO_TODOS=(); NUCLEO_ASIGNADO=(); NUCLEO_FUERA=(); NUCLEO_AVISOS=()
 
     nucleo_mandos "$modo"
@@ -237,6 +252,7 @@ nucleo_planificar() { # $1 = eden|cemu
         PLAN_SDL+=("$sdl")
         PLAN_SERIE+=("$serie")
         PLAN_INDICE+=("$indice")
+        PLAN_INDICE_NOMBRE+=("${NUCLEO_IND_NOMBRE[${indice:-0}]:-${indice:-0}}")
         PLAN_CLASE+=("$clase")
         PLAN_UUID+=("$uuid")
     done

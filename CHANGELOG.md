@@ -16,6 +16,14 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
   `Source = 1` en los Wiimotes del plan (EmuDeck no trae esa línea). También
   apunta `Hotkeys.ini` al jugador 1. Respeta el adaptador GC real
   (`SIDeviceN = 12`) y los Wiimotes reales (`Source = 2`).
+- **Dolphin: el Player 2 con otro mando ya funciona.** Dolphin asigna el id de
+  `SDL/<id>/<nombre>` por nombre de dispositivo, no por el índice global de SDL
+  (con un DualSense y el integrado, ambos son `id 0` de su nombre). El driver
+  ahora usa el n-ésimo con ese mismo nombre; antes escribía `SDL/1/Asus…` y
+  Dolphin esperaba `SDL/0/Asus…`.
+- **El log muestra los `Device` escritos.** Cada aplicar deja en `log.txt` el
+  `GCPadN Device`, `SIDevice0..3`, `Source` y `Hotkeys` resultantes, para poder
+  verlo desde **Ver log** sin abrir una consola.
 - **Restaurar vuelve al estado anterior a N.E.C.A en Dolphin y Cemu.** Cada
   driver guarda una copia fija en `backups/<emu>/stock/` la primera vez que
   aplica; **Restaurar** usa esa copia (`--restore stock`), no el último backup.
