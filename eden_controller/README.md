@@ -686,8 +686,11 @@ eden-autoconfig.sh --sistema wiiu   # Cemu: controllerProfiles/controllerN.xml
 El hook de ES-DE ya lo hace solo: `switch` → Eden, `gc`/`wii` → Dolphin,
 `wiiu` → Cemu.
 
-**Dolphin** solo reescribe la línea `Device = SDL/<indice>/<nombre>` de cada
-puerto. EmuDeck ya deja los botones configurados.
+**Dolphin** reescribe el dispositivo de cada puerto (`Device = SDL/<indice>/<nombre>`),
+activa los puertos de GameCube (`SIDevice0..3`), pone `Source = 1` en los Wiimotes
+emulados y apunta `Hotkeys.ini` al jugador 1. EmuDeck ya deja los botones
+configurados; N.E.C.A no los toca. Si un puerto usa el adaptador GC real
+(`SIDeviceN = 12`), se respeta y se avisa.
 
 **Cemu** solo cambia el dispositivo de cada mando. El `uuid` que guarda Cemu es
 `<n>_<guid>` con el CRC **real** (Eden lo pone a cero), por eso el driver pide
@@ -710,7 +713,8 @@ Comandos útiles:
 eden-autoconfig.sh --sistema wiiu --status        # qué hay ahora
 eden-autoconfig.sh --sistema wiiu --dry-run       # qué haría, sin escribir
 eden-autoconfig.sh --sistema wiiu --diagnostico   # carpetas y ficheros de Cemu
-eden-autoconfig.sh --sistema wiiu --restore       # deshacer
+eden-autoconfig.sh --sistema wiiu --restore       # deshacer el último aplicar
+eden-autoconfig.sh --sistema wiiu --restore stock # volver al estado anterior a N.E.C.A
 ```
 
 Si Cemu está en una carpeta rara, se fija en el `.conf`:

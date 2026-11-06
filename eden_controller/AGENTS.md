@@ -106,6 +106,30 @@ jugadores sobrantes quedan `connected=false`.
   aborta. Todo lo opcional va en `try/except` (serial, `SDL_UpdateJoysticks`,
   `SDL_GetVersion`…).
 
+### Dolphin (GameCube / Wii)
+- **No hay perfil referenciado**: a diferencia de Eden (`player_N_profile_name`) o
+  Cemu (`<profile>`), Dolphin usa directamente `GCPadNew.ini`/`WiimoteNew.ini`.
+  Los `Profiles/GCPad|Wiimote/*.ini` que instala EmuDeck son plantillas que se
+  cargan a mano; no se autoaplican.
+- EmuDeck deja `SIDevice0 = 6` y `SIDevice1..3 = 0`: **solo el puerto 1 de
+  GameCube está activo**. Hay que poner `SIDeviceN = 6` para los jugadores del
+  plan y `0` para el resto; `12` es el adaptador GC real y no se toca.
+- `WiimoteNew.ini` no trae líneas `Source`. Dolphin por defecto pone
+  **Wiimote1 = Emulated (1)** y **Wiimote2..4 = None (0)**. Hay que **insertar**
+  `Source = 1` en los Wiimotes del plan (y `0` para el resto); `2` es un Wiimote
+  real y se respeta.
+- `Hotkeys.ini` lleva su propio `Device`; si no apunta al P1, los atajos pueden
+  no responder. EmuDeck lo actualiza en su AutoMap.
+- El **AutoMap de EmuDeck** (`autoMapDolphin=true`) copia su plantilla y
+  reescribe `Device`/`SIDevice`/`Source`/Hotkeys al lanzar con su lanzador; eso
+  pisaría a N.E.C.A. Con AutoMap desactivado no toca nada.
+- El `WiimoteNew.ini` de EmuDeck **no termina en salto de línea**; el driver
+  conserva esa propiedad al reescribir.
+- El driver guarda una copia fija del estado anterior en
+  `backups/dolphin/stock/` para que `--restore stock` (lo usa el botón
+  Restaurar) vuelva al estado real anterior a N.E.C.A; `latest` deshace solo el
+  último aplicar. Cemu hace lo mismo en `backups/cemu/stock/`.
+
 ### ES-DE
 - Evento `game-start`: `$1` ruta del juego, `$2` nombre, `$3` sistema (`switch`),
   `$4` nombre completo. ES-DE **espera** a que el script termine.
@@ -126,7 +150,7 @@ jugadores sobrantes quedan `connected=false`.
 | `eden-autoconfig.sh` | **Despachador**: elige driver por `--sistema` y le pasa los argumentos |
 | `eden-nucleo.sh` | Piezas compartidas: rutas, `.conf`, preferencias comunes |
 | `eden-driver-yuzu.sh` | Eden y sus fork: `qt-config.ini` (todo el flujo anterior) |
-| `eden-driver-dolphin.sh` | Dolphin (GC/Wii): reescribe `Device` en `GCPadNew.ini`/`WiimoteNew.ini` |
+| `eden-driver-dolphin.sh` | Dolphin (GC/Wii): `Device`, `SIDevice`, `Source` y `Hotkeys` en sus cuatro ini |
 | `eden-driver-cemu.sh` | Cemu (Wii U): fija el dispositivo (uuid/display_name) en `controllerN.xml` |
 | `eden-plantilla-cemu.xml` | Plantilla de emergencia (Wii U Pro Controller) si no hay `Deck-PN.xml` |
 | `eden-mandos-sdl.sh` | Interroga a libSDL3 (python + ctypes); lista lo que ve Eden |

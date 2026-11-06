@@ -15,6 +15,7 @@ import importlib.util
 import logging
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import types
@@ -567,9 +568,14 @@ async def main():
         fh.write("[GCPad1]\nDevice = NUEVO\n")
     dbk = os.path.join(bk, "dolphin")
     os.makedirs(dbk, exist_ok=True)
-    with open(os.path.join(dbk, "GCPadNew.ini.20260101-000000"), "w",
-              encoding="utf-8") as fh:
+    viejo_dol = os.path.join(dbk, "GCPadNew.ini.20260101-000000")
+    nuevo_dol = os.path.join(dbk, "GCPadNew.ini.20260102-000000")
+    with open(viejo_dol, "w", encoding="utf-8") as fh:
         fh.write("[GCPad1]\nDevice = VIEJO\n")
+    with open(nuevo_dol, "w", encoding="utf-8") as fh:
+        fh.write("[GCPad1]\nDevice = MAS_NUEVO\n")
+    os.utime(viejo_dol, (1000000, 1000000))
+    os.utime(nuevo_dol, (3000000, 3000000))
 
     cem = os.path.join(home, ".config", "Cemu", "controllerProfiles")
     os.makedirs(cem, exist_ok=True)
@@ -577,9 +583,14 @@ async def main():
         fh.write("<nuevo/>")
     cbk = os.path.join(bk, "cemu")
     os.makedirs(cbk, exist_ok=True)
-    with open(os.path.join(cbk, "controller0.xml.20260101-000000"), "w",
-              encoding="utf-8") as fh:
+    viejo_cem = os.path.join(cbk, "controller0.xml.20260101-000000")
+    nuevo_cem = os.path.join(cbk, "controller0.xml.20260102-000000")
+    with open(viejo_cem, "w", encoding="utf-8") as fh:
         fh.write("<viejo/>")
+    with open(nuevo_cem, "w", encoding="utf-8") as fh:
+        fh.write("<mas-nuevo/>")
+    os.utime(viejo_cem, (1000000, 1000000))
+    os.utime(nuevo_cem, (3000000, 3000000))
 
     r = await mod.Plugin().restaurar_todo()
     check("restaurar_todo ok", r["ok"] is True, r)
@@ -617,6 +628,22 @@ async def main():
     os.remove(stock)
     r = await mod.Plugin().restaurar_todo()
     check("sin copias avisa", r["ok"] is False and "copia" in r["salida"], r)
+
+    # Eden con stock pero Dolphin/Cemu con carpetas de backup vacias:
+    # el resumen debe decir "sin copias", no "restaurado"
+    os.makedirs(os.path.dirname(stock), exist_ok=True)
+    with open(stock, "w", encoding="utf-8") as fh:
+        fh.write("[Controls]\nplayer_0_profile_name=ORIGINAL\n")
+    os.makedirs(os.path.join(bk, "dolphin"), exist_ok=True)
+    os.makedirs(os.path.join(bk, "cemu"), exist_ok=True)
+    r = await mod.Plugin().restaurar_todo()
+    check("Dolphin sin copias se avisa",
+          "Dolphin: sin copias" in r["salida"], r["salida"])
+    check("Cemu sin copias se avisa",
+          "Cemu: sin copias" in r["salida"], r["salida"])
+    check("no dice restaurado en falso",
+          "Dolphin: restaurado" not in r["salida"], r["salida"])
+    shutil.rmtree(bk, ignore_errors=True)
 
     # el integrado se coloca solo: J1 sin externos, ultimo con externos
     prefs = mod._leer_prefs()
@@ -662,6 +689,164 @@ async def main():
     check("la eleccion manual manda",
           est["prefs"]["ORDEN_INTEGRADO"] == "primero"
           and est["prefs"]["INTEGRADO_MANUAL"] == "si", est["prefs"])
+
+    # ------------------------------------------------------------------ 22
+    print("22) Dolphin: Device, SIDevice, Source y Hotkeys")
+    dol = os.path.join(home, ".config", "dolphin-emu")
+    os.makedirs(dol, exist_ok=True)
+
+    ORIG = {}
+    ORIG["GCPadNew.ini"] = (
+        "[GCPad1]\nDevice = SDL/0/Steam Deck Controller\nButtons/A = `Button S`\n"
+        "[GCPad2]\nDevice = SDL/1/Steam Deck Controller\nButtons/A = `Button S`\n"
+        "[GCPad3]\nDevice = SDL/2/Steam Deck Controller\nButtons/A = `Button S`\n"
+        "[GCPad4]\nDevice = SDL/3/Steam Deck Controller\nButtons/A = `Button S`\n"
+    )
+    ORIG["WiimoteNew.ini"] = (
+        "[Wiimote1]\nDevice = SDL/0/Steam Deck Controller\nButtons/A = `Button S`\n"
+        "[Wiimote2]\nDevice = SDL/1/Steam Deck Controller\nButtons/A = `Button S`\n"
+        "[Wiimote3]\nDevice = SDL/2/Steam Deck Controller\nButtons/A = `Button S`\n"
+        "[Wiimote4]\nDevice = SDL/3/Steam Deck Controller\nButtons/A = `Button S`\n"
+        "[BalanceBoard]\nDevice = XInput2/0/Virtual core pointer\nSource = 0"
+    )  # sin \n final a proposito, como el de EmuDeck
+    ORIG["Dolphin.ini"] = (
+        "[Core]\nSIDevice0 = 6\nSIDevice1 = 0\nSIDevice2 = 0\nSIDevice3 = 0\n"
+        "[DSP]\nBackend = Cubeb\n"
+    )
+    ORIG["Hotkeys.ini"] = (
+        "[Hotkeys]\nDevice = SDL/0/Steam Deck Controller\n"
+        "General/Stop = @(Back+`Button W`)\n"
+    )
+
+    def escribir_dolphin(si0=None):
+        for nombre, texto in ORIG.items():
+            if nombre == "Dolphin.ini" and si0 is not None:
+                texto = texto.replace("SIDevice0 = 6", "SIDevice0 = %s" % si0)
+            with open(os.path.join(dol, nombre), "w", encoding="utf-8") as fh:
+                fh.write(texto)
+
+    def leer_dolphin(nombre):
+        with open(os.path.join(dol, nombre), encoding="utf-8") as fh:
+            return fh.read()
+
+    def ini_valor(texto, seccion, clave):
+        actual = None
+        for linea in texto.splitlines():
+            if linea.startswith("["):
+                actual = linea.strip("[]")
+            elif actual == seccion and linea.strip().startswith(clave + " ="):
+                return linea.split("=", 1)[1].strip()
+        return None
+
+    escribir_dolphin()
+    antes_dolphin = {n: leer_dolphin(n) for n in ORIG}
+
+    fake_dol = os.path.join(tmp, "sdl_dolphin.txt")
+    with open(fake_dol, "w", encoding="utf-8") as fh:
+        fh.write(
+            "DualSense Wireless Controller|050000004c050000e60c000000010000"
+            "|0|6|1|DualSense Wireless Controller|aa:aa|2\n"
+            "DualSense Wireless Controller|050000004c050000e60c000000010000"
+            "|1|6|1|DualSense Wireless Controller|bb:bb|5\n"
+            "DualSense Wireless Controller|050000004c050000e60c000000010000"
+            "|2|6|1|DualSense Wireless Controller|cc:cc|7\n"
+            "Asus Rog Ally Controller|03000000bd1200001501000011010000"
+            "|0|1|1|Asus Rog Ally Controller||0\n"
+        )
+    env_dol = os.environ.copy()
+    env_dol["HOME"] = home
+    env_dol["EDEN_AUTOCONFIG_DIR"] = base
+    env_dol["EDEN_FAKE_SDL"] = fake_dol
+    env_dol["TMPDIR"] = tempfile.gettempdir()
+    env_dol.pop("EDEN_AUTOCONFIG_CONF", None)
+
+    script = os.path.join(AQUI, "eden_controller", "eden-autoconfig.sh")
+    conf = os.path.join(base, "eden-autoconfig.conf")
+
+    def conf_dolphin(maximo):
+        with open(conf, "w", encoding="utf-8") as fh:
+            fh.write('JUGADORES_MAX="%s"\nORDEN_INTEGRADO="ultimo"\n'
+                     'P1_SERIE=""\n' % maximo)
+
+    def correr_dolphin(*args, maximo=None):
+        if maximo is not None:
+            conf_dolphin(maximo)
+        return subprocess.run(["bash", script, "--sistema", "gc"] + list(args),
+                              env=env_dol, capture_output=True, text=True)
+
+    conf_dolphin(4)
+    r = correr_dolphin(maximo=4)
+    check("Dolphin: aplicar ok", r.returncode == 0, r.stdout + r.stderr)
+
+    gc = leer_dolphin("GCPadNew.ini")
+    check("Dolphin: P1 en SDL/2",
+          ini_valor(gc, "GCPad1", "Device")
+          == "SDL/2/DualSense Wireless Controller", ini_valor(gc, "GCPad1", "Device"))
+    check("Dolphin: P4 = integrado SDL/0",
+          ini_valor(gc, "GCPad4", "Device") == "SDL/0/Asus Rog Ally Controller",
+          ini_valor(gc, "GCPad4", "Device"))
+
+    wii = leer_dolphin("WiimoteNew.ini")
+    check("Dolphin: Source insertado en Wiimote1",
+          ini_valor(wii, "Wiimote1", "Source") == "1", wii[:120])
+    check("Dolphin: Source en Wiimote4",
+          ini_valor(wii, "Wiimote4", "Source") == "1", wii[-160:])
+    check("Dolphin: BalanceBoard intacto",
+          ini_valor(wii, "BalanceBoard", "Source") == "0"
+          and ini_valor(wii, "BalanceBoard", "Device")
+          == "XInput2/0/Virtual core pointer", wii[-160:])
+
+    dini = leer_dolphin("Dolphin.ini")
+    puertos = [ini_valor(dini, "Core", "SIDevice%d" % i) for i in range(4)]
+    check("Dolphin: 4 puertos GC activos", puertos == ["6"] * 4, puertos)
+    check("Dolphin: Hotkeys al P1",
+          ini_valor(leer_dolphin("Hotkeys.ini"), "Hotkeys", "Device")
+          == "SDL/2/DualSense Wireless Controller")
+
+    stock = os.path.join(base, "backups", "dolphin", "stock")
+    check("Dolphin: guarda el original",
+          os.path.isfile(os.path.join(stock, "GCPadNew.ini")))
+    with open(os.path.join(stock, "GCPadNew.ini"), encoding="utf-8") as fh:
+        check("Dolphin: stock = estado anterior",
+              fh.read() == antes_dolphin["GCPadNew.ini"])
+
+    # 2 jugadores: los puertos 3-4 y los Wiimotes 3-4 se apagan
+    r = correr_dolphin(maximo=2)
+    check("Dolphin: aplicar 2 jugadores ok", r.returncode == 0, r.stdout + r.stderr)
+    dini = leer_dolphin("Dolphin.ini")
+    puertos = [ini_valor(dini, "Core", "SIDevice%d" % i) for i in range(4)]
+    check("Dolphin: 2 jugadores -> 2 puertos", puertos == ["6", "6", "0", "0"],
+          puertos)
+    wii = leer_dolphin("WiimoteNew.ini")
+    check("Dolphin: Wiimote3 apagado",
+          ini_valor(wii, "Wiimote3", "Source") == "0", wii[-220:])
+
+    # latest = estado anterior al ultimo aplicar (4 jugadores)
+    r = correr_dolphin("--restore", "latest")
+    check("Dolphin: restore latest ok", r.returncode == 0, r.stdout + r.stderr)
+    dini = leer_dolphin("Dolphin.ini")
+    check("Dolphin: latest vuelve al apply anterior",
+          ini_valor(dini, "Core", "SIDevice3") == "6",
+          ini_valor(dini, "Core", "SIDevice3"))
+
+    # stock = estado anterior a N.E.C.A (los cuatro ficheros)
+    r = correr_dolphin("--restore", "stock")
+    check("Dolphin: restore stock ok", r.returncode == 0, r.stdout + r.stderr)
+    for nombre, texto in ORIG.items():
+        check("Dolphin: %s vuelve al original" % nombre,
+              leer_dolphin(nombre) == texto)
+
+    # adaptador GC real: no se pisa SIDevice0 = 12
+    escribir_dolphin(12)
+    r = correr_dolphin(maximo=1)
+    check("Dolphin: aplicar con adaptador ok", r.returncode == 0,
+          r.stdout + r.stderr)
+    dini = leer_dolphin("Dolphin.ini")
+    check("Dolphin: respeta el adaptador GC real",
+          ini_valor(dini, "Core", "SIDevice0") == "12",
+          ini_valor(dini, "Core", "SIDevice0"))
+    check("Dolphin: avisa del adaptador", "adaptador" in r.stderr.lower(),
+          r.stderr)
 
     shutil.rmtree(tmp, ignore_errors=True)
 

@@ -1077,17 +1077,22 @@ class Plugin:
         else:
             errores.append("restaurar Eden: %s" % _mensaje_exit(rc))
 
-        # 2b) Dolphin y Cemu: vuelven a la ultima copia que dejo N.E.C.A
+        # 2b) Dolphin y Cemu: vuelven al estado anterior a N.E.C.A (stock/)
         for sistema, etiqueta in (("gc", "Dolphin"), ("wiiu", "Cemu")):
             rc, salida = await _run(
-                ["bash", _script(SCRIPT), "--sistema", sistema, "--restore"],
+                ["bash", _script(SCRIPT), "--sistema", sistema,
+                 "--restore", "stock"],
                 timeout=90)
             texto = _corta(salida).strip()
             lineas_ok = [l.strip() for l in texto.splitlines()
                          if l.strip() and not l.strip().lower().startswith("aviso")]
             if rc == 0:
-                lineas.append("%s: %s" % (etiqueta,
-                                          ", ".join(lineas_ok) or "restaurado"))
+                if lineas_ok:
+                    lineas.append("%s: %s" % (etiqueta, ", ".join(lineas_ok)))
+                elif "no hay copia" in texto.lower():
+                    lineas.append("%s: sin copias, no se toca" % etiqueta)
+                else:
+                    lineas.append("%s: sin cambios" % etiqueta)
             elif rc == 4:
                 lineas.append("%s: no encontrado, sin cambios" % etiqueta)
             elif "no hay copia" in texto.lower():

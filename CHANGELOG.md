@@ -8,6 +8,25 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 <!-- Añade aquí los cambios sin versión. Al publicar, crea ## [x.y.z] - YYYY-MM-DD. -->
 
+### Corregido
+
+- **Dolphin: los jugadores 2–4 ahora funcionan.** EmuDeck deja activo solo el
+  puerto 1 de GameCube (`SIDevice1..3 = 0`) y los Wiimotes 2–4 en `Source = 0`;
+  el driver ahora escribe `SIDevice0..3` en `Dolphin.ini` e **inserta**
+  `Source = 1` en los Wiimotes del plan (EmuDeck no trae esa línea). También
+  apunta `Hotkeys.ini` al jugador 1. Respeta el adaptador GC real
+  (`SIDeviceN = 12`) y los Wiimotes reales (`Source = 2`).
+- **Restaurar vuelve al estado anterior a N.E.C.A en Dolphin y Cemu.** Cada
+  driver guarda una copia fija en `backups/<emu>/stock/` la primera vez que
+  aplica; **Restaurar** usa esa copia (`--restore stock`), no el último backup.
+  `--restore latest` sigue disponible para deshacer solo el último aplicar.
+
+### Añadido
+
+- **Dolphin usa `Dolphin.ini` y `Hotkeys.ini`.** Además de `GCPadNew.ini` y
+  `WiimoteNew.ini`, el driver activa los puertos de GameCube y ajusta los
+  atajos del jugador 1, con backup, escritura atómica y validación.
+
 ## [2.0.0] - 2026-11-06
 
 ### Cambios incompatibles

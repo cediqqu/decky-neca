@@ -26,8 +26,9 @@ Pensado para PC de mano con SteamOS y ES-DE (EmuDeck), no para Windows.
   mando que les toca al lanzar.
 - **Puedes fijar el Player 1 por MAC**, no por puerto. Steam puede renumerar los
   puertos entre sesiones; N.E.C.A fija el mando concreto.
-- **Dolphin y Cemu solo cambian el dispositivo**, no los bindings. Conservan el
-  tipo, el perfil y el mapeo que dejó EmuDeck.
+- **Dolphin y Cemu no rehacen los bindings.** Conservan el mapeo que dejó
+  EmuDeck; Dolphin además activa los puertos (`SIDevice`/`Source`) y ajusta
+  `Hotkeys.ini`.
 - **En el `.conf`, solo escribe un bloque marcado** al final de
   `eden-autoconfig.conf`. El resto del fichero, tus plantillas y tus copias
   quedan intactos.
@@ -51,7 +52,7 @@ necesitas fijar más de un jugador por MAC.
 | Sistema ES-DE | Emulador | Configuración que lee N.E.C.A |
 |---|---|---|
 | `switch` | Eden (AppImage) | `<config>/eden/qt-config.ini` y el perfil `emudeck` |
-| `gc`, `wii` | Dolphin | `GCPadNew.ini` y `WiimoteNew.ini` |
+| `gc`, `wii` | Dolphin | `GCPadNew.ini`, `WiimoteNew.ini`, `Dolphin.ini` y `Hotkeys.ini` |
 | `wiiu` | Cemu | `controllerProfiles/controller0.xml` |
 
 - **ES-DE** con *Custom Event Scripts* activado. El plugin espera ES-DE en
@@ -112,9 +113,9 @@ vienes de E.C.A, desinstala primero el plugin viejo.
    1,5 s) sobre su tarjeta. La **★** marca el Player 1 actual.
 6. El icono de **Asignación** en la cabecera de **Mandos** abre el último plan de
    Cemu y Dolphin. **Comprobar ahora** lo recalcula sin escribir nada.
-7. En **Ajustes** están **Aplicar** (escribe Eden), **Restaurar** (Eden) y
-   **Ver log**. Dolphin y Cemu se aplican al lanzar el juego, o a mano con
-   `--sistema gc` y `--sistema wiiu`.
+7. En **Ajustes** están **Aplicar** (escribe Eden), **Restaurar** (Eden, Dolphin
+   y Cemu) y **Ver log**. Dolphin y Cemu se aplican al lanzar el juego, o a mano
+   con `--sistema gc` y `--sistema wiiu`.
 
 Cada tarjeta muestra el **icono** de la familia (PlayStation, Xbox, Switch, Steam
 o integrado), la **conexión** (Bluetooth, USB, Interno o Virtual) y la **MAC**
@@ -151,7 +152,7 @@ emulador:
 | Emulador | Fichero | Qué cambia |
 |---|---|---|
 | Eden | `qt-config.ini` | controles y applet de mandos |
-| Dolphin | `GCPadNew.ini`, `WiimoteNew.ini` | solo la línea `Device` |
+| Dolphin | `GCPadNew.ini`, `WiimoteNew.ini`, `Dolphin.ini`, `Hotkeys.ini` | dispositivo, puertos GC, `Source` y atajos |
 | Cemu | `controllerProfiles/controllerN.xml` | solo el dispositivo |
 
 El bloque se sustituye entero; el resto del `.conf` no se toca. Ejemplo:
@@ -174,34 +175,42 @@ RETENCION_BACKUPS=10
 - Si borras el bloque, el `.conf` vuelve a tus valores anteriores. El
   `qt-config.ini` no se toca por borrar el bloque.
 - Los backups van a `~/eden-autoconfig/backups/`: `qt-config.ini.*` para Eden,
-  `dolphin/GCPadNew.ini.*` y `dolphin/WiimoteNew.ini.*` para Dolphin, y
-  `cemu/controllerN.xml.*` para Cemu. Se conservan las 10 copias más recientes
-  por fichero. El original de Eden vive aparte, en
-  `~/eden-autoconfig/stock/qt-config.ini`.
+  `dolphin/GCPadNew.ini.*`, `dolphin/WiimoteNew.ini.*`, `dolphin/Dolphin.ini.*`
+  y `dolphin/Hotkeys.ini.*` para Dolphin, y `cemu/controllerN.xml.*` para Cemu.
+  Se conservan las 10 copias más recientes por fichero. El original de cada
+  emulador vive aparte, en `stock/` (Eden en `~/eden-autoconfig/stock/`, Dolphin
+  y Cemu dentro de su carpeta de backups).
 
-**Restaurar** en **Ajustes** devuelve Eden al estado anterior a N.E.C.A:
+**Restaurar** en **Ajustes** devuelve Eden, Dolphin y Cemu al estado anterior a
+N.E.C.A:
 
-1. Restaura el `qt-config.ini` original de `stock/`.
-2. Quita el bloque de preferencias del `.conf`.
-3. Desactiva el hook de ES-DE (lo mueve fuera de
+1. Restaura el `qt-config.ini` original de Eden (`stock/`).
+2. Restaura `GCPadNew.ini`, `WiimoteNew.ini`, `Dolphin.ini` y `Hotkeys.ini` de
+   Dolphin desde `backups/dolphin/stock/`.
+3. Restaura los `controllerN.xml` de Cemu desde `backups/cemu/stock/`.
+4. Quita el bloque de preferencias del `.conf`.
+5. Desactiva el hook de ES-DE (lo mueve fuera de
    `~/ES-DE/scripts/game-start/`).
 
 Antes de tocar nada se guarda una copia del estado actual en `backups/`. Después,
 el panel muestra **Reactivar hook** para volver a copiarlo.
 
-Dolphin y Cemu no se restauran desde ese botón. Usa sus copias:
+Si un emulador no tiene copia fija (nunca se aplicó con N.E.C.A), se usa su
+backup más antiguo y, si tampoco hay, se avisa sin tocar nada. Los comandos
+siguen disponibles para casos concretos:
 
 ```bash
 ~/eden-autoconfig/eden-autoconfig.sh --sistema gc --restore latest
-~/eden-autoconfig/eden-autoconfig.sh --sistema wiiu --restore latest
+~/eden-autoconfig/eden-autoconfig.sh --sistema wiiu --restore stock
 ```
+
+`latest` deshace solo el último aplicar; `stock` vuelve al estado anterior a
+N.E.C.A.
 
 ### Desinstalar
 
-1. **Ajustes → Restaurar** para devolver Eden y quitar el hook.
-2. Si quieres deshacer también Dolphin y Cemu, usa los comandos `--restore`
-   anteriores.
-3. Quita el plugin desde Decky.
+1. **Ajustes → Restaurar** para devolver Eden, Dolphin y Cemu y quitar el hook.
+2. Quita el plugin desde Decky.
 
 Si desinstalas sin restaurar, el hook seguirá en
 `~/ES-DE/scripts/game-start/` y seguirá aplicando el `.conf` aunque el plugin ya
@@ -212,8 +221,8 @@ backups y el `.conf`.
 
 - **Aplicar desde el panel solo escribe Eden.** Dolphin y Cemu se aplican al
   lanzar el juego desde ES-DE o con `--sistema gc|wiiu`.
-- **Restaurar desde el panel solo afecta a Eden.** Dolphin y Cemu se restauran
-  con `--restore` por sistema.
+- **Restaurar desde el panel afecta a los tres emuladores.** Para deshacer solo
+  el último aplicar de Dolphin o Cemu, usa `--restore latest`.
 - Solo se puede fijar **un mando concreto como Player 1** (`P1_SERIE`). El resto
   sigue el orden elegido (conexión o MAC).
 - Si un mando no informa de su serie (pasa con algunos pads virtuales), no se
@@ -228,8 +237,11 @@ backups y el `.conf`.
 - Con **Steam Input activado** para ES-DE, Eden ve pads virtuales de Valve. La
   asignación exacta Player N = DualSense N solo es fiable con Steam Input
   desactivado para ES-DE.
-- **Dolphin y Cemu no crean bindings**: solo cambian el dispositivo. Si EmuDeck
-  no dejó la configuración de mandos, no hay nada que asignar.
+- **Dolphin y Cemu no crean bindings**: Dolphin cambia el dispositivo y activa
+  los puertos (`SIDevice`/`Source`); Cemu cambia el dispositivo. Si EmuDeck no
+  dejó los bindings, no hay nada que asignar.
+- En **Dolphin**, si un puerto usa el **adaptador GC real** (`SIDeviceN = 12`),
+  N.E.C.A no lo toca y lo avisa: en ese puerto manda el adaptador.
 - Probado en **ROG Xbox Ally X**. En otras handhelds, `INTEGRADO_PATRON` puede
   necesitar ajuste en el `.conf`.
 
