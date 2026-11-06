@@ -1426,11 +1426,13 @@ function Content() {
   const restaurarTodo = () => {
     showModal(
       <ConfirmModal
-        strTitle="Restaurar Eden"
+        strTitle="Restaurar todo"
         strDescription={
-          "Se restaurara el qt-config.ini anterior a N.E.C.A, se quitaran las " +
-          "preferencias del plugin y se desactivara el hook de ES-DE.\n\n" +
-          "Eden debe estar cerrado. Se guarda una copia del estado actual.\n\n" +
+          "Se restaurara la configuracion anterior de Eden, Dolphin y Cemu, " +
+          "se quitaran las preferencias del plugin y se desactivara el hook " +
+          "de ES-DE.\n\n" +
+          "Los emuladores deben estar cerrados. Se guarda una copia del " +
+          "estado actual.\n\n" +
           "Podras reactivar el hook con el boton de arriba."
         }
         strOKButtonText="Restaurar"
@@ -1749,7 +1751,7 @@ function Content() {
               icono={<FaUndo size={16} />}
               anim="giro"
               titulo="Restaurar"
-              detalle="Eden"
+              detalle="Todo"
               onClick={restaurarTodo}
             />
           </div>

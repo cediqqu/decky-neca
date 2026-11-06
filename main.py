@@ -1073,9 +1073,28 @@ class Plugin:
             pass
 
         if rc == 0:
-            lineas.append("qt-config.ini restaurado al estado original")
+            lineas.append("Eden: qt-config.ini restaurado al estado original")
         else:
-            errores.append("restaurar: %s" % _mensaje_exit(rc))
+            errores.append("restaurar Eden: %s" % _mensaje_exit(rc))
+
+        # 2b) Dolphin y Cemu: vuelven a la ultima copia que dejo N.E.C.A
+        for sistema, etiqueta in (("gc", "Dolphin"), ("wiiu", "Cemu")):
+            rc, salida = await _run(
+                ["bash", _script(SCRIPT), "--sistema", sistema, "--restore"],
+                timeout=90)
+            texto = _corta(salida).strip()
+            lineas_ok = [l.strip() for l in texto.splitlines()
+                         if l.strip() and not l.strip().lower().startswith("aviso")]
+            if rc == 0:
+                lineas.append("%s: %s" % (etiqueta,
+                                          ", ".join(lineas_ok) or "restaurado"))
+            elif rc == 4:
+                lineas.append("%s: no encontrado, sin cambios" % etiqueta)
+            elif "no hay copia" in texto.lower():
+                lineas.append("%s: sin copias, no se toca" % etiqueta)
+            else:
+                detalle = lineas_ok[-1] if lineas_ok else _mensaje_exit(rc)
+                errores.append("%s: %s" % (etiqueta, detalle))
 
         # 3) quitar preferencias del plugin
         ok, habia = _quitar_bloque()

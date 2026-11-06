@@ -938,9 +938,11 @@ function Content() {
         await refrescar();
     });
     const restaurarTodo = () => {
-        DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: "Restaurar Eden", strDescription: "Se restaurara el qt-config.ini anterior a N.E.C.A, se quitaran las " +
-                "preferencias del plugin y se desactivara el hook de ES-DE.\n\n" +
-                "Eden debe estar cerrado. Se guarda una copia del estado actual.\n\n" +
+        DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: "Restaurar todo", strDescription: "Se restaurara la configuracion anterior de Eden, Dolphin y Cemu, " +
+                "se quitaran las preferencias del plugin y se desactivara el hook " +
+                "de ES-DE.\n\n" +
+                "Los emuladores deben estar cerrados. Se guarda una copia del " +
+                "estado actual.\n\n" +
                 "Podras reactivar el hook con el boton de arriba.", strOKButtonText: "Restaurar", strCancelButtonText: "Cancelar", onOK: () => {
                 void conBloqueo(async () => {
                     const r = await call("restaurar_todo");
@@ -1013,7 +1015,7 @@ function Content() {
                                 gap: "6px",
                                 fontSize: "0.68em",
                                 opacity: 0.6,
-                            }, children: [SP_JSX.jsx(GlifoA, {}), " vibrar \u00B7 dos toques seguidos = mando principal"] }) })) : null] }), SP_JSX.jsx(Seccion, { titulo: "Ajustes", color: C.violeta, icono: SP_JSX.jsx(FaSlidersH, { size: 12 }), abierta: Boolean(abiertas.ajustes), onToggle: () => toggle("ajustes"), children: SP_JSX.jsxs(Rejilla, { children: [SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.verde, icono: SP_JSX.jsx(FaCheck, { size: 17 }), anim: "pop", titulo: "Aplicar", detalle: "Ahora", onClick: aplicar }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.rojo, icono: SP_JSX.jsx(FaUndo, { size: 16 }), anim: "giro", titulo: "Restaurar", detalle: "Eden", onClick: restaurarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.turquesa, icono: SP_JSX.jsx(FaFileAlt, { size: 16 }), anim: "barrido", titulo: "Ver log", detalle: "log.txt", onClick: verLog }) })] }) })] }));
+                            }, children: [SP_JSX.jsx(GlifoA, {}), " vibrar \u00B7 dos toques seguidos = mando principal"] }) })) : null] }), SP_JSX.jsx(Seccion, { titulo: "Ajustes", color: C.violeta, icono: SP_JSX.jsx(FaSlidersH, { size: 12 }), abierta: Boolean(abiertas.ajustes), onToggle: () => toggle("ajustes"), children: SP_JSX.jsxs(Rejilla, { children: [SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.verde, icono: SP_JSX.jsx(FaCheck, { size: 17 }), anim: "pop", titulo: "Aplicar", detalle: "Ahora", onClick: aplicar }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.rojo, icono: SP_JSX.jsx(FaUndo, { size: 16 }), anim: "giro", titulo: "Restaurar", detalle: "Todo", onClick: restaurarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.turquesa, icono: SP_JSX.jsx(FaFileAlt, { size: 16 }), anim: "barrido", titulo: "Ver log", detalle: "log.txt", onClick: verLog }) })] }) })] }));
 }
 var index = definePlugin(() => {
     return {

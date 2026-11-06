@@ -560,8 +560,36 @@ async def main():
         antes = fh.read()
     check("habia bloque del plugin", mod.BEGIN in antes)
 
+    # copias de Dolphin y Cemu para comprobar que tambien se restauran
+    dol = os.path.join(home, ".config", "dolphin-emu")
+    os.makedirs(dol, exist_ok=True)
+    with open(os.path.join(dol, "GCPadNew.ini"), "w", encoding="utf-8") as fh:
+        fh.write("[GCPad1]\nDevice = NUEVO\n")
+    dbk = os.path.join(bk, "dolphin")
+    os.makedirs(dbk, exist_ok=True)
+    with open(os.path.join(dbk, "GCPadNew.ini.20260101-000000"), "w",
+              encoding="utf-8") as fh:
+        fh.write("[GCPad1]\nDevice = VIEJO\n")
+
+    cem = os.path.join(home, ".config", "Cemu", "controllerProfiles")
+    os.makedirs(cem, exist_ok=True)
+    with open(os.path.join(cem, "controller0.xml"), "w", encoding="utf-8") as fh:
+        fh.write("<nuevo/>")
+    cbk = os.path.join(bk, "cemu")
+    os.makedirs(cbk, exist_ok=True)
+    with open(os.path.join(cbk, "controller0.xml.20260101-000000"), "w",
+              encoding="utf-8") as fh:
+        fh.write("<viejo/>")
+
     r = await mod.Plugin().restaurar_todo()
     check("restaurar_todo ok", r["ok"] is True, r)
+
+    with open(os.path.join(dol, "GCPadNew.ini"), encoding="utf-8") as fh:
+        check("Dolphin restaurado", "VIEJO" in fh.read())
+    with open(os.path.join(cem, "controller0.xml"), encoding="utf-8") as fh:
+        check("Cemu restaurado", "<viejo/>" in fh.read())
+    check("el resumen menciona Dolphin", "Dolphin" in r["salida"], r["salida"])
+    check("el resumen menciona Cemu", "Cemu" in r["salida"], r["salida"])
 
     stock = os.path.join(base, "stock", "qt-config.ini")
     check("guarda el original", os.path.isfile(stock))
