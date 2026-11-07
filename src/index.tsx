@@ -7,11 +7,11 @@ import {
   DialogButton,
   DialogButtonPrimary,
   DialogFooter,
-  GamepadButton,
-  type GamepadEvent,
   ModalRoot,
   PanelSection,
   PanelSectionRow,
+  ScrollPanel,
+  scrollClasses,
   showModal,
   staticClasses,
 } from "@decky/ui";
@@ -1050,6 +1050,8 @@ function Seccion(props: {
 // ---------------------------------------------------------------------------
 //  Ventana emergente de texto (con scroll: D-pad, stick o dedo)
 // ---------------------------------------------------------------------------
+const PanelScroll = ScrollPanel as any;
+
 function VentanaTexto(props: {
   titulo: string;
   texto: string;
@@ -1057,35 +1059,14 @@ function VentanaTexto(props: {
   recientePrimero?: boolean;
 }) {
   const texto = (props.texto || "").replace(/\s+$/, "");
-  const ref = useRef<HTMLDivElement>(null);
   const esLog = Boolean(props.recientePrimero);
-
-  // Al abrir el log, empezar por lo mas reciente (final del fichero).
-  useEffect(() => {
-    if (!esLog) return;
-    const el = ref.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [esLog, texto]);
-
-  // Scroll manual: el texto no tiene hijos enfocables y ScrollPanel no se
-  // movia. El Focusable recibe el D-pad y movemos scrollTop.
-  const mover = (evt: GamepadEvent) => {
-    const boton = evt.detail?.button;
-    const el = ref.current;
-    if (!el) return;
-    const paso = Math.max(40, Math.floor(el.clientHeight * 0.75));
-    if (boton === GamepadButton.DIR_UP) {
-      if (el.scrollTop > 0) {
-        el.scrollTop -= paso;
-        evt.stopPropagation();
-      }
-    } else if (boton === GamepadButton.DIR_DOWN) {
-      if (el.scrollTop + el.clientHeight < el.scrollHeight - 1) {
-        el.scrollTop += paso;
-        evt.stopPropagation();
-      }
-    }
-  };
+  const lineas = texto ? texto.split("\n") : ["(vacio)"];
+  const bloques: string[] = [];
+  for (let i = 0; i < lineas.length; i += 20) {
+    bloques.push(lineas.slice(i, i + 20).join("\n"));
+  }
+  // El log se muestra con lo mas reciente arriba.
+  if (esLog) bloques.reverse();
 
   return (
     <ModalRoot strTitle={props.titulo} bAllowFullSize onCancel={props.onCerrar}>
@@ -1110,9 +1091,7 @@ function VentanaTexto(props: {
             D-pad / stick: desplazar · B: cerrar
           </div>
         ) : null}
-        <Focusable
-          preferredFocus
-          onGamepadDirection={mover}
+        <div
           style={{
             flex: 1,
             minHeight: 0,
@@ -1120,23 +1099,35 @@ function VentanaTexto(props: {
             flexDirection: "column",
           }}
         >
-          <div
-            ref={ref}
-            style={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: "auto",
-              padding: "8px 16px 16px",
-              fontFamily: "monospace",
-              fontSize: "0.84em",
-              lineHeight: 1.35,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}
+          {/* scrollClasses.ScrollY es lo que activa el overflow del panel. */}
+          <PanelScroll
+            className={scrollClasses.ScrollY}
+            style={{ flex: 1, minHeight: 0 }}
           >
-            {texto || "(vacio)"}
-          </div>
-        </Focusable>
+            <div style={{ padding: "8px 12px 16px" }}>
+              {bloques.map((bloque, i) => (
+                <Focusable
+                  key={i}
+                  preferredFocus={i === 0}
+                  style={{ padding: "2px 4px", borderRadius: "6px" }}
+                >
+                  <pre
+                    style={{
+                      margin: 0,
+                      fontFamily: "monospace",
+                      fontSize: "0.84em",
+                      lineHeight: 1.35,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {bloque}
+                  </pre>
+                </Focusable>
+              ))}
+            </div>
+          </PanelScroll>
+        </div>
       </DialogBody>
       {esLog ? null : (
         <DialogFooter>
