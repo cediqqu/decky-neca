@@ -122,7 +122,9 @@ preparar_dirs() {
     [ -w "$BASE_DIR" ] || { err "$BASE_DIR no es escribible"; exit 1; }
 }
 
+LOG_QUIET=0
 log() { # log NIVEL mensaje...
+    [ "$LOG_QUIET" -eq 1 ] && return 0
     local nivel="$1"; shift
     printf '%s [%s] [%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$nivel" "$$" "$*" >>"$LOG_FILE" 2>/dev/null
     [ "$VERBOSE" -eq 1 ] && printf '  log[%s] %s\n' "$nivel" "$*" >&2
@@ -1988,6 +1990,8 @@ main() {
             exit 0
             ;;
         who)
+            # El panel pide --who cada 5 s: no inundar log.txt.
+            LOG_QUIET=1
             planificar || true
             cmd_who
             exit 0

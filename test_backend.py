@@ -974,6 +974,16 @@ async def main():
     check("Steam Input avisa del orden de jugadores",
           "Steam Input" in est["aviso"], est["aviso"])
 
+    # El log del panel filtra los bloques de --who (ruido del refresco)
+    with open(os.path.join(base, "log.txt"), "w", encoding="utf-8") as fh:
+        fh.write("2026-01-01 10:00:00 [INFO] [1] === eden-autoconfig.sh v2 modo=who args='--who' ===\n")
+        for _ in range(6):
+            fh.write("2026-01-01 10:00:00 [INFO] [1] deteccion SDL: ruido\n")
+        fh.write("[2026-01-01 10:00:01] dolphin aplicar: GCPad1 Device = SDL/0/X\n")
+    r = await mod.Plugin().ver_log()
+    check("el log filtra los --who", "modo=who" not in r["salida"], r["salida"])
+    check("el log conserva el aplicar", "GCPad1 Device" in r["salida"], r["salida"])
+
     shutil.rmtree(tmp, ignore_errors=True)
 
     print()

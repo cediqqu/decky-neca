@@ -1258,7 +1258,20 @@ class Plugin:
             return {"salida": "todavia no hay log (%s)" % _log_txt()}
         except Exception as exc:
             return {"salida": "no puedo leer el log: %s" % exc}
-        return {"salida": "".join(lineas[-800:]) or "(log vacio)"}
+
+        # El panel llama a --who cada pocos segundos; esas lineas (7 por
+        # llamada) inundan el log y esconden los aplicar. Se quitan al vuelo.
+        limpias = []
+        saltar = 0
+        for linea in lineas:
+            if "modo=who" in linea:
+                saltar = 6
+                continue
+            if saltar > 0:
+                saltar -= 1
+                continue
+            limpias.append(linea)
+        return {"salida": "".join(limpias[-600:]) or "(log vacio)"}
 
     async def instalar_scripts(self):
         inst = os.path.join(SCRIPTS_DIR, INSTALADOR)

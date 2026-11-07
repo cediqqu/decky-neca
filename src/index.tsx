@@ -7,10 +7,11 @@ import {
   DialogButton,
   DialogButtonPrimary,
   DialogFooter,
+  GamepadButton,
+  type GamepadEvent,
   ModalRoot,
   PanelSection,
   PanelSectionRow,
-  ScrollPanel,
   showModal,
   staticClasses,
 } from "@decky/ui";
@@ -1056,15 +1057,35 @@ function VentanaTexto(props: {
   recientePrimero?: boolean;
 }) {
   const texto = (props.texto || "").replace(/\s+$/, "");
-  const lineas = texto ? texto.split("\n") : ["(vacio)"];
-  // Bloques enfocables: ScrollPanel sigue al bloque con foco. Sin hijos
-  // enfocables no se movia con el D-pad. Para el log se invierten para que
-  // lo mas reciente quede arriba y se vea sin necesidad de scroll.
-  const bloques: string[] = [];
-  for (let i = 0; i < lineas.length; i += 20) {
-    bloques.push(lineas.slice(i, i + 20).join("\n"));
-  }
-  if (props.recientePrimero) bloques.reverse();
+  const ref = useRef<HTMLDivElement>(null);
+  const esLog = Boolean(props.recientePrimero);
+
+  // Al abrir el log, empezar por lo mas reciente (final del fichero).
+  useEffect(() => {
+    if (!esLog) return;
+    const el = ref.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [esLog, texto]);
+
+  // Scroll manual: el texto no tiene hijos enfocables y ScrollPanel no se
+  // movia. El Focusable recibe el D-pad y movemos scrollTop.
+  const mover = (evt: GamepadEvent) => {
+    const boton = evt.detail?.button;
+    const el = ref.current;
+    if (!el) return;
+    const paso = Math.max(40, Math.floor(el.clientHeight * 0.75));
+    if (boton === GamepadButton.DIR_UP) {
+      if (el.scrollTop > 0) {
+        el.scrollTop -= paso;
+        evt.stopPropagation();
+      }
+    } else if (boton === GamepadButton.DIR_DOWN) {
+      if (el.scrollTop + el.clientHeight < el.scrollHeight - 1) {
+        el.scrollTop += paso;
+        evt.stopPropagation();
+      }
+    }
+  };
 
   return (
     <ModalRoot strTitle={props.titulo} bAllowFullSize onCancel={props.onCerrar}>
@@ -1074,36 +1095,54 @@ function VentanaTexto(props: {
           maxHeight: "58vh",
           padding: 0,
           overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        <ScrollPanel>
-          <div style={{ padding: "8px 12px" }}>
-            {bloques.map((bloque, i) => (
-              <Focusable
-                key={i}
-                preferredFocus={i === 0}
-                style={{ padding: "2px 4px", borderRadius: "6px" }}
-              >
-                <pre
-                  style={{
-                    margin: 0,
-                    fontFamily: "monospace",
-                    fontSize: "0.84em",
-                    lineHeight: 1.35,
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {bloque}
-                </pre>
-              </Focusable>
-            ))}
+        {esLog ? (
+          <div
+            style={{
+              padding: "4px 12px 0",
+              fontSize: "0.7em",
+              opacity: 0.65,
+            }}
+          >
+            D-pad / stick: desplazar · B: cerrar
           </div>
-        </ScrollPanel>
+        ) : null}
+        <Focusable
+          preferredFocus
+          onGamepadDirection={mover}
+          style={{
+            flex: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div
+            ref={ref}
+            style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              padding: "8px 16px 16px",
+              fontFamily: "monospace",
+              fontSize: "0.84em",
+              lineHeight: 1.35,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}
+          >
+            {texto || "(vacio)"}
+          </div>
+        </Focusable>
       </DialogBody>
-      <DialogFooter>
-        <DialogButtonPrimary onClick={props.onCerrar}>Cerrar</DialogButtonPrimary>
-      </DialogFooter>
+      {esLog ? null : (
+        <DialogFooter>
+          <DialogButtonPrimary onClick={props.onCerrar}>Cerrar</DialogButtonPrimary>
+        </DialogFooter>
+      )}
     </ModalRoot>
   );
 }
