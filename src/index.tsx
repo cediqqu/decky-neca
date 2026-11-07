@@ -10,8 +10,6 @@ import {
   ModalRoot,
   PanelSection,
   PanelSectionRow,
-  ScrollPanel,
-  scrollClasses,
   showModal,
   staticClasses,
 } from "@decky/ui";
@@ -1050,8 +1048,6 @@ function Seccion(props: {
 // ---------------------------------------------------------------------------
 //  Ventana emergente de texto (con scroll: D-pad, stick o dedo)
 // ---------------------------------------------------------------------------
-const PanelScroll = ScrollPanel as any;
-
 function VentanaTexto(props: {
   titulo: string;
   texto: string;
@@ -1060,74 +1056,40 @@ function VentanaTexto(props: {
 }) {
   const texto = (props.texto || "").replace(/\s+$/, "");
   const esLog = Boolean(props.recientePrimero);
-  const lineas = texto ? texto.split("\n") : ["(vacio)"];
-  const bloques: string[] = [];
-  for (let i = 0; i < lineas.length; i += 20) {
-    bloques.push(lineas.slice(i, i + 20).join("\n"));
-  }
-  // El log se muestra con lo mas reciente arriba.
-  if (esLog) bloques.reverse();
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  // El log abre por el final: lo mas reciente (el ultimo aplicar) se ve ya.
+  useEffect(() => {
+    if (!esLog) return;
+    const el = ref.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [esLog, texto]);
 
   return (
     <ModalRoot strTitle={props.titulo} bAllowFullSize onCancel={props.onCerrar}>
-      <DialogBody
-        style={{
-          height: "58vh",
-          maxHeight: "58vh",
-          padding: 0,
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {esLog ? (
-          <div
-            style={{
-              padding: "4px 12px 0",
-              fontSize: "0.7em",
-              opacity: 0.65,
-            }}
-          >
-            D-pad / stick: desplazar · B: cerrar
-          </div>
-        ) : null}
-        <div
+      <DialogBody style={{ height: "58vh", maxHeight: "58vh", padding: "8px 12px" }}>
+        {/* textarea readOnly: scroll nativo con barra, stick derecho y dedo */}
+        <textarea
+          ref={ref}
+          readOnly
+          value={texto || "(vacio)"}
+          wrap="soft"
+          spellCheck={false}
           style={{
-            flex: 1,
-            minHeight: 0,
-            display: "flex",
-            flexDirection: "column",
+            width: "100%",
+            height: "100%",
+            resize: "none",
+            overflowY: "scroll",
+            padding: "8px 10px",
+            border: "1px solid rgba(128,128,128,0.25)",
+            borderRadius: "8px",
+            background: "rgba(0,0,0,0.18)",
+            color: "inherit",
+            fontFamily: "monospace",
+            fontSize: "0.82em",
+            lineHeight: 1.35,
           }}
-        >
-          {/* scrollClasses.ScrollY es lo que activa el overflow del panel. */}
-          <PanelScroll
-            className={scrollClasses.ScrollY}
-            style={{ flex: 1, minHeight: 0 }}
-          >
-            <div style={{ padding: "8px 12px 16px" }}>
-              {bloques.map((bloque, i) => (
-                <Focusable
-                  key={i}
-                  preferredFocus={i === 0}
-                  style={{ padding: "2px 4px", borderRadius: "6px" }}
-                >
-                  <pre
-                    style={{
-                      margin: 0,
-                      fontFamily: "monospace",
-                      fontSize: "0.84em",
-                      lineHeight: 1.35,
-                      whiteSpace: "pre-wrap",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {bloque}
-                  </pre>
-                </Focusable>
-              ))}
-            </div>
-          </PanelScroll>
-        </div>
+        />
       </DialogBody>
       {esLog ? null : (
         <DialogFooter>

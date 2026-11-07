@@ -701,42 +701,32 @@ function Seccion(props) {
 // ---------------------------------------------------------------------------
 //  Ventana emergente de texto (con scroll: D-pad, stick o dedo)
 // ---------------------------------------------------------------------------
-const PanelScroll = DFL.ScrollPanel;
 function VentanaTexto(props) {
     const texto = (props.texto || "").replace(/\s+$/, "");
     const esLog = Boolean(props.recientePrimero);
-    const lineas = texto ? texto.split("\n") : ["(vacio)"];
-    const bloques = [];
-    for (let i = 0; i < lineas.length; i += 20) {
-        bloques.push(lineas.slice(i, i + 20).join("\n"));
-    }
-    // El log se muestra con lo mas reciente arriba.
-    if (esLog)
-        bloques.reverse();
-    return (SP_JSX.jsxs(DFL.ModalRoot, { strTitle: props.titulo, bAllowFullSize: true, onCancel: props.onCerrar, children: [SP_JSX.jsxs(DFL.DialogBody, { style: {
-                    height: "58vh",
-                    maxHeight: "58vh",
-                    padding: 0,
-                    overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                }, children: [esLog ? (SP_JSX.jsx("div", { style: {
-                            padding: "4px 12px 0",
-                            fontSize: "0.7em",
-                            opacity: 0.65,
-                        }, children: "D-pad / stick: desplazar \u00B7 B: cerrar" })) : null, SP_JSX.jsx("div", { style: {
-                            flex: 1,
-                            minHeight: 0,
-                            display: "flex",
-                            flexDirection: "column",
-                        }, children: SP_JSX.jsx(PanelScroll, { className: DFL.scrollClasses.ScrollY, style: { flex: 1, minHeight: 0 }, children: SP_JSX.jsx("div", { style: { padding: "8px 12px 16px" }, children: bloques.map((bloque, i) => (SP_JSX.jsx(DFL.Focusable, { preferredFocus: i === 0, style: { padding: "2px 4px", borderRadius: "6px" }, children: SP_JSX.jsx("pre", { style: {
-                                            margin: 0,
-                                            fontFamily: "monospace",
-                                            fontSize: "0.84em",
-                                            lineHeight: 1.35,
-                                            whiteSpace: "pre-wrap",
-                                            wordBreak: "break-word",
-                                        }, children: bloque }) }, i))) }) }) })] }), esLog ? null : (SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) }))] }));
+    const ref = SP_REACT.useRef(null);
+    // El log abre por el final: lo mas reciente (el ultimo aplicar) se ve ya.
+    SP_REACT.useEffect(() => {
+        if (!esLog)
+            return;
+        const el = ref.current;
+        if (el)
+            el.scrollTop = el.scrollHeight;
+    }, [esLog, texto]);
+    return (SP_JSX.jsxs(DFL.ModalRoot, { strTitle: props.titulo, bAllowFullSize: true, onCancel: props.onCerrar, children: [SP_JSX.jsx(DFL.DialogBody, { style: { height: "58vh", maxHeight: "58vh", padding: "8px 12px" }, children: SP_JSX.jsx("textarea", { ref: ref, readOnly: true, value: texto || "(vacio)", wrap: "soft", spellCheck: false, style: {
+                        width: "100%",
+                        height: "100%",
+                        resize: "none",
+                        overflowY: "scroll",
+                        padding: "8px 10px",
+                        border: "1px solid rgba(128,128,128,0.25)",
+                        borderRadius: "8px",
+                        background: "rgba(0,0,0,0.18)",
+                        color: "inherit",
+                        fontFamily: "monospace",
+                        fontSize: "0.82em",
+                        lineHeight: 1.35,
+                    } }) }), esLog ? null : (SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) }))] }));
 }
 function abrirVentana(titulo, texto, recientePrimero = false) {
     const cierre = { f: () => { } };
