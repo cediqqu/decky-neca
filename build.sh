@@ -40,6 +40,7 @@ FICHEROS=(
     eden-driver-cemu.sh
     eden-plantilla-cemu.xml
     eden-mandos-sdl.sh
+    eden-mandos-evdev.sh
     eden-diagnostico.sh
     eden-autoconfig.conf.example
     instalar.sh

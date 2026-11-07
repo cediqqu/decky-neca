@@ -122,9 +122,9 @@ come from E.C.A, uninstall the old plugin first.
    Cemu and Dolphin plan. **Comprobar ahora** (Check now) recalculates it without
    writing anything.
 7. **Ajustes** (Settings) contains **Aplicar** (Apply: Eden, Dolphin and Cemu),
-   **Restaurar** (Restore, all three) and **Ver log** (View log, scrollable).
-   The hook also applies on game launch; manually use `--sistema gc` and
-   `--sistema wiiu`.
+   **Dolphin** (SDL/evdev), **Restaurar** (Restore, all three) and
+   **Ver log** (filterable). The hook also applies on game launch; manually use
+   `--sistema gc` and `--sistema wiiu`.
 
 Each card shows the family **icon** (PlayStation, Xbox, Switch, Steam or
 built-in), the **connection** (Bluetooth, USB, Internal or Virtual) and the short
@@ -227,6 +227,19 @@ If you uninstall without restoring, the hook remains in
 `~/ES-DE/scripts/game-start/` and keeps applying the `.conf` even though the
 plugin is gone. Uninstalling does not delete `~/eden-autoconfig`: your
 templates, backups and `.conf` live there.
+
+### Dolphin and Steam Input
+
+Dolphin identifies controllers by **name**, and Steam Input turns them into
+virtual pads ordered by Steam. If players do not match the ports:
+
+- **SDL** (default): the Flatpak SDL; the one that worked before.
+- **evdev**: physical pads through `/dev/input`; **experimental** with Steam
+  Input.
+
+The **Dolphin** card in Settings cycles between the two. `evdev` writes
+`Device = evdev/<id>/<name>` and bypasses Steam's virtual pads; bindings and
+profiles are untouched.
 
 ### Log and diagnostics
 

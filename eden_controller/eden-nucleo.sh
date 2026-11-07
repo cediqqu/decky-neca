@@ -30,6 +30,7 @@ nucleo_prefs() {
     P1_SERIE="${P1_SERIE:-}"
     DUALSENSE_PATRON="${DUALSENSE_PATRON:-*wireless controller*|*dualsense*}"
     INTEGRADO_PATRON="${INTEGRADO_PATRON:-*rog*|*ally*|*asus*|*hid-asus*|*microsoft x-box 360 pad*|*steam deck*|*deck controller*}"
+    DOLPHIN_BACKEND="${DOLPHIN_BACKEND:-sdl}"
 }
 
 # Ruta al ayudante de SDL (junto a los scripts).
@@ -40,6 +41,19 @@ nucleo_helper_sdl() {
         printf '%s' "${AQUI:-.}/eden-mandos-sdl.sh"
     elif [ -r "$base/eden-mandos-sdl.sh" ]; then
         printf '%s' "$base/eden-mandos-sdl.sh"
+    else
+        return 1
+    fi
+}
+
+# Ruta al ayudante de evdev (mandos fisicos, sin Steam Input).
+nucleo_helper_evdev() {
+    local base
+    base="$(nucleo_base)"
+    if [ -r "${AQUI:-.}/eden-mandos-evdev.sh" ]; then
+        printf '%s' "${AQUI:-.}/eden-mandos-evdev.sh"
+    elif [ -r "$base/eden-mandos-evdev.sh" ]; then
+        printf '%s' "$base/eden-mandos-evdev.sh"
     else
         return 1
     fi
@@ -83,11 +97,19 @@ nucleo_mandos() {
     NUCLEO_RAW=()
     NUCLEO_IND_NOMBRE=()
     NUCLEO_SDL_FUENTE=""
-    local modo="${1:-eden}" helper out err tmp errc
+    local modo="${1:-eden}" helper="" evhelper="" out err tmp errc
     SDL_OK=0; SDL_ERR=""; SDL_LIB=""
-    helper="$(nucleo_helper_sdl)" || { SDL_ERR="no encuentro eden-mandos-sdl.sh"; return 1; }
+    if [ "$modo" = "evdev" ]; then
+        evhelper="$(nucleo_helper_evdev)" || { SDL_ERR="no encuentro eden-mandos-evdev.sh"; return 1; }
+    else
+        helper="$(nucleo_helper_sdl)" || { SDL_ERR="no encuentro eden-mandos-sdl.sh"; return 1; }
+    fi
     tmp="$(mktemp "${TMPDIR:-/tmp}/eca-sdl.XXXXXX" 2>/dev/null || echo "/tmp/eca-sdl.$$")"
-    if [ "$modo" = "cemu" ]; then
+    if [ "$modo" = "evdev" ]; then
+        out="$(bash "$evhelper" 2>"$tmp")"
+        errc=$?
+        NUCLEO_SDL_FUENTE="evdev"
+    elif [ "$modo" = "cemu" ]; then
         out="$(SDL_FUENTE=sistema SDL_GUID_MODO=cemu bash "$helper" 2>"$tmp")"
         errc=$?
         NUCLEO_SDL_FUENTE="host"
@@ -127,6 +149,7 @@ nucleo_mandos() {
     fi
     SDL_OK=1
     SDL_LIB="$(printf '%s\n' "$out" | grep -m1 '^#lib ' | sed 's/^#lib //')"
+    [ "$modo" = "evdev" ] && [ -z "$SDL_LIB" ] && SDL_LIB="evdev"
     local -A vistos=()
     local seq=0 sdl_eff ind cuenta
     while IFS='|' read -r nombre guid puerto tipo esgp sdl serie indice; do

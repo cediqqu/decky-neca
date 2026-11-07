@@ -113,9 +113,10 @@ vienes de E.C.A, desinstala primero el plugin viejo.
    1,5 s) sobre su tarjeta. La **★** marca el Player 1 actual.
 6. El icono de **Asignación** en la cabecera de **Mandos** abre el último plan de
    Cemu y Dolphin. **Comprobar ahora** lo recalcula sin escribir nada.
-7. En **Ajustes** están **Aplicar** (Eden, Dolphin y Cemu), **Restaurar**
-   (los tres) y **Ver log** (con scroll). El hook también aplica al lanzar el
-   juego; a mano puedes usar `--sistema gc` y `--sistema wiiu`.
+7. En **Ajustes** están **Aplicar** (Eden, Dolphin y Cemu), **Dolphin**
+   (SDL/evdev), **Restaurar** (los tres) y **Ver log** (con filtros).
+   El hook también aplica al lanzar el juego; a mano puedes usar `--sistema gc`
+   y `--sistema wiiu`.
 
 Cada tarjeta muestra el **icono** de la familia (PlayStation, Xbox, Switch, Steam
 o integrado), la **conexión** (Bluetooth, USB, Interno o Virtual) y la **MAC**
@@ -216,6 +217,19 @@ Si desinstalas sin restaurar, el hook seguirá en
 `~/ES-DE/scripts/game-start/` y seguirá aplicando el `.conf` aunque el plugin ya
 no esté. `~/eden-autoconfig` no se borra al desinstalar: ahí están tus plantillas,
 backups y el `.conf`.
+
+### Dolphin con Steam Input
+
+Dolphin identifica los mandos por **nombre**, y Steam Input los convierte en
+pads virtuales cuyo orden decide Steam. Si los jugadores no coinciden con los
+puertos:
+
+- **SDL** (por defecto): la SDL del Flatpak; es la que funcionaba antes.
+- **evdev**: mandos físicos por `/dev/input`; **experimental** con Steam Input.
+
+La tarjeta **Dolphin** de Ajustes cicla entre los dos. `evdev` escribe
+`Device = evdev/<id>/<nombre>` y evita los pads virtuales de Steam; no toca los
+bindings ni los perfiles.
 
 ### Log y diagnóstico
 

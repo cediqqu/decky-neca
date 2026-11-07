@@ -53,6 +53,15 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
   `Device` escritos, `SIDevice`, `Source` y `Hotkeys`.
 - **Aviso de emulador abierto en el log.** Si Dolphin o Cemu están en ejecución,
   el log deja `en ejecucion, no aplico` en vez de fallar en silencio.
+- **Dolphin por evdev.** Con Steam Input, Dolphin usaba los pads virtuales y el
+  orden lo decidía Steam. El nuevo modo `evdev` lee los mandos físicos por
+  `/dev/input` y escribe `Device = evdev/<id>/<nombre>`. La tarjeta **Dolphin**
+  de Ajustes cicla SDL/evdev; **SDL es el valor por defecto** y evdev queda como
+  opción experimental. Incluye `eden-mandos-evdev.sh` y su instalación.
+- **Puertos de los DualSense virtuales.** El ayudante contaba el integrado como
+  un puerto más entre los pads `de28`; Eden/Cemu lo ordenan al final, así que P2
+  apuntaba a DS3 y P4 al Asus. Ahora los DualSense se renumeran 0..N-1 y el
+  integrado no consume puerto.
 
 ## [2.0.0] - 2026-11-06
 

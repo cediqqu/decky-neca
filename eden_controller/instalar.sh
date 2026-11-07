@@ -33,7 +33,7 @@ say ""
 faltan=0
 for f in eden-autoconfig.sh eden-nucleo.sh eden-driver-yuzu.sh \
          eden-driver-dolphin.sh eden-driver-cemu.sh eden-plantilla-cemu.xml \
-         eden-diagnostico.sh eden-mandos-sdl.sh \
+         eden-diagnostico.sh eden-mandos-sdl.sh eden-mandos-evdev.sh \
          eden-autoconfig.conf.example es-de-hooks/10-eden-autoconfig.sh; do
     if [ ! -r "$AQUI/$f" ]; then say "FALTA: $AQUI/$f"; faltan=1; fi
 done
@@ -60,7 +60,8 @@ haz "cp -f '$AQUI/eden-plantilla-cemu.xml' '$DEST_CFG/eden-plantilla-cemu.xml'"
 [ -f "$AQUI/VERSION" ] && haz "cp -f '$AQUI/VERSION' '$DEST_CFG/VERSION'"
 haz "cp -f '$AQUI/eden-diagnostico.sh' '$DEST_CFG/eden-diagnostico.sh'"
 haz "cp -f '$AQUI/eden-mandos-sdl.sh' '$DEST_CFG/eden-mandos-sdl.sh'"
-haz "chmod 755 '$DEST_CFG/eden-autoconfig.sh' '$DEST_CFG/eden-nucleo.sh' '$DEST_CFG/eden-driver-yuzu.sh' '$DEST_CFG/eden-driver-dolphin.sh' '$DEST_CFG/eden-driver-cemu.sh' '$DEST_CFG/eden-diagnostico.sh' '$DEST_CFG/eden-mandos-sdl.sh'"
+haz "cp -f '$AQUI/eden-mandos-evdev.sh' '$DEST_CFG/eden-mandos-evdev.sh'"
+haz "chmod 755 '$DEST_CFG/eden-autoconfig.sh' '$DEST_CFG/eden-nucleo.sh' '$DEST_CFG/eden-driver-yuzu.sh' '$DEST_CFG/eden-driver-dolphin.sh' '$DEST_CFG/eden-driver-cemu.sh' '$DEST_CFG/eden-diagnostico.sh' '$DEST_CFG/eden-mandos-sdl.sh' '$DEST_CFG/eden-mandos-evdev.sh'"
 
 if [ -e "$DEST_CFG/eden-autoconfig.conf" ]; then
     say "   (ya existe $DEST_CFG/eden-autoconfig.conf: no lo toco)"

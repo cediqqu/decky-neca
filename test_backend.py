@@ -82,7 +82,8 @@ async def main():
     r = await mod.Plugin().instalar_scripts()
     check("instalar ok", r["ok"] is True, r["salida"])
     for f in ("eden-autoconfig.sh", "eden-mandos-sdl.sh",
-              "eden-diagnostico.sh", "eden-autoconfig.conf"):
+              "eden-mandos-evdev.sh", "eden-diagnostico.sh",
+              "eden-autoconfig.conf"):
         check("existe %s" % f, os.path.isfile(os.path.join(base, f)))
     check("hook de ES-DE",
           os.path.isfile(os.path.join(home, "ES-DE", "scripts", "game-start",
@@ -764,14 +765,15 @@ async def main():
     script = os.path.join(AQUI, "eden_controller", "eden-autoconfig.sh")
     conf = os.path.join(base, "eden-autoconfig.conf")
 
-    def conf_dolphin(maximo):
+    def conf_dolphin(maximo, backend="sdl"):
         with open(conf, "w", encoding="utf-8") as fh:
             fh.write('JUGADORES_MAX="%s"\nORDEN_INTEGRADO="ultimo"\n'
-                     'P1_SERIE=""\n' % maximo)
+                     'P1_SERIE=""\nDOLPHIN_BACKEND="%s"\n'
+                     % (maximo, backend))
 
-    def correr_dolphin(*args, maximo=None):
+    def correr_dolphin(*args, maximo=None, backend="sdl"):
         if maximo is not None:
-            conf_dolphin(maximo)
+            conf_dolphin(maximo, backend)
         return subprocess.run(["bash", script, "--sistema", "gc"] + list(args),
                               env=env_dol, capture_output=True, text=True)
 
@@ -946,6 +948,39 @@ async def main():
     shutil.rmtree(os.path.join(home, ".var"), ignore_errors=True)
     env_dol["PATH"] = env_dol["PATH"].split(":", 1)[-1]
 
+    # evdev: mandos fisicos aunque Steam Input este activo
+    fake_evdev = os.path.join(tmp, "evdev.txt")
+    with open(fake_evdev, "w", encoding="utf-8") as fh:
+        fh.write(
+            "I: Bus=0005 Vendor=054c Product=0ce6 Version=0000\n"
+            'N: Name="DualSense Wireless Controller"\n'
+            "U: Uniq=4c:b9:9b:23:f1:fb\n"
+            "H: Handlers=event10 js0\n\n"
+            "I: Bus=0005 Vendor=054c Product=0ce6 Version=0000\n"
+            'N: Name="DualSense Wireless Controller"\n'
+            "U: Uniq=4c:b9:9b:23:f1:fc\n"
+            "H: Handlers=event3 js1\n\n"
+            "I: Bus=0018 Vendor=0b05 Product=1abe Version=0000\n"
+            'N: Name="Asus Rog Ally Controller"\n'
+            "H: Handlers=event12 js2\n"
+        )
+    env_dol["EDEN_FAKE_EVDEV"] = fake_evdev
+    r = correr_dolphin(maximo=2, backend="evdev")
+    check("evdev: aplicar ok", r.returncode == 0, r.stdout + r.stderr)
+    gc = leer_dolphin("GCPadNew.ini")
+    check("evdev: P1 fisico",
+          ini_valor(gc, "GCPad1", "Device")
+          == "evdev/0/DualSense Wireless Controller",
+          ini_valor(gc, "GCPad1", "Device"))
+    check("evdev: P2 fisico",
+          ini_valor(gc, "GCPad2", "Device")
+          == "evdev/1/DualSense Wireless Controller",
+          ini_valor(gc, "GCPad2", "Device"))
+    dini = leer_dolphin("Dolphin.ini")
+    check("evdev: solo 2 puertos",
+          [ini_valor(dini, "Core", "SIDevice%d" % i) for i in range(4)]
+          == ["6", "6", "0", "0"])
+
     # adaptador GC real: no se pisa SIDevice0 = 12
     escribir_dolphin(12)
     r = correr_dolphin(maximo=1)
@@ -996,6 +1031,45 @@ async def main():
     ds_jug = sorted([m["jugador"] for m in est["mandos"]
                      if m["clase"] == "DualSense"])
     check("Eden: los dos DualSense son P1/P2", ds_jug == [1, 2], ds_jug)
+
+    # 4 DualSense + integrado, con el integrado en medio en la SDL del host:
+    # el ayudante debe renumerar los DualSense 0..3 y dejar el integrado fuera.
+    cuatro = os.path.join(tmp, "sdl_4virtual.txt")
+    with open(cuatro, "w", encoding="utf-8") as fh:
+        fh.write(
+            "DualSense Wireless Controller 1|03000000de280000ff11000001000000"
+            "|0|6|1|DualSense Wireless Controller 1||0\n"
+            "Asus Rog Ally Controller|03000000de280000ff11000001000000"
+            "|1|1|1|Asus Rog Ally Controller||1\n"
+            "DualSense Wireless Controller 2|03000000de280000ff11000001000000"
+            "|2|6|1|DualSense Wireless Controller 2||2\n"
+            "DualSense Wireless Controller 3|03000000de280000ff11000001000000"
+            "|3|6|1|DualSense Wireless Controller 3||3\n"
+            "DualSense Wireless Controller 4|03000000de280000ff11000001000000"
+            "|4|6|1|DualSense Wireless Controller 4||4\n"
+        )
+    os.environ["EDEN_FAKE_SDL"] = cuatro
+    prefs = mod._leer_prefs()
+    prefs["JUGADORES_MAX"] = "4"
+    prefs["ORDEN_INTEGRADO"] = "ignorar"
+    prefs["INTEGRADO_MANUAL"] = "si"
+    prefs["P1_SERIE"] = ""
+    mod._escribir_prefs(prefs)
+    est = await mod.Plugin().estado()
+    ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
+    check("Eden: 4 DualSense son P1..P4",
+          sorted(m["jugador"] for m in ds) == [1, 2, 3, 4],
+          [(m["nombre"], m["jugador"]) for m in ds])
+    asus = [m for m in est["mandos"] if m["clase"] == "Integrado"]
+    check("Eden: integrado fuera con 4 DS",
+          bool(asus) and all(m["jugador"] is None for m in asus),
+          [(m["nombre"], m["jugador"]) for m in asus])
+    check("Eden: puertos 0..3 tras renumerar",
+          sorted(int(m["puerto"]) for m in ds) == [0, 1, 2, 3],
+          [m["puerto"] for m in ds])
+    check("Dolphin por defecto SDL",
+          est["prefs"]["DOLPHIN_BACKEND"] == "sdl",
+          est["prefs"].get("DOLPHIN_BACKEND"))
 
     # El log del panel filtra los bloques de --who (ruido del refresco)
     with open(os.path.join(base, "log.txt"), "w", encoding="utf-8") as fh:

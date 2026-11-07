@@ -686,7 +686,8 @@ eden-autoconfig.sh --sistema wiiu   # Cemu: controllerProfiles/controllerN.xml
 El hook de ES-DE ya lo hace solo: `switch` → Eden, `gc`/`wii` → Dolphin,
 `wiiu` → Cemu.
 
-**Dolphin** reescribe el dispositivo de cada puerto (`Device = SDL/<indice>/<nombre>`),
+**Dolphin** reescribe el dispositivo de cada puerto (`Device = SDL/<indice>/<nombre>` o
+`evdev/<id>/<nombre>` con `DOLPHIN_BACKEND=evdev`),
 activa los puertos de GameCube (`SIDevice0..3`), pone `Source = 1` en los Wiimotes
 emulados y apunta `Hotkeys.ini` al jugador 1. EmuDeck ya deja los botones
 configurados; N.E.C.A no los toca. Si un puerto usa el adaptador GC real

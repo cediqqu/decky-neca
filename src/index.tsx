@@ -65,6 +65,7 @@ type Prefs = {
   P1_SERIE: string;
   JUGADORES_MAX: string;
   ORDEN_INTEGRADO: string;
+  DOLPHIN_BACKEND: string;
 };
 
 type Maquina = { vendor: string; producto: string; placa: string };
@@ -1561,6 +1562,13 @@ function Content() {
       setTimeout(() => setPulsoMando(0), 520);
     });
 
+  const cambiarBackend = () =>
+    conBloqueo(async () => {
+      const nuevo = await call<[string], Estado>("ciclar", "dolphin");
+      setEst(nuevo);
+      if (nuevo.aviso) avisar(nuevo.aviso);
+    });
+
   const elegirIntegrado = (modo: string) =>
     conBloqueo(async () => {
       const nuevo = await call<[string], Estado>("integrado_modo", modo);
@@ -1935,6 +1943,16 @@ function Content() {
               titulo="Aplicar"
               detalle="Los 3"
               onClick={aplicar}
+            />
+          </div>
+          <div className="ede-celda">
+            <TarjetaAccion
+              color={C.ambar}
+              icono={<FaGamepad size={16} />}
+              anim="pop"
+              titulo="Dolphin"
+              detalle={p.DOLPHIN_BACKEND === "evdev" ? "evdev" : "SDL"}
+              onClick={cambiarBackend}
             />
           </div>
           <div className="ede-celda">

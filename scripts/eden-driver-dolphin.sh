@@ -76,8 +76,12 @@ d_en_ejecucion() {
 # La lista y el plan los pone el nucleo (igual que Eden y Cemu).
 # Dolphin identifica por nombre+id de SU SDL: si la config esta en un Flatpak,
 # hay que enumerar dentro de ese Flatpak para ver los mismos dispositivos.
+# Con Steam Input todos son virtuales y el orden lo decide Steam; en ese caso
+# (auto) se usan los mandos fisicos por evdev.
 d_planificar() {
-    local dir resto
+    local dir resto modo
+    nucleo_prefs
+    modo="${DOLPHIN_BACKEND:-auto}"
     dir="$(d_dir 2>/dev/null || true)"
     NUCLEO_SDL_MODO="dolphin"
     case "$dir" in
@@ -89,6 +93,14 @@ d_planificar() {
             NUCLEO_SDL_FLATPAK=""
             ;;
     esac
+
+    if [ "$modo" = "evdev" ]; then
+        NUCLEO_SDL_MODO="evdev"
+        nucleo_planificar evdev
+        return
+    fi
+
+    # sdl (por defecto) o cualquier valor no reconocido
     nucleo_planificar eden
 }
 
@@ -97,9 +109,10 @@ d_planificar() {
 # dispositivo. Por eso se usa el n-esimo con ese mismo nombre (INDICE_NOMBRE).
 d_device() {
     local n="$1"
-    local i=$((n - 1))
-    printf 'SDL/%s/%s' \
-        "${PLAN_INDICE_NOMBRE[$i]:-${PLAN_INDICE[$i]}}" "${PLAN_SDL[$i]}"
+    local i=$((n - 1)) prefijo="SDL"
+    [ "${NUCLEO_SDL_FUENTE:-}" = "evdev" ] && prefijo="evdev"
+    printf '%s/%s/%s' "$prefijo" \
+        "${PLAN_INDICE_NOMBRE[$i]:-${PLAN_INDICE[$i]:-0}}" "${PLAN_SDL[$i]:-}"
 }
 
 d_njugadores() { printf '%s' "${#PLAN_NOMBRE[@]}"; }

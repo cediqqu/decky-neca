@@ -394,30 +394,27 @@ cargar_mandos_sdl() {
     local f="$TMPDIR_RUN/sdl.txt" helper="" err
     : >"$f" 2>/dev/null || return 1
 
-    if [ -n "${EDEN_FAKE_SDL:-}" ] && [ -r "$EDEN_FAKE_SDL" ]; then
-        grep -v '^[[:space:]]*$' "$EDEN_FAKE_SDL" >"$f" 2>/dev/null
-        SDL_LISTA="$f"; SDL_OK=1
-    else
-        local c
-        for c in "$HERE/eden-mandos-sdl.sh" "$BASE_DIR/eden-mandos-sdl.sh"; do
-            [ -r "$c" ] && { helper="$c"; break; }
-        done
-        if [ -z "$helper" ]; then
-            log WARN "no encuentro eden-mandos-sdl.sh (uso el metodo /sys)"
-            return 1
-        fi
-        # se pasan al ayudante las variables que puede necesitar del .conf
-        if ! SDL_CRC_CERO="${SDL_CRC_CERO:-}" \
-             EDEN_SDL_LIB="${EDEN_SDL_LIB:-}" \
-             EDEN_SDL_LIB_DIR="${EDEN_SDL_LIB_DIR:-}" \
-             EDEN_APPIMAGE="${EDEN_APPIMAGE:-}" \
-             bash "$helper" >"$f" 2>"$TMPDIR_RUN/sdl.err"; then
-            err="$(tr '\n' ' ' <"$TMPDIR_RUN/sdl.err" 2>/dev/null | cut -c1-300)"
-            log WARN "eden-mandos-sdl.sh fallo: ${err:-sin detalle}"
-            return 1
-        fi
-        SDL_LISTA="$f"; SDL_OK=1
+    local c
+    for c in "$HERE/eden-mandos-sdl.sh" "$BASE_DIR/eden-mandos-sdl.sh"; do
+        [ -r "$c" ] && { helper="$c"; break; }
+    done
+    if [ -z "$helper" ]; then
+        log WARN "no encuentro eden-mandos-sdl.sh (uso el metodo /sys)"
+        return 1
     fi
+    # El ayudante tambien aplica el renumerado de pads virtuales (de28).
+    # En pruebas EDEN_FAKE_SDL hace que use el fichero falso.
+    if ! SDL_CRC_CERO="${SDL_CRC_CERO:-}" \
+         EDEN_SDL_LIB="${EDEN_SDL_LIB:-}" \
+         EDEN_SDL_LIB_DIR="${EDEN_SDL_LIB_DIR:-}" \
+         EDEN_APPIMAGE="${EDEN_APPIMAGE:-}" \
+         EDEN_FAKE_SDL="${EDEN_FAKE_SDL:-}" \
+         bash "$helper" >"$f" 2>"$TMPDIR_RUN/sdl.err"; then
+        err="$(tr '\n' ' ' <"$TMPDIR_RUN/sdl.err" 2>/dev/null | cut -c1-300)"
+        log WARN "eden-mandos-sdl.sh fallo: ${err:-sin detalle}"
+        return 1
+    fi
+    SDL_LISTA="$f"; SDL_OK=1
 
     # ---- comun a los dos caminos ----
     SDL_INFO="$(grep -m1 '^#lib ' "$f" 2>/dev/null | sed 's/^#lib //')"

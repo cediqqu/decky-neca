@@ -55,6 +55,7 @@ PREF_DEF = {
     "ORDEN_INTEGRADO": "primero",
     "INTEGRADO_MANUAL": "no",
     "ORDEN_DUALSENSE": "conexion",
+    "DOLPHIN_BACKEND": "sdl",
     "RETENCION_BACKUPS": "10",
 }
 
@@ -226,6 +227,9 @@ def _validar(prefs):
     orden = str(prefs.get("ORDEN_DUALSENSE", "conexion")).strip()
     out["ORDEN_DUALSENSE"] = orden if orden in ORDENES else "conexion"
 
+    backend = str(prefs.get("DOLPHIN_BACKEND", "sdl")).strip().lower()
+    out["DOLPHIN_BACKEND"] = backend if backend in ("sdl", "evdev") else "sdl"
+
     try:
         ret = int(str(prefs.get("RETENCION_BACKUPS", "10")).strip())
     except Exception:
@@ -283,6 +287,7 @@ def _escribir_prefs(prefs):
               'ORDEN_INTEGRADO="%s"' % prefs["ORDEN_INTEGRADO"],
               'INTEGRADO_MANUAL="%s"' % prefs["INTEGRADO_MANUAL"],
               'ORDEN_DUALSENSE="%s"' % prefs["ORDEN_DUALSENSE"],
+              'DOLPHIN_BACKEND="%s"' % prefs["DOLPHIN_BACKEND"],
               "RETENCION_BACKUPS=%s" % prefs["RETENCION_BACKUPS"],
               END, ""]
     nuevo = texto + "\n".join(bloque)
@@ -615,8 +620,8 @@ def _reporte_ds5(bus, motor, seq=None):
 
 
 FICHEROS_SCRIPTS = (
-    SCRIPT, MANDOS, "eden-diagnostico.sh", "eden-nucleo.sh",
-    "eden-driver-yuzu.sh", "eden-driver-dolphin.sh",
+    SCRIPT, MANDOS, "eden-mandos-evdev.sh", "eden-diagnostico.sh",
+    "eden-nucleo.sh", "eden-driver-yuzu.sh", "eden-driver-dolphin.sh",
     "eden-driver-cemu.sh", "eden-plantilla-cemu.xml",
 )
 
@@ -719,10 +724,10 @@ def _clase(nombre, guid, virtual):
     n = (nombre or "").lower()
     if "dualsense" in n or "wireless controller" in n:
         return "DualSense"
-    if virtual:
-        return "Pad virtual"
     if any(x in n for x in ("rog", "ally", "asus", "x-box", "xbox")):
         return "Integrado"
+    if virtual:
+        return "Pad virtual"
     return "Otro"
 
 
@@ -868,17 +873,10 @@ class Plugin:
         aviso = ""
 
         if ok:
-            # mismo gancho de pruebas que eden-autoconfig.sh (aqui no hay SDL)
-            fake = os.environ.get("EDEN_FAKE_SDL", "").strip()
-            if fake and os.path.isfile(fake):
-                try:
-                    with open(fake, "r", encoding="utf-8", errors="replace") as fh:
-                        salida = fh.read()
-                    rc = 0
-                except Exception as exc:
-                    rc, salida = -1, "no puedo leer EDEN_FAKE_SDL: %s" % exc
-            else:
-                rc, salida = await _run(["bash", _script(MANDOS)], timeout=45)
+            # El ayudante ya soporta EDEN_FAKE_SDL y aplica el renumerado de
+            # pads virtuales; no lo saltamos para que el panel y --who
+            # trabajen con la misma lista.
+            rc, salida = await _run(["bash", _script(MANDOS)], timeout=45)
             mandos = _parse_mandos(salida)
             if rc != 0 and not mandos:
                 aviso = ("No he podido interrogar a SDL:\n" +
@@ -1046,9 +1044,11 @@ class Plugin:
         if clave == "max":
             n = int(prefs["JUGADORES_MAX"])
             prefs["JUGADORES_MAX"] = str(1 if n >= 4 else n + 1)
-
-
-
+        elif clave == "dolphin":
+            orden = ["sdl", "evdev"]
+            actual = prefs.get("DOLPHIN_BACKEND", "sdl")
+            i = orden.index(actual) if actual in orden else 0
+            prefs["DOLPHIN_BACKEND"] = orden[(i + 1) % len(orden)]
         else:
             return await self.estado()
 

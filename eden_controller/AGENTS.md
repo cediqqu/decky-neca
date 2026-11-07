@@ -118,6 +118,10 @@ jugadores sobrantes quedan `connected=false`.
   el índice global de SDL: el primer mando de cada nombre es `0`. Por eso el
   driver usa `PLAN_INDICE_NOMBRE` y no `PLAN_INDICE`. Con un DualSense y el
   integrado, el integrado debe ser `SDL/0/Asus…`, no `SDL/1/Asus…`.
+- **Dolphin por evdev.** `DOLPHIN_BACKEND=evdev` usa `eden-mandos-evdev.sh` y
+  escribe `evdev/<id>/<nombre>`; así se saltan los pads de Steam. Por defecto
+  es `sdl` (la que funcionaba); evdev es experimental. El id es el n-ésimo con
+  ese nombre en el orden de `/proc` (event).
 - **Dolphin corre en Flatpak y usa SU SDL** (3.2.30), distinta de la del host
   (3.4.12). Los nombres/orden pueden no coincidir. El driver pone
   `NUCLEO_SDL_MODO=dolphin` y `NUCLEO_SDL_FLATPAK=<app>`; `nucleo_mandos`
@@ -169,6 +173,7 @@ jugadores sobrantes quedan `connected=false`.
 | `eden-driver-cemu.sh` | Cemu (Wii U): fija el dispositivo (uuid/display_name) en `controllerN.xml` |
 | `eden-plantilla-cemu.xml` | Plantilla de emergencia (Wii U Pro Controller) si no hay `Deck-PN.xml` |
 | `eden-mandos-sdl.sh` | Interroga a libSDL3 (python + ctypes); lista lo que ve Eden |
+| `eden-mandos-evdev.sh` | Lista gamepads físicos por `/proc/bus/input/devices` para Dolphin (`evdev/<id>/<nombre>`) |
 | `eden-diagnostico.sh` | Solo lectura; volcado para que el usuario lo pegue |
 | `instalar.sh` | Copia a `~/eden-autoconfig` (incluido `VERSION`), repone el hook y verifica SDL |
 | `es-de-hooks/10-eden-autoconfig.sh` | Hook `game-start`: `switch` → Eden, `gc`/`wii` → Dolphin, `wiiu` → Cemu |
