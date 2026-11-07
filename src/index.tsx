@@ -7,6 +7,8 @@ import {
   DialogButton,
   DialogButtonPrimary,
   DialogFooter,
+  GamepadButton,
+  type GamepadEvent,
   ModalRoot,
   PanelSection,
   PanelSectionRow,
@@ -1065,31 +1067,85 @@ function VentanaTexto(props: {
     if (el) el.scrollTop = el.scrollHeight;
   }, [esLog, texto]);
 
+  // El Focusable es el unico elemento enfocable del log; mueve el textarea.
+  // El textarea tiene tabIndex=-1 para no robar el foco ni abrir el teclado.
+  const mover = (evt: GamepadEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const paso = Math.max(40, Math.floor(el.clientHeight * 0.75));
+    if (evt.detail?.button === GamepadButton.DIR_UP) {
+      if (el.scrollTop > 0) {
+        el.scrollTop -= paso;
+        evt.stopPropagation();
+      }
+    } else if (evt.detail?.button === GamepadButton.DIR_DOWN) {
+      if (el.scrollTop + el.clientHeight < el.scrollHeight - 1) {
+        el.scrollTop += paso;
+        evt.stopPropagation();
+      }
+    }
+  };
+
   return (
     <ModalRoot strTitle={props.titulo} bAllowFullSize onCancel={props.onCerrar}>
-      <DialogBody style={{ height: "58vh", maxHeight: "58vh", padding: "8px 12px" }}>
-        {/* textarea readOnly: scroll nativo con barra, stick derecho y dedo */}
-        <textarea
-          ref={ref}
-          readOnly
-          value={texto || "(vacio)"}
-          wrap="soft"
-          spellCheck={false}
+      <DialogBody
+        style={{
+          height: "58vh",
+          maxHeight: "58vh",
+          padding: 0,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {esLog ? (
+          <div
+            style={{
+              padding: "4px 12px 0",
+              fontSize: "0.7em",
+              opacity: 0.65,
+            }}
+          >
+            D-pad / stick: desplazar · B: cerrar
+          </div>
+        ) : null}
+        <Focusable
+          preferredFocus
+          onGamepadDirection={mover}
           style={{
-            width: "100%",
-            height: "100%",
-            resize: "none",
-            overflowY: "scroll",
-            padding: "8px 10px",
-            border: "1px solid rgba(128,128,128,0.25)",
-            borderRadius: "8px",
-            background: "rgba(0,0,0,0.18)",
-            color: "inherit",
-            fontFamily: "monospace",
-            fontSize: "0.82em",
-            lineHeight: 1.35,
+            flex: 1,
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
           }}
-        />
+        >
+          <textarea
+            ref={ref}
+            readOnly
+            tabIndex={-1}
+            rows={20}
+            value={texto || "(vacio)"}
+            wrap="soft"
+            spellCheck={false}
+            style={{
+              width: "100%",
+              height: "50vh",
+              minHeight: "260px",
+              flex: 1,
+              resize: "none",
+              overflowY: "auto",
+              margin: "8px 12px",
+              padding: "8px 10px",
+              border: "1px solid rgba(128,128,128,0.25)",
+              borderRadius: "8px",
+              background: "rgba(0,0,0,0.18)",
+              color: "inherit",
+              fontFamily: "monospace",
+              fontSize: "0.82em",
+              lineHeight: 1.35,
+            }}
+          />
+        </Focusable>
       </DialogBody>
       {esLog ? null : (
         <DialogFooter>

@@ -713,20 +713,59 @@ function VentanaTexto(props) {
         if (el)
             el.scrollTop = el.scrollHeight;
     }, [esLog, texto]);
-    return (SP_JSX.jsxs(DFL.ModalRoot, { strTitle: props.titulo, bAllowFullSize: true, onCancel: props.onCerrar, children: [SP_JSX.jsx(DFL.DialogBody, { style: { height: "58vh", maxHeight: "58vh", padding: "8px 12px" }, children: SP_JSX.jsx("textarea", { ref: ref, readOnly: true, value: texto || "(vacio)", wrap: "soft", spellCheck: false, style: {
-                        width: "100%",
-                        height: "100%",
-                        resize: "none",
-                        overflowY: "scroll",
-                        padding: "8px 10px",
-                        border: "1px solid rgba(128,128,128,0.25)",
-                        borderRadius: "8px",
-                        background: "rgba(0,0,0,0.18)",
-                        color: "inherit",
-                        fontFamily: "monospace",
-                        fontSize: "0.82em",
-                        lineHeight: 1.35,
-                    } }) }), esLog ? null : (SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) }))] }));
+    // El Focusable es el unico elemento enfocable del log; mueve el textarea.
+    // El textarea tiene tabIndex=-1 para no robar el foco ni abrir el teclado.
+    const mover = (evt) => {
+        const el = ref.current;
+        if (!el)
+            return;
+        const paso = Math.max(40, Math.floor(el.clientHeight * 0.75));
+        if (evt.detail?.button === DFL.GamepadButton.DIR_UP) {
+            if (el.scrollTop > 0) {
+                el.scrollTop -= paso;
+                evt.stopPropagation();
+            }
+        }
+        else if (evt.detail?.button === DFL.GamepadButton.DIR_DOWN) {
+            if (el.scrollTop + el.clientHeight < el.scrollHeight - 1) {
+                el.scrollTop += paso;
+                evt.stopPropagation();
+            }
+        }
+    };
+    return (SP_JSX.jsxs(DFL.ModalRoot, { strTitle: props.titulo, bAllowFullSize: true, onCancel: props.onCerrar, children: [SP_JSX.jsxs(DFL.DialogBody, { style: {
+                    height: "58vh",
+                    maxHeight: "58vh",
+                    padding: 0,
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                }, children: [esLog ? (SP_JSX.jsx("div", { style: {
+                            padding: "4px 12px 0",
+                            fontSize: "0.7em",
+                            opacity: 0.65,
+                        }, children: "D-pad / stick: desplazar \u00B7 B: cerrar" })) : null, SP_JSX.jsx(DFL.Focusable, { preferredFocus: true, onGamepadDirection: mover, style: {
+                            flex: 1,
+                            minHeight: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                        }, children: SP_JSX.jsx("textarea", { ref: ref, readOnly: true, tabIndex: -1, rows: 20, value: texto || "(vacio)", wrap: "soft", spellCheck: false, style: {
+                                width: "100%",
+                                height: "50vh",
+                                minHeight: "260px",
+                                flex: 1,
+                                resize: "none",
+                                overflowY: "auto",
+                                margin: "8px 12px",
+                                padding: "8px 10px",
+                                border: "1px solid rgba(128,128,128,0.25)",
+                                borderRadius: "8px",
+                                background: "rgba(0,0,0,0.18)",
+                                color: "inherit",
+                                fontFamily: "monospace",
+                                fontSize: "0.82em",
+                                lineHeight: 1.35,
+                            } }) })] }), esLog ? null : (SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) }))] }));
 }
 function abrirVentana(titulo, texto, recientePrimero = false) {
     const cierre = { f: () => { } };
