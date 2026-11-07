@@ -206,6 +206,18 @@ nucleo_planificar() { # $1 = eden|cemu
         return 2
     fi
 
+    # Todos los mandos con el GUID de Valve (de28) = Steam Input los esta
+    # virtualizando. El orden de jugadores lo decide Steam, no Dolphin.
+    if [ "${#NUCLEO_TODOS[@]}" -ge 2 ]; then
+        local todos_virt=1 lv
+        for lv in "${NUCLEO_TODOS[@]}"; do
+            case "${lv##*_}" in *de28*) ;; *) todos_virt=0 ;; esac
+        done
+        if [ "$todos_virt" -eq 1 ]; then
+            NUCLEO_AVISOS+=("Steam Input: todos los mandos son pads virtuales; el orden de jugadores lo decide Steam (desactiva Steam Input para ES-DE o reordena los mandos)")
+        fi
+    fi
+
     local lista=() orden_int="ultimo" incluir_int=0
     case "${ORDEN_INTEGRADO:-ignorar}" in
         ignorar) incluir_int=0 ;;

@@ -1053,15 +1053,18 @@ function VentanaTexto(props: {
   titulo: string;
   texto: string;
   onCerrar: () => void;
+  recientePrimero?: boolean;
 }) {
   const texto = (props.texto || "").replace(/\s+$/, "");
   const lineas = texto ? texto.split("\n") : ["(vacio)"];
   // Bloques enfocables: ScrollPanel sigue al bloque con foco. Sin hijos
-  // enfocables no se movia con el D-pad.
+  // enfocables no se movia con el D-pad. Para el log se invierten para que
+  // lo mas reciente quede arriba y se vea sin necesidad de scroll.
   const bloques: string[] = [];
-  for (let i = 0; i < lineas.length; i += 12) {
-    bloques.push(lineas.slice(i, i + 12).join("\n"));
+  for (let i = 0; i < lineas.length; i += 20) {
+    bloques.push(lineas.slice(i, i + 20).join("\n"));
   }
+  if (props.recientePrimero) bloques.reverse();
 
   return (
     <ModalRoot strTitle={props.titulo} bAllowFullSize onCancel={props.onCerrar}>
@@ -1078,7 +1081,7 @@ function VentanaTexto(props: {
             {bloques.map((bloque, i) => (
               <Focusable
                 key={i}
-                preferredFocus={i === bloques.length - 1}
+                preferredFocus={i === 0}
                 style={{ padding: "2px 4px", borderRadius: "6px" }}
               >
                 <pre
@@ -1105,10 +1108,15 @@ function VentanaTexto(props: {
   );
 }
 
-function abrirVentana(titulo: string, texto: string) {
+function abrirVentana(titulo: string, texto: string, recientePrimero = false) {
   const cierre = { f: () => {} };
   const res = showModal(
-    <VentanaTexto titulo={titulo} texto={texto} onCerrar={() => cierre.f()} />
+    <VentanaTexto
+      titulo={titulo}
+      texto={texto}
+      recientePrimero={recientePrimero}
+      onCerrar={() => cierre.f()}
+    />
   );
   cierre.f = res.Close;
 }
@@ -1417,7 +1425,7 @@ function Content() {
   const verLog = () =>
     conBloqueo(async () => {
       const r = await call<[], { salida: string }>("ver_log");
-      abrirVentana("Log (log.txt)", r.salida);
+      abrirVentana("Log (lo mas reciente arriba)", r.salida, true);
     });
 
   const instalar = () =>

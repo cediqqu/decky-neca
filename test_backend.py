@@ -958,6 +958,22 @@ async def main():
     check("Dolphin: avisa del adaptador", "adaptador" in r.stderr.lower(),
           r.stderr)
 
+    # Steam Input: todos los mandos como pads virtuales -> aviso en el panel
+    virtuales = os.path.join(tmp, "sdl_virtual.txt")
+    with open(virtuales, "w", encoding="utf-8") as fh:
+        fh.write(
+            "DualSense Wireless Controller 1|03000000de280000ff11000001000000"
+            "|0|6|1|DualSense Wireless Controller 1||0\n"
+            "DualSense Wireless Controller 2|03000000de280000ff11000001000000"
+            "|1|6|1|DualSense Wireless Controller 2||1\n"
+            "Asus Rog Ally Controller|03000000de280000ff11000001000000"
+            "|2|1|1|Asus Rog Ally Controller||2\n"
+        )
+    os.environ["EDEN_FAKE_SDL"] = virtuales
+    est = await mod.Plugin().estado()
+    check("Steam Input avisa del orden de jugadores",
+          "Steam Input" in est["aviso"], est["aviso"])
+
     shutil.rmtree(tmp, ignore_errors=True)
 
     print()

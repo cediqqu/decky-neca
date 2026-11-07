@@ -929,6 +929,12 @@ class Plugin:
                 "No se pueden distinguir: manda el orden de conexion."
                 % ", ".join(dups[:3]))
 
+        if len(mandos) >= 2 and all(m["virtual"] for m in mandos):
+            aviso = ((aviso + "\n") if aviso else "") + (
+                "Steam Input presenta todos los mandos como pads virtuales: "
+                "el orden de jugadores lo decide Steam. Si P2/P3 no coinciden, "
+                "desactiva Steam Input para ES-DE o reordena los mandos en Steam.")
+
         has_inst = _hash_scripts(_base())
         has_bundle = _hash_scripts(SCRIPTS_DIR)
         faltan = _faltan_scripts(_base()) if ok else []

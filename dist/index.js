@@ -705,17 +705,20 @@ function VentanaTexto(props) {
     const texto = (props.texto || "").replace(/\s+$/, "");
     const lineas = texto ? texto.split("\n") : ["(vacio)"];
     // Bloques enfocables: ScrollPanel sigue al bloque con foco. Sin hijos
-    // enfocables no se movia con el D-pad.
+    // enfocables no se movia con el D-pad. Para el log se invierten para que
+    // lo mas reciente quede arriba y se vea sin necesidad de scroll.
     const bloques = [];
-    for (let i = 0; i < lineas.length; i += 12) {
-        bloques.push(lineas.slice(i, i + 12).join("\n"));
+    for (let i = 0; i < lineas.length; i += 20) {
+        bloques.push(lineas.slice(i, i + 20).join("\n"));
     }
+    if (props.recientePrimero)
+        bloques.reverse();
     return (SP_JSX.jsxs(DFL.ModalRoot, { strTitle: props.titulo, bAllowFullSize: true, onCancel: props.onCerrar, children: [SP_JSX.jsx(DFL.DialogBody, { style: {
                     height: "58vh",
                     maxHeight: "58vh",
                     padding: 0,
                     overflow: "hidden",
-                }, children: SP_JSX.jsx(DFL.ScrollPanel, { children: SP_JSX.jsx("div", { style: { padding: "8px 12px" }, children: bloques.map((bloque, i) => (SP_JSX.jsx(DFL.Focusable, { preferredFocus: i === bloques.length - 1, style: { padding: "2px 4px", borderRadius: "6px" }, children: SP_JSX.jsx("pre", { style: {
+                }, children: SP_JSX.jsx(DFL.ScrollPanel, { children: SP_JSX.jsx("div", { style: { padding: "8px 12px" }, children: bloques.map((bloque, i) => (SP_JSX.jsx(DFL.Focusable, { preferredFocus: i === 0, style: { padding: "2px 4px", borderRadius: "6px" }, children: SP_JSX.jsx("pre", { style: {
                                     margin: 0,
                                     fontFamily: "monospace",
                                     fontSize: "0.84em",
@@ -724,9 +727,9 @@ function VentanaTexto(props) {
                                     wordBreak: "break-word",
                                 }, children: bloque }) }, i))) }) }) }), SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) })] }));
 }
-function abrirVentana(titulo, texto) {
+function abrirVentana(titulo, texto, recientePrimero = false) {
     const cierre = { f: () => { } };
-    const res = DFL.showModal(SP_JSX.jsx(VentanaTexto, { titulo: titulo, texto: texto, onCerrar: () => cierre.f() }));
+    const res = DFL.showModal(SP_JSX.jsx(VentanaTexto, { titulo: titulo, texto: texto, recientePrimero: recientePrimero, onCerrar: () => cierre.f() }));
     cierre.f = res.Close;
 }
 // ---------------------------------------------------------------------------
@@ -935,7 +938,7 @@ function Content() {
     });
     const verLog = () => conBloqueo(async () => {
         const r = await call("ver_log");
-        abrirVentana("Log (log.txt)", r.salida);
+        abrirVentana("Log (lo mas reciente arriba)", r.salida, true);
     });
     const instalar = () => conBloqueo(async () => {
         const r = await call("instalar_scripts");
