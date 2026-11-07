@@ -974,6 +974,29 @@ async def main():
     check("Steam Input avisa del orden de jugadores",
           "Steam Input" in est["aviso"], est["aviso"])
 
+    # Con el integrado desactivado, Eden no debe asignarlo como P2
+    # (config de Eden realista: 10 jugadores, como el default de EmuDeck)
+    cfg_eden = os.path.join(home, ".config", "eden", "qt-config.ini")
+    os.makedirs(os.path.dirname(cfg_eden), exist_ok=True)
+    with open(cfg_eden, "w", encoding="utf-8") as fh:
+        fh.write("[Controls]\n")
+        for n in range(10):
+            fh.write("player_%d_profile_name=\n" % n)
+    prefs = mod._leer_prefs()
+    prefs["JUGADORES_MAX"] = "2"
+    prefs["ORDEN_INTEGRADO"] = "ignorar"
+    prefs["INTEGRADO_MANUAL"] = "si"
+    prefs["P1_SERIE"] = ""
+    mod._escribir_prefs(prefs)
+    est = await mod.Plugin().estado()
+    por_nombre = {m["nombre"]: m for m in est["mandos"]}
+    check("Eden: integrado desactivado no es P2",
+          por_nombre.get("Asus Rog Ally Controller", {}).get("jugador") is None,
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+    ds_jug = sorted([m["jugador"] for m in est["mandos"]
+                     if m["clase"] == "DualSense"])
+    check("Eden: los dos DualSense son P1/P2", ds_jug == [1, 2], ds_jug)
+
     # El log del panel filtra los bloques de --who (ruido del refresco)
     with open(os.path.join(base, "log.txt"), "w", encoding="utf-8") as fh:
         fh.write("2026-01-01 10:00:00 [INFO] [1] === eden-autoconfig.sh v2 modo=who args='--who' ===\n")

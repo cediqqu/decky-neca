@@ -767,6 +767,85 @@ function VentanaTexto(props) {
                                 lineHeight: 1.35,
                             } }) })] }), esLog ? null : (SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) }))] }));
 }
+function VentanaLog(props) {
+    const [filtro, setFiltro] = SP_REACT.useState("todo");
+    const [texto, setTexto] = SP_REACT.useState("");
+    const [cargando, setCargando] = SP_REACT.useState(false);
+    const ref = SP_REACT.useRef(null);
+    const cargar = async (f) => {
+        setFiltro(f);
+        setCargando(true);
+        try {
+            const r = await call("ver_log", f);
+            setTexto(r.salida);
+        }
+        catch (e) {
+            setTexto(String(e));
+        }
+        finally {
+            setCargando(false);
+        }
+    };
+    SP_REACT.useEffect(() => {
+        void cargar("todo");
+    }, []);
+    SP_REACT.useEffect(() => {
+        const el = ref.current;
+        if (el)
+            el.scrollTop = el.scrollHeight;
+    }, [texto]);
+    const mover = (dir) => {
+        const el = ref.current;
+        if (!el)
+            return;
+        const paso = Math.max(40, Math.floor(el.clientHeight * 0.8));
+        el.scrollTop += dir * paso;
+    };
+    const filtros = [
+        ["todo", "Todo"],
+        ["dolphin", "Dolphin"],
+        ["eden", "Eden"],
+        ["cemu", "Cemu"],
+    ];
+    return (SP_JSX.jsx(DFL.ModalRoot, { strTitle: "Log", bAllowFullSize: true, onCancel: props.onCerrar, children: SP_JSX.jsxs(DFL.DialogBody, { style: {
+                height: "66vh",
+                maxHeight: "66vh",
+                padding: 0,
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+            }, children: [SP_JSX.jsx("div", { style: {
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "6px",
+                        padding: "8px 12px 4px",
+                    }, children: filtros.map(([clave, etiqueta]) => (SP_JSX.jsx(DFL.DialogButton, { disabled: cargando, onClick: () => void cargar(clave), style: {
+                            flex: "1 1 64px",
+                            minWidth: "64px",
+                            padding: "6px 8px",
+                            ...(filtro === clave
+                                ? { borderColor: C.azul, borderWidth: "2px" }
+                                : {}),
+                        }, children: etiqueta }, clave))) }), SP_JSX.jsx("textarea", { ref: ref, readOnly: true, tabIndex: -1, rows: 16, value: texto || "(log vacio)", wrap: "soft", spellCheck: false, style: {
+                        flex: 1,
+                        minHeight: "220px",
+                        margin: "4px 12px",
+                        padding: "8px 10px",
+                        resize: "none",
+                        overflowY: "auto",
+                        border: "1px solid rgba(128,128,128,0.25)",
+                        borderRadius: "8px",
+                        background: "rgba(0,0,0,0.18)",
+                        color: "inherit",
+                        fontFamily: "monospace",
+                        fontSize: "0.8em",
+                        lineHeight: 1.35,
+                    } }), SP_JSX.jsxs("div", { style: {
+                        display: "flex",
+                        gap: "6px",
+                        padding: "4px 12px 8px",
+                    }, children: [SP_JSX.jsx(DFL.DialogButton, { onClick: () => mover(-1), children: "\u25B2 Subir" }), SP_JSX.jsx(DFL.DialogButton, { onClick: () => mover(1), children: "\u25BC Bajar" }), SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" })] })] }) }));
+}
 function abrirVentana(titulo, texto, recientePrimero = false) {
     const cierre = { f: () => { } };
     const res = DFL.showModal(SP_JSX.jsx(VentanaTexto, { titulo: titulo, texto: texto, recientePrimero: recientePrimero, onCerrar: () => cierre.f() }));
@@ -971,10 +1050,11 @@ function Content() {
         abrirVentana(r.ok ? "Aplicar: hecho" : "Aplicar: con problemas", r.salida);
         await refrescar();
     });
-    const verLog = () => conBloqueo(async () => {
-        const r = await call("ver_log");
-        abrirVentana("Log (lo mas reciente arriba)", r.salida, true);
-    });
+    const verLog = () => {
+        const cierre = { f: () => { } };
+        const res = DFL.showModal(SP_JSX.jsx(VentanaLog, { onCerrar: () => cierre.f() }));
+        cierre.f = res.Close;
+    };
     const instalar = () => conBloqueo(async () => {
         const r = await call("instalar_scripts");
         abrirVentana(r.ok ? "Scripts instalados" : `Error instalando (${r.exit})`, r.salida);

@@ -1156,6 +1156,128 @@ function VentanaTexto(props: {
   );
 }
 
+function VentanaLog(props: { onCerrar: () => void }) {
+  const [filtro, setFiltro] = useState("todo");
+  const [texto, setTexto] = useState("");
+  const [cargando, setCargando] = useState(false);
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const cargar = async (f: string) => {
+    setFiltro(f);
+    setCargando(true);
+    try {
+      const r = await call<[string], { salida: string }>("ver_log", f);
+      setTexto(r.salida);
+    } catch (e) {
+      setTexto(String(e));
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    void cargar("todo");
+  }, []);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [texto]);
+
+  const mover = (dir: number) => {
+    const el = ref.current;
+    if (!el) return;
+    const paso = Math.max(40, Math.floor(el.clientHeight * 0.8));
+    el.scrollTop += dir * paso;
+  };
+
+  const filtros = [
+    ["todo", "Todo"],
+    ["dolphin", "Dolphin"],
+    ["eden", "Eden"],
+    ["cemu", "Cemu"],
+  ];
+
+  return (
+    <ModalRoot strTitle="Log" bAllowFullSize onCancel={props.onCerrar}>
+      <DialogBody
+        style={{
+          height: "66vh",
+          maxHeight: "66vh",
+          padding: 0,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "6px",
+            padding: "8px 12px 4px",
+          }}
+        >
+          {filtros.map(([clave, etiqueta]) => (
+            <DialogButton
+              key={clave}
+              disabled={cargando}
+              onClick={() => void cargar(clave)}
+              style={{
+                flex: "1 1 64px",
+                minWidth: "64px",
+                padding: "6px 8px",
+                ...(filtro === clave
+                  ? { borderColor: C.azul, borderWidth: "2px" }
+                  : {}),
+              }}
+            >
+              {etiqueta}
+            </DialogButton>
+          ))}
+        </div>
+        <textarea
+          ref={ref}
+          readOnly
+          tabIndex={-1}
+          rows={16}
+          value={texto || "(log vacio)"}
+          wrap="soft"
+          spellCheck={false}
+          style={{
+            flex: 1,
+            minHeight: "220px",
+            margin: "4px 12px",
+            padding: "8px 10px",
+            resize: "none",
+            overflowY: "auto",
+            border: "1px solid rgba(128,128,128,0.25)",
+            borderRadius: "8px",
+            background: "rgba(0,0,0,0.18)",
+            color: "inherit",
+            fontFamily: "monospace",
+            fontSize: "0.8em",
+            lineHeight: 1.35,
+          }}
+        />
+        <div
+          style={{
+            display: "flex",
+            gap: "6px",
+            padding: "4px 12px 8px",
+          }}
+        >
+          <DialogButton onClick={() => mover(-1)}>▲ Subir</DialogButton>
+          <DialogButton onClick={() => mover(1)}>▼ Bajar</DialogButton>
+          <DialogButtonPrimary onClick={props.onCerrar}>
+            Cerrar
+          </DialogButtonPrimary>
+        </div>
+      </DialogBody>
+    </ModalRoot>
+  );
+}
+
 function abrirVentana(titulo: string, texto: string, recientePrimero = false) {
   const cierre = { f: () => {} };
   const res = showModal(
@@ -1463,11 +1585,11 @@ function Content() {
       await refrescar();
     });
 
-  const verLog = () =>
-    conBloqueo(async () => {
-      const r = await call<[], { salida: string }>("ver_log");
-      abrirVentana("Log (lo mas reciente arriba)", r.salida, true);
-    });
+  const verLog = () => {
+    const cierre = { f: () => {} };
+    const res = showModal(<VentanaLog onCerrar={() => cierre.f()} />);
+    cierre.f = res.Close;
+  };
 
   const instalar = () =>
     conBloqueo(async () => {

@@ -471,7 +471,9 @@ detectar_mandos_sdl() {
             dualsense)
                 DS_SDL_N=$((DS_SDL_N + 1))
                 lista_ds="$lista_ds ${port:-0}|$guid|${serial:-}"
-                DS_SDL_MACS="$DS_SDL_MACS ${serial:-$guid}"
+                # Solo la serie real; los pads virtuales comparten guid y no
+                # dan MAC, y usar el guid los colapsaria en uno solo.
+                DS_SDL_MACS="$DS_SDL_MACS ${serial:-}"
                 ;;
             integrado)
                 INTEGRADO_N=$((INTEGRADO_N + 1))
@@ -634,13 +636,8 @@ EOF
         [ "$visto" -eq 0 ] && lista="$lista $mac" && ORDEN_DS="$ORDEN_DS $mac"
     done
     DS_SDL_MACS="${lista# }"
-    # si no hay MACs (p.ej. USB), el numero de nodos es la cuenta
-    if [ -z "$DS_SDL_MACS" ]; then
-        DS_SDL_N=0
-    else
-        DS_SDL_N=0
-        for mac in $DS_SDL_MACS; do DS_SDL_N=$((DS_SDL_N + 1)); done
-    fi
+    # DS_SDL_N ya es el numero de lineas/mandos de SDL. No se recalcula desde
+    # las MACs: los pads virtuales no tienen serie y comparten guid.
 
     # Bluetooth (cuenta DualSense aunque Steam Input los oculte a Eden)
     DS_BT_N=0; DS_BT_MACS=""
@@ -1113,6 +1110,7 @@ planificar_sdl() {
     fi
 
     PLAN_RESUMEN="$resumen"
+    log INFO "plan SDL: $PLAN_JUGADORES"
     plan_desconectar_resto "$i"
     return 0
 }
@@ -1147,8 +1145,8 @@ planificar() {
         INCLUIR_INT=1
         p1_es_integrado=1
     fi
-    # en escenario Steam Input no podemos identificar el integrado
-    if [ "$ESCENARIO" = "steam_input" ]; then INCLUIR_INT=0; fi
+    # En Steam Input, si no se puede identificar el integrado, INTEGRADO_N=0
+    # y no se anade; pero no forzamos INCLUIR_INT=0 (asi se respeta ignorar).
 
     # ¿ponemos el integrado primero?
     local primero_int=0
@@ -1160,17 +1158,37 @@ planificar() {
         [ "$p1_es_integrado" -eq 1 ] && primero_int=1
     fi
 
-    # --- escenario Steam Input: asignamos los pads virtuales 1..N -----------
+    # --- escenario Steam Input: solo los DualSense reales (+ integrado si toca)
     if [ "$ESCENARIO" = "steam_input" ]; then
-        local np="$VIRT_N"
-        [ "$np" -gt "$JUGADORES_MAX" ] && np="$JUGADORES_MAX"
-        if [ "$np" -eq 0 ]; then return 2; fi
-        while [ "$i" -lt "$np" ]; do
+        local nds="$DS_N" k=0
+        [ "$nds" -eq 0 ] && nds="$VIRT_N"
+        if [ "$nds" -eq 0 ]; then return 2; fi
+
+        if [ "$primero_int" -eq 1 ] && [ "$INCLUIR_INT" -eq 1 ] \
+           && [ "$INTEGRADO_N" -gt 0 ]; then
+            PLAN_JUGADORES="$PLAN_JUGADORES integrado:0:0"
+            resumen="$resumen
+      Player 1 = INTEGRADO [$INTEGRADO_NOMBRES]   (port 0)"
+            i=1
+        fi
+        while [ "$k" -lt "$nds" ] && [ "$i" -lt "$JUGADORES_MAX" ] \
+              && [ "$i" -lt "$N_TOTALES" ]; do
             PLAN_JUGADORES="$PLAN_JUGADORES dual:$i:$i"
             resumen="$resumen
-      Player $((i + 1)) = pad virtual Steam $i   (port $i)"
-            i=$((i + 1))
+      Player $((i + 1)) = DualSense $((k + 1))   (port $i)"
+            i=$((i + 1)); k=$((k + 1))
         done
+        if [ "$primero_int" -eq 0 ] && [ "$INCLUIR_INT" -eq 1 ] \
+           && [ "$INTEGRADO_N" -gt 0 ] && [ "$i" -lt "$JUGADORES_MAX" ] \
+           && [ "$i" -lt "$N_TOTALES" ]; then
+            PLAN_JUGADORES="$PLAN_JUGADORES integrado:$i:$i"
+            resumen="$resumen
+      Player $((i + 1)) = INTEGRADO [$INTEGRADO_NOMBRES]   (port $i)"
+            i=$((i + 1))
+        fi
+        [ "$INCLUIR_INT" -eq 1 ] && [ "$INTEGRADO_N" -eq 0 ] && \
+            warn "Steam Input: no puedo identificar el integrado; puede entrar otro pad"
+        [ "$i" -gt 0 ] || return 2
         PLAN_RESUMEN="$resumen"
         plan_desconectar_resto "$i"
         return 0

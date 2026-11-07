@@ -908,10 +908,14 @@ class Plugin:
             m["principal"] = bool(prefs["P1_SERIE"]) and m["serie"] == prefs["P1_SERIE"]
             if m["clase"] == "Integrado":
                 jug = plan["integrado"]
+            elif m["clase"] == "DualSense":
+                # Los DualSense virtuales se planifican como "dual", no como
+                # "virtual"; probar ambos para que el panel muestre P1/P2.
+                jug = plan["dual"].get(m["puerto"])
+                if jug is None:
+                    jug = plan["virtual"].get(m["puerto"])
             elif m["virtual"]:
                 jug = plan["virtual"].get(m["puerto"])
-            elif m["clase"] == "DualSense":
-                jug = plan["dual"].get(m["puerto"])
             else:
                 jug = None
             # el script puede repartir mas jugadores de los configurados
@@ -1250,7 +1254,7 @@ class Plugin:
         return {"ok": True,
                 "salida": "vibrando (%s · %s)" % (metodo, os.path.basename(ruta))}
 
-    async def ver_log(self):
+    async def ver_log(self, sistema="todo"):
         try:
             with open(_log_txt(), "r", encoding="utf-8", errors="replace") as fh:
                 lineas = fh.readlines()
@@ -1271,6 +1275,20 @@ class Plugin:
                 saltar -= 1
                 continue
             limpias.append(linea)
+
+        sistema = (sistema or "todo").strip().lower()
+        if sistema in ("dolphin", "cemu"):
+            limpias = [l for l in limpias if sistema in l.lower()]
+        elif sistema == "eden":
+            # Ultimo bloque de Eden (el aplicar mas reciente)
+            idx = None
+            for i, l in enumerate(limpias):
+                if "=== eden-autoconfig.sh" in l:
+                    idx = i
+            if idx is not None:
+                limpias = limpias[idx:]
+            else:
+                limpias = [l for l in limpias if "eden" in l.lower()]
         return {"salida": "".join(limpias[-600:]) or "(log vacio)"}
 
     async def instalar_scripts(self):
