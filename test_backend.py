@@ -1071,6 +1071,31 @@ async def main():
           est["prefs"]["DOLPHIN_BACKEND"] == "sdl",
           est["prefs"].get("DOLPHIN_BACKEND"))
 
+    # El ayudante devuelve los puertos reales (Cemu los necesita)
+    env_u = os.environ.copy()
+    env_u["HOME"] = home
+    env_u["EDEN_AUTOCONFIG_DIR"] = base
+    env_u["EDEN_FAKE_SDL"] = cuatro
+    r = subprocess.run(["bash", os.path.join(base, "eden-mandos-sdl.sh")],
+                       env=env_u, capture_output=True, text=True)
+    puertos = [l.split("|")[2] for l in r.stdout.splitlines()
+               if l.startswith("DualSense")]
+    check("helper: puertos raw 0,2,3,4", puertos == ["0", "2", "3", "4"],
+          puertos)
+
+    # Cemu usa los puertos reales (uuid 0,2,3,4), no los renumerados de Eden
+    cem = os.path.join(home, ".config", "Cemu", "controllerProfiles")
+    os.makedirs(cem, exist_ok=True)
+    with open(os.path.join(cem, "controller0.xml"), "w", encoding="utf-8") as fh:
+        fh.write("<xml/>")
+    r = subprocess.run(["bash", script, "--sistema", "wiiu", "--dry-run"],
+                       env=env_u, capture_output=True, text=True)
+    check("Cemu dry-run ok", r.returncode == 0, r.stdout + r.stderr)
+    out = r.stdout + r.stderr
+    for u in ("0_", "2_", "3_", "4_"):
+        check("Cemu uuid %s raw" % u, ("uuid         = %s" % u) in out,
+              out[-600:])
+
     # El log del panel filtra los bloques de --who (ruido del refresco)
     with open(os.path.join(base, "log.txt"), "w", encoding="utf-8") as fh:
         fh.write("2026-01-01 10:00:00 [INFO] [1] === eden-autoconfig.sh v2 modo=who args='--who' ===\n")

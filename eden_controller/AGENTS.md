@@ -118,6 +118,10 @@ jugadores sobrantes quedan `connected=false`.
   el índice global de SDL: el primer mando de cada nombre es `0`. Por eso el
   driver usa `PLAN_INDICE_NOMBRE` y no `PLAN_INDICE`. Con un DualSense y el
   integrado, el integrado debe ser `SDL/0/Asus…`, no `SDL/1/Asus…`.
+- **Puertos de los DualSense virtuales.** El ayudante SDL da el puerto real por
+  guid (el integrado `de28` ocupa uno; Cemu lo necesita para su `uuid`). Eden
+  renumera sus DualSense 0..N-1 dentro de `detectar_mandos_sdl`, porque coloca
+  el integrado al final; el panel hace lo mismo con las tarjetas virtuales.
 - **Dolphin por evdev.** `DOLPHIN_BACKEND=evdev` usa `eden-mandos-evdev.sh` y
   escribe `evdev/<id>/<nombre>`; así se saltan los pads de Steam. Por defecto
   es `sdl` (la que funcionaba); evdev es experimental. El id es el n-ésimo con

@@ -59,9 +59,10 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
   de Ajustes cicla SDL/evdev; **SDL es el valor por defecto** y evdev queda como
   opción experimental. Incluye `eden-mandos-evdev.sh` y su instalación.
 - **Puertos de los DualSense virtuales.** El ayudante contaba el integrado como
-  un puerto más entre los pads `de28`; Eden/Cemu lo ordenan al final, así que P2
-  apuntaba a DS3 y P4 al Asus. Ahora los DualSense se renumeran 0..N-1 y el
-  integrado no consume puerto.
+  un puerto más entre los pads `de28`; Eden lo ordena al final, así que P2
+  apuntaba a DS3 y P4 al Asus. Eden ahora renumera sus DualSense 0..N-1 (el
+  integrado no consume puerto) y Cemu conserva los puertos reales por guid
+  (`0,2,3,4`), que es lo que necesita su `uuid`.
 
 ## [2.0.0] - 2026-11-06
 

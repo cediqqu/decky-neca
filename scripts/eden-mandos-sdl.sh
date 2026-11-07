@@ -529,57 +529,23 @@ if [ "$MODO_COPIAR" -eq 1 ]; then
     exit 1
 fi
 
-# Los pads virtuales de Steam (de28) comparten guid. El integrado ocupa un
-# puerto en la SDL del host, pero Eden/Cemu lo ordenan al final: renumeramos
-# los DualSense 0..N-1 y dejamos el integrado en N.
-renumerar_virtual() {
-    awk '
-        function es_ds(n) {
-            n = tolower(n)
-            if (n ~ /xbox|x-box/) return 0
-            return (n ~ /dualsense|dualshock|wireless controller/)
-        }
-        { lineas[NR] = $0 }
-        END {
-            total = 0
-            for (i = 1; i <= NR; i++) {
-                if (lineas[i] ~ /^#/ || lineas[i] == "") continue
-                n = split(lineas[i], a, /\|/)
-                if (a[2] ~ /de28/ && es_ds(a[1])) total++
-            }
-            ds = 0
-            for (i = 1; i <= NR; i++) {
-                l = lineas[i]
-                if (l ~ /^#/ || l == "") { print l; continue }
-                n = split(l, a, /\|/)
-                if (a[2] ~ /de28/) {
-                    if (es_ds(a[1])) { a[3] = ds; ds++ }
-                    else { a[3] = total }
-                }
-                out = a[1]
-                for (j = 2; j <= n; j++) out = out "|" a[j]
-                print out
-            }
-        }
-    '
-}
-
 # Gancho de pruebas: mismo formato que la salida real (sin libSDL3).
 if [ -n "${EDEN_FAKE_SDL:-}" ] && [ -r "$EDEN_FAKE_SDL" ]; then
-    { echo "#lib falsa (EDEN_FAKE_SDL)"; cat "$EDEN_FAKE_SDL"; } | renumerar_virtual
+    echo "#lib falsa (EDEN_FAKE_SDL)"
+    cat "$EDEN_FAKE_SDL"
     exit 0
 fi
 
 log "python: $PY"
-if out="$(intentar_candidatos)"; then
-    printf '%s\n' "$out" | renumerar_virtual
+if intentar_candidatos; then
     exit 0
 fi
 
 # ultimo recurso: extraer del AppImage y volver a intentar
-if extraer_sdl && out="$(intentar_candidatos)"; then
-    printf '%s\n' "$out" | renumerar_virtual
-    exit 0
+if extraer_sdl; then
+    if intentar_candidatos; then
+        exit 0
+    fi
 fi
 
 echo "no he podido cargar ninguna libSDL3." >&2

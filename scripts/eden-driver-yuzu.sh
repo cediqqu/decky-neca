@@ -508,6 +508,9 @@ detectar_mandos_sdl() {
     #   conexion (por defecto) = el orden en que los enumera el sistema
     #   mac                    = por numero de serie (un DualSense concreto es
     #                            siempre P1, aunque cambie el orden de conexion)
+    # modo: si algun dispositivo usa el guid de Valve (de28), Steam Input manda
+    if [ "$hay_de28" -eq 1 ]; then MODO_RED="virtual"; else MODO_RED="nativo"; fi
+
     if [ -n "$lista_ds" ]; then
         local orden="${ORDEN_DUALSENSE:-conexion}" lista_ord
         if [ "$orden" = "mac" ]; then
@@ -521,6 +524,20 @@ detectar_mandos_sdl() {
             lista_ord="$(printf '%s\n' $lista_ds | sort -t'|' -k3,3)"
         else
             lista_ord="$(printf '%s\n' $lista_ds | sort -n -t'|' -k1,1)"
+        fi
+        # En Steam Input el integrado virtual comparte guid y ocupa un puerto
+        # intermedio en la SDL del host; Eden lo ordena al final. Renumeramos
+        # los DualSense 0..N-1 antes de aplicar P1_SERIE.
+        if [ "$MODO_RED" = "virtual" ]; then
+            local itemv nuevo_ord="" nv=0
+            for itemv in $lista_ord; do
+                nuevo_ord="$nuevo_ord $nv|${itemv#*|}"
+                nv=$((nv + 1))
+            done
+            lista_ord="${nuevo_ord# }"
+            if [ -n "${SDL_INT_PAR:-}" ]; then
+                SDL_INT_PAR="$nv:${SDL_INT_PAR#*:}"
+            fi
         fi
         # P1_SERIE: ese mando concreto va SIEMPRE primero (P1)
         if [ -n "${P1_SERIE:-}" ]; then
@@ -542,9 +559,6 @@ detectar_mandos_sdl() {
         SDL_DS_LISTA="$(printf '%s\n' $lista_ord | awk -F'|' 'NF{printf "%s:%s ", $1, $2}')"
         SDL_DS_LISTA="${SDL_DS_LISTA% }"
     fi
-
-    # modo: si algun dispositivo usa el guid de Valve (de28), Steam Input manda
-    if [ "$hay_de28" -eq 1 ]; then MODO_RED="virtual"; else MODO_RED="nativo"; fi
 
     # ---- escenario ----
     if [ "$DS_SDL_N" -gt 0 ]; then

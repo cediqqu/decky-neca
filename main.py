@@ -790,6 +790,13 @@ def _parse_mandos(texto):
             virtuales[0]["clase"] = "Integrado"
             virtuales[0]["familia"] = "integrado"
             virtuales[0]["conexion"] = "Interno"
+
+    # Eden: los DualSense virtuales (de28) comparten guid. El plan los
+    # renumera 0..N-1 (el integrado no consume puerto); el panel debe usar
+    # los mismos puertos para casar jugador <-> tarjeta.
+    vds = [m for m in mandos if m["clase"] == "DualSense" and m["virtual"]]
+    for i, m in enumerate(vds):
+        m["puerto"] = str(i)
     return mandos
 
 
