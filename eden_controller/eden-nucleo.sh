@@ -74,19 +74,51 @@ NUCLEO_RAW=()
 # Dolphin no usa el indice global: asigna el id por (backend, nombre).
 NUCLEO_IND_NOMBRE=()
 
+# De donde se enumera SDL: host | flatpak (Dolphin dentro de su sandbox).
+NUCLEO_SDL_MODO="${NUCLEO_SDL_MODO:-}"
+NUCLEO_SDL_FLATPAK="${NUCLEO_SDL_FLATPAK:-}"
+NUCLEO_SDL_FUENTE=""
+
 nucleo_mandos() {
     NUCLEO_RAW=()
     NUCLEO_IND_NOMBRE=()
+    NUCLEO_SDL_FUENTE=""
     local modo="${1:-eden}" helper out err tmp errc
     SDL_OK=0; SDL_ERR=""; SDL_LIB=""
     helper="$(nucleo_helper_sdl)" || { SDL_ERR="no encuentro eden-mandos-sdl.sh"; return 1; }
     tmp="$(mktemp "${TMPDIR:-/tmp}/eca-sdl.XXXXXX" 2>/dev/null || echo "/tmp/eca-sdl.$$")"
     if [ "$modo" = "cemu" ]; then
         out="$(SDL_FUENTE=sistema SDL_GUID_MODO=cemu bash "$helper" 2>"$tmp")"
+        errc=$?
+        NUCLEO_SDL_FUENTE="host"
+    elif [ "${NUCLEO_SDL_MODO:-eden}" = "dolphin" ] \
+         && [ -n "${NUCLEO_SDL_FLATPAK:-}" ] \
+         && command -v flatpak >/dev/null 2>&1; then
+        # Dolphin usa SU SDL (la del Flatpak). Enumerar aqui dentro es lo unico
+        # que garantiza los mismos nombres e ids que ve el emulador.
+        out="$(flatpak run --command=sh --filesystem=home "$NUCLEO_SDL_FLATPAK" -c '
+            for lib in /app/lib/libSDL3.so.0 /usr/lib/x86_64-linux-gnu/libSDL3.so.0; do
+                [ -f "$lib" ] || continue
+                EDEN_SDL_LIB="$lib" SDL_FUENTE=sistema SDL_HINTS_MODO=dolphin bash "$1"
+                exit $?
+            done
+            exit 127
+        ' sh "$helper" 2>"$tmp")"
+        errc=$?
+        NUCLEO_SDL_FUENTE="flatpak"
+        if [ "$errc" -ne 0 ]; then
+            # Si el Flatpak no puede (sin SDL3, sin python...), seguimos con la
+            # SDL del host, pero dejando claro en el plan/log que es un fallback.
+            out="$(SDL_FUENTE=sistema SDL_HINTS_MODO=dolphin bash "$helper" 2>"$tmp")"
+            errc=$?
+            NUCLEO_SDL_FUENTE="host"
+            NUCLEO_AVISOS+=("no pude enumerar dentro del Flatpak; uso la SDL del host")
+        fi
     else
-        out="$(bash "$helper" 2>"$tmp")"
+        out="$(SDL_FUENTE=sistema SDL_HINTS_MODO="${NUCLEO_SDL_MODO:-eden}" bash "$helper" 2>"$tmp")"
+        errc=$?
+        NUCLEO_SDL_FUENTE="host"
     fi
-    errc=$?
     err="$(head -n 1 "$tmp" 2>/dev/null | sed 's/  */ /g' | cut -c1-160)"
     rm -f "$tmp"
     if [ "$errc" -ne 0 ]; then
@@ -352,6 +384,7 @@ nucleo_guardar_plan() { # $1 = sistema, $2 = modo
         printf 'max=%s\n' "${JUGADORES_MAX:-?}"
         printf 'sdl=%s\n' "$([ "$SDL_OK" -eq 1 ] && echo ok || echo error)"
         printf 'lib=%s\n' "${SDL_LIB:-}"
+        printf 'fuente=%s\n' "${NUCLEO_SDL_FUENTE:-?}"
         printf 'detectados=%s\n' "${#NUCLEO_TODOS[@]}"
         for i in "${!PLAN_UUID[@]}"; do
             printf 'mando=%s|%s|%s\n' "$((i + 1))" "${PLAN_SDL[$i]}" "${PLAN_CLASE[$i]}"
@@ -374,7 +407,7 @@ nucleo_registrar() { # $1 = sistema, $2 = modo
         ver="$(sed -n 's/^version:[[:space:]]*//p' "$vf" | head -n 1)"
         hash="$(sed -n 's/^hash:[[:space:]]*//p' "$vf" | head -n 1)"
     fi
-    nucleo_log "$1 $2: version=${ver:-?} hash=${hash:-?} SDL=$([ "$SDL_OK" -eq 1 ] && echo ok || echo "error(${SDL_ERR:-?})") lib=${SDL_LIB:-?} detectados=${#NUCLEO_TODOS[@]} max=${JUGADORES_MAX:-?}"
+    nucleo_log "$1 $2: version=${ver:-?} hash=${hash:-?} fuente=${NUCLEO_SDL_FUENTE:-?} SDL=$([ "$SDL_OK" -eq 1 ] && echo ok || echo "error(${SDL_ERR:-?})") lib=${SDL_LIB:-?} detectados=${#NUCLEO_TODOS[@]} max=${JUGADORES_MAX:-?}"
     for i in "${!PLAN_UUID[@]}"; do
         nucleo_log "$1 $2: Mando $((i + 1)) = ${PLAN_SDL[$i]} [${PLAN_CLASE[$i]}] uuid=${PLAN_UUID[$i]}"
     done

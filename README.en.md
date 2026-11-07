@@ -231,9 +231,10 @@ templates, backups and `.conf` live there.
 
 ### Log and diagnostics
 
-- **Ver log** (View log) opens `log.txt` in a scrollable window. Each apply
-  records the script version and hash, the written `Device` lines, `SIDevice`,
-  `Source` and any warnings.
+- **Ver log** (View log) opens `log.txt` in a scrollable window (D-pad, stick
+  or touch). Each apply records the script version and hash, the SDL source
+  (`fuente=flatpak` when Dolphin was enumerated inside its Flatpak), the written
+  `Device` lines, `SIDevice`, `Source` and any warnings.
 - If Dolphin or Cemu is open, nothing is written and the log says so
   (`en ejecucion, no aplico`). Close it completely and launch again.
 - After installing or updating scripts, the panel shows a notice; close the
@@ -262,6 +263,8 @@ templates, backups and `.conf` live there.
   disabled for ES-DE.
 - **Dolphin and Cemu do not create bindings**: they only change the device. If
   EmuDeck did not leave a controller configuration, there is nothing to assign.
+  The `GC_base`/`GC_nintendo_layout` profiles are not loaded either: they are
+  manual templates, and loading one overwrites `Device`, so apply again after.
 - Tested on **ROG Xbox Ally X**. On other handhelds, `INTEGRADO_PATRON` may need
   adjustment in the `.conf`.
 

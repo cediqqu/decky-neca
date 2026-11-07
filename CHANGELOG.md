@@ -21,6 +21,12 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
   (con un DualSense y el integrado, ambos son `id 0` de su nombre). El driver
   ahora usa el n-ésimo con ese mismo nombre; antes escribía `SDL/1/Asus…` y
   Dolphin esperaba `SDL/0/Asus…`.
+- **Dolphin enumera dentro de su Flatpak.** Dolphin identifica por nombre+id de
+  **su** SDL (Flatpak 3.2.30), no de la del host (3.4.12). El driver ahora
+  ejecuta el helper dentro de `org.DolphinEmu.dolphin-emu` con
+  `SDL_HINTS_MODO=dolphin` (sin forzar el HIDAPI de Xbox). Así los `Device`
+  coinciden con los mandos que ve Dolphin. Si el Flatpak falla, cae al host y
+  lo avisa; el log registra `fuente=flatpak|host`.
 - **El log muestra los `Device` escritos.** Cada aplicar deja en `log.txt` el
   `GCPadN Device`, `SIDevice0..3`, `Source` y `Hotkeys` resultantes, para poder
   verlo desde **Ver log** sin abrir una consola.
@@ -36,8 +42,9 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
   atajos del jugador 1, con backup, escritura atómica y validación.
 - **«Aplicar todo» en el panel.** Escribe Eden, Dolphin y Cemu de una vez, sin
   depender del hook ni de lanzar un juego.
-- **Log con scroll.** **Ver log** abre una ventana desplazable (D-pad, stick o
-  dedo) en lugar de la paginación por botones. Devuelve hasta 800 líneas.
+- **Log con scroll.** **Ver log** abre una ventana desplazable con D-pad,
+  stick o dedo. El texto ya no usa `ScrollPanel` (no reaccionaba al D-pad):
+  mueve `scrollTop` a mano. Devuelve hasta 800 líneas.
 - **Aviso de scripts recién instalados.** Si el plugin acaba de actualizar los
   scripts, el panel avisa de que hay que cerrar el juego y relanzarlo (o pulsar
   **Aplicar todo**). El aviso se limpia al aplicar.

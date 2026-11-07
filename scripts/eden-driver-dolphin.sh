@@ -74,7 +74,23 @@ d_en_ejecucion() {
 
 # ---------------------------------------------------------------- mandos ----
 # La lista y el plan los pone el nucleo (igual que Eden y Cemu).
-d_planificar() { nucleo_planificar eden; }
+# Dolphin identifica por nombre+id de SU SDL: si la config esta en un Flatpak,
+# hay que enumerar dentro de ese Flatpak para ver los mismos dispositivos.
+d_planificar() {
+    local dir resto
+    dir="$(d_dir 2>/dev/null || true)"
+    NUCLEO_SDL_MODO="dolphin"
+    case "$dir" in
+        "$HOME/.var/app/"*)
+            resto="${dir#"$HOME/.var/app/"}"
+            NUCLEO_SDL_FLATPAK="${resto%%/*}"
+            ;;
+        *)
+            NUCLEO_SDL_FLATPAK=""
+            ;;
+    esac
+    nucleo_planificar eden
+}
 
 # Devuelve el valor de Device para el jugador N (1..).
 # OJO: Dolphin no usa el indice global de SDL; asigna el id por nombre de

@@ -118,6 +118,17 @@ jugadores sobrantes quedan `connected=false`.
   el índice global de SDL: el primer mando de cada nombre es `0`. Por eso el
   driver usa `PLAN_INDICE_NOMBRE` y no `PLAN_INDICE`. Con un DualSense y el
   integrado, el integrado debe ser `SDL/0/Asus…`, no `SDL/1/Asus…`.
+- **Dolphin corre en Flatpak y usa SU SDL** (3.2.30), distinta de la del host
+  (3.4.12). Los nombres/orden pueden no coincidir. El driver pone
+  `NUCLEO_SDL_MODO=dolphin` y `NUCLEO_SDL_FLATPAK=<app>`; `nucleo_mandos`
+  ejecuta `eden-mandos-sdl.sh` **dentro del Flatpak** con `SDL_LIB` del sandbox
+  y `SDL_HINTS_MODO=dolphin` (sin forzar el HIDAPI de Xbox). Si falla, cae al
+  host y lo avisa; `log.txt` registra `fuente=flatpak|host`. Sin esto, Dolphin
+  guarda nombres que no corresponden a los mandos físicos.
+- El driver **no crea bindings ni carga perfiles**: los `GC_base`/`Wiimote*` de
+  `Profiles/` son plantillas manuales. Solo cambia `Device`, `SIDevice`,
+  `Source` y `Hotkeys`. Si el usuario carga un perfil, sobrescribe `Device` y
+  hay que volver a aplicar.
 - `WiimoteNew.ini` no trae líneas `Source`. Dolphin por defecto pone
   **Wiimote1 = Emulated (1)** y **Wiimote2..4 = None (0)**. Hay que **insertar**
   `Source = 1` en los Wiimotes del plan (y `0` para el resto); `2` es un Wiimote

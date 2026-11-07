@@ -898,6 +898,54 @@ async def main():
     check("Aplicar todo quita el aviso de scripts",
           est["scripts_nuevos"] is False)
 
+    # Enumeracion dentro del Flatpak (Dolphin usa su propia SDL)
+    escribir_dolphin()
+    flat_dol = os.path.join(home, ".var", "app",
+                            "org.DolphinEmu.dolphin-emu", "config",
+                            "dolphin-emu")
+    os.makedirs(flat_dol, exist_ok=True)
+    for nombre in ORIG:
+        shutil.copyfile(os.path.join(dol, nombre),
+                        os.path.join(flat_dol, nombre))
+
+    fakebin = os.path.join(tmp, "bin")
+    os.makedirs(fakebin, exist_ok=True)
+    fp = os.path.join(fakebin, "flatpak")
+    with open(fp, "w", encoding="utf-8") as fh:
+        fh.write("#!/bin/sh\n"
+                 "if [ \"${FAKE_FLATPAK_FAIL:-}\" = \"1\" ]; then exit 1; fi\n"
+                 "last=\"\"\n"
+                 "for a in \"$@\"; do last=\"$a\"; done\n"
+                 "exec env SDL_HINTS_MODO=dolphin bash \"$last\"\n")
+    os.chmod(fp, 0o755)
+    env_dol["PATH"] = fakebin + ":" + env_dol.get("PATH", "")
+    env_dol["EDEN_FAKE_SDL"] = fake_dol
+
+    r = correr_dolphin("--dry-run", maximo=2)
+    check("Flatpak: dry-run ok", r.returncode == 0, r.stdout + r.stderr)
+    with open(os.path.join(base, "log.txt"), encoding="utf-8") as fh:
+        log = fh.read()
+    lineas = [l for l in log.splitlines()
+              if "dolphin dry-run:" in l and "fuente=" in l]
+    check("Flatpak: se enumera dentro del Flatpak",
+          bool(lineas) and "fuente=flatpak" in lineas[-1], lineas[-1:])
+
+    env_dol["FAKE_FLATPAK_FAIL"] = "1"
+    r = correr_dolphin("--dry-run", maximo=2)
+    check("Flatpak: fallback ok", r.returncode == 0, r.stdout + r.stderr)
+    with open(os.path.join(base, "log.txt"), encoding="utf-8") as fh:
+        log = fh.read()
+    lineas = [l for l in log.splitlines()
+              if "dolphin dry-run:" in l and "fuente=" in l]
+    check("Flatpak: fallback al host",
+          bool(lineas) and "fuente=host" in lineas[-1], lineas[-1:])
+    check("Flatpak: avisa del fallback",
+          "Flatpak" in log and "host" in log, log[-300:])
+    env_dol.pop("FAKE_FLATPAK_FAIL", None)
+
+    shutil.rmtree(os.path.join(home, ".var"), ignore_errors=True)
+    env_dol["PATH"] = env_dol["PATH"].split(":", 1)[-1]
+
     # adaptador GC real: no se pisa SIDevice0 = 12
     escribir_dolphin(12)
     r = correr_dolphin(maximo=1)

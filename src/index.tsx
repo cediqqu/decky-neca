@@ -7,10 +7,11 @@ import {
   DialogButton,
   DialogButtonPrimary,
   DialogFooter,
+  GamepadButton,
+  type GamepadEvent,
   ModalRoot,
   PanelSection,
   PanelSectionRow,
-  ScrollPanel,
   showModal,
   staticClasses,
 } from "@decky/ui";
@@ -1055,6 +1056,28 @@ function VentanaTexto(props: {
   onCerrar: () => void;
 }) {
   const texto = (props.texto || "").replace(/\s+$/, "");
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Scroll con D-pad/stick. El texto no tiene hijos enfocables, asi que
+  // ScrollPanel no se movia; movemos scrollTop a mano.
+  const mover = (evt: GamepadEvent) => {
+    const boton = evt.detail?.button;
+    const el = ref.current;
+    if (!el) return;
+    const paso = Math.max(40, Math.floor(el.clientHeight * 0.8));
+    if (boton === GamepadButton.DIR_UP) {
+      if (el.scrollTop > 0) {
+        el.scrollTop -= paso;
+        evt.stopPropagation();
+      }
+    } else if (boton === GamepadButton.DIR_DOWN) {
+      if (el.scrollTop + el.clientHeight < el.scrollHeight - 1) {
+        el.scrollTop += paso;
+        evt.stopPropagation();
+      }
+    }
+  };
+
   return (
     <ModalRoot strTitle={props.titulo} bAllowFullSize onCancel={props.onCerrar}>
       <DialogBody
@@ -1067,22 +1090,28 @@ function VentanaTexto(props: {
           flexDirection: "column",
         }}
       >
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <ScrollPanel>
-            <div
-              style={{
-                padding: "12px 16px 16px",
-                fontFamily: "monospace",
-                fontSize: "0.85em",
-                lineHeight: 1.35,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-            >
-              {texto || "(vacio)"}
-            </div>
-          </ScrollPanel>
-        </div>
+        <Focusable
+          preferredFocus
+          onGamepadDirection={mover}
+          style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}
+        >
+          <div
+            ref={ref}
+            style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              padding: "12px 16px 16px",
+              fontFamily: "monospace",
+              fontSize: "0.85em",
+              lineHeight: 1.35,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+            }}
+          >
+            {texto || "(vacio)"}
+          </div>
+        </Focusable>
       </DialogBody>
       <DialogFooter>
         <DialogButtonPrimary onClick={props.onCerrar}>Cerrar</DialogButtonPrimary>

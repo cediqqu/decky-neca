@@ -220,9 +220,10 @@ backups y el `.conf`.
 
 ### Log y diagnóstico
 
-- **Ver log** abre `log.txt` en una ventana con scroll. Cada aplicar deja la
-  versión y el hash de los scripts, los `Device` escritos, `SIDevice`, `Source`
-  y los avisos.
+- **Ver log** abre `log.txt` en una ventana con scroll (D-pad, stick o dedo).
+  Cada aplicar deja la versión y el hash de los scripts, la fuente de SDL
+  (`fuente=flatpak` si Dolphin se enumeró dentro de su Flatpak), los `Device`
+  escritos, `SIDevice`, `Source` y los avisos.
 - Si Dolphin o Cemu están abiertos, no se escribe y queda en el log
   (`en ejecucion, no aplico`). Ciérralos del todo y vuelve a lanzar.
 - Tras instalar o actualizar scripts, el panel avisa; cierra el juego y vuelve
@@ -251,7 +252,9 @@ backups y el `.conf`.
   desactivado para ES-DE.
 - **Dolphin y Cemu no crean bindings**: Dolphin cambia el dispositivo y activa
   los puertos (`SIDevice`/`Source`); Cemu cambia el dispositivo. Si EmuDeck no
-  dejó los bindings, no hay nada que asignar.
+  dejó los bindings, no hay nada que asignar. Tampoco se cargan los perfiles
+  `GC_base`/`GC_nintendo_layout`: son plantillas manuales; si cargas una,
+  sobrescribe el `Device` y hay que volver a aplicar.
 - En **Dolphin**, si un puerto usa el **adaptador GC real** (`SIDeviceN = 12`),
   N.E.C.A no lo toca y lo avisa: en ese puerto manda el adaptador.
 - Probado en **ROG Xbox Ally X**. En otras handhelds, `INTEGRADO_PATRON` puede

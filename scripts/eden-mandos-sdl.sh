@@ -104,6 +104,13 @@ HINTS = [
     ("SDL_JOYSTICK_ENHANCED_REPORTS", "1"),
     ("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1"),
 ]
+# Dolphin no desactiva el HIDAPI de Xbox; estos son sus defaults relevantes.
+HINTS_DOLPHIN = [
+    ("SDL_JOYSTICK_ENHANCED_REPORTS", "1"),
+    ("SDL_JOYSTICK_HIDAPI_PS5_PLAYER_LED", "0"),
+    ("SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS", "1"),
+    ("SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS", "0"),
+]
 # Nombres que da Eden segun el tipo de SDL (su funcion GetControllerName)
 TIPOS = {2: "Xbox 360 Controller", 3: "Xbox One Controller", 4: "DualShock 3 Controller",
          5: "DualShock 4 Controller", 6: "DualSense Controller"}
@@ -174,7 +181,14 @@ except Exception:
     pass
 sys.stdout.write("#lib %s version %s\n" % (lib, version))
 
-for k, v in HINTS:
+# Para Dolphin no forzamos los hints de Eden: Dolphin deja el HIDAPI de
+# Xbox activado y usa sus propios defaults. Con SDL_HINTS_MODO=dolphin nos
+# limitamos a leer los dispositivos igual que los ve Dolphin.
+if os.environ.get("SDL_HINTS_MODO", "eden").lower() == "dolphin":
+    hints = HINTS_DOLPHIN
+else:
+    hints = HINTS
+for k, v in hints:
     try:
         sdl.SDL_SetHint(k.encode(), v.encode())
     except Exception:
