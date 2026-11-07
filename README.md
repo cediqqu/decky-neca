@@ -113,10 +113,9 @@ vienes de E.C.A, desinstala primero el plugin viejo.
    1,5 s) sobre su tarjeta. La **★** marca el Player 1 actual.
 6. El icono de **Asignación** en la cabecera de **Mandos** abre el último plan de
    Cemu y Dolphin. **Comprobar ahora** lo recalcula sin escribir nada.
-7. En **Ajustes** están **Aplicar** (escribe Eden), **Aplicar todo** (Eden,
-   Dolphin y Cemu), **Restaurar** (los tres) y **Ver log** (con scroll).
-   Dolphin y Cemu se aplican también al lanzar el juego, o a mano con
-   `--sistema gc` y `--sistema wiiu`.
+7. En **Ajustes** están **Aplicar** (Eden, Dolphin y Cemu), **Restaurar**
+   (los tres) y **Ver log** (con scroll). El hook también aplica al lanzar el
+   juego; a mano puedes usar `--sistema gc` y `--sistema wiiu`.
 
 Cada tarjeta muestra el **icono** de la familia (PlayStation, Xbox, Switch, Steam
 o integrado), la **conexión** (Bluetooth, USB, Interno o Virtual) y la **MAC**
@@ -227,13 +226,12 @@ backups y el `.conf`.
 - Si Dolphin o Cemu están abiertos, no se escribe y queda en el log
   (`en ejecucion, no aplico`). Ciérralos del todo y vuelve a lanzar.
 - Tras instalar o actualizar scripts, el panel avisa; cierra el juego y vuelve
-  a abrirlo, o pulsa **Aplicar todo**.
+  a abrirlo, o pulsa **Aplicar**.
 
 ## Límites conocidos
 
-- **Aplicar** escribe solo Eden; **Aplicar todo** escribe Eden, Dolphin y Cemu.
-  Dolphin y Cemu también se aplican al lanzar el juego desde ES-DE o con
-  `--sistema gc|wiiu`.
+- **Aplicar** escribe Eden, Dolphin y Cemu. El hook también los aplica al
+  lanzar el juego desde ES-DE, o a mano con `--sistema gc|wiiu`.
 - **Restaurar desde el panel afecta a los tres emuladores.** Para deshacer solo
   el último aplicar de Dolphin o Cemu, usa `--restore latest`.
 - Solo se puede fijar **un mando concreto como Player 1** (`P1_SERIE`). El resto

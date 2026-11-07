@@ -1055,7 +1055,7 @@ class Plugin:
         return estado
 
     async def aplicar(self):
-        """Escribe qt-config.ini segun las preferencias guardadas."""
+        """Escribe solo Eden (API/legado; el panel usa aplicar_todo)."""
         ok, _ = _instalado()
         if not ok:
             return {"exit": 4, "salida": "Los scripts no estan instalados."}

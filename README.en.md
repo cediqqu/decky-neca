@@ -121,10 +121,9 @@ come from E.C.A, uninstall the old plugin first.
 6. The **Asignación** (Assignment) icon in the **Mandos** header shows the last
    Cemu and Dolphin plan. **Comprobar ahora** (Check now) recalculates it without
    writing anything.
-7. **Ajustes** (Settings) contains **Aplicar** (Apply, writes Eden),
-   **Aplicar todo** (Apply all: Eden, Dolphin and Cemu), **Restaurar**
-   (Restore, all three) and **Ver log** (View log, scrollable). Dolphin and Cemu
-   are also applied when the game launches, or manually with `--sistema gc` and
+7. **Ajustes** (Settings) contains **Aplicar** (Apply: Eden, Dolphin and Cemu),
+   **Restaurar** (Restore, all three) and **Ver log** (View log, scrollable).
+   The hook also applies on game launch; manually use `--sistema gc` and
    `--sistema wiiu`.
 
 Each card shows the family **icon** (PlayStation, Xbox, Switch, Steam or
@@ -238,13 +237,12 @@ templates, backups and `.conf` live there.
 - If Dolphin or Cemu is open, nothing is written and the log says so
   (`en ejecucion, no aplico`). Close it completely and launch again.
 - After installing or updating scripts, the panel shows a notice; close the
-  game and relaunch, or press **Aplicar todo** (Apply all).
+  game and relaunch, or press **Aplicar** (Apply).
 
 ## Known limits
 
-- **Aplicar** writes only Eden; **Aplicar todo** writes Eden, Dolphin and Cemu.
-  Dolphin and Cemu are also applied when the game launches from ES-DE or with
-  `--sistema gc|wiiu`.
+- **Aplicar** writes Eden, Dolphin and Cemu. The hook also applies them when
+  the game launches from ES-DE, or manually with `--sistema gc|wiiu`.
 - **Restore from the panel affects all three emulators.** To undo only the
   last Dolphin or Cemu apply, use `--restore latest`.
 - Only **one specific controller can be pinned as Player 1** (`P1_SERIE`). The

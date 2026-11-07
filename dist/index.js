@@ -927,13 +927,8 @@ function Content() {
         return orden[(i + 1) % orden.length];
     };
     const aplicar = () => conBloqueo(async () => {
-        const r = await call("aplicar");
-        abrirVentana(`Aplicar: ${r.mensaje ?? "salida " + r.exit}`, r.salida);
-        await refrescar();
-    });
-    const aplicarTodo = () => conBloqueo(async () => {
         const r = await call("aplicar_todo");
-        abrirVentana(r.ok ? "Aplicar todo: hecho" : "Aplicar todo: con problemas", r.salida);
+        abrirVentana(r.ok ? "Aplicar: hecho" : "Aplicar: con problemas", r.salida);
         await refrescar();
     });
     const verLog = () => conBloqueo(async () => {
@@ -984,7 +979,7 @@ function Content() {
                                 ? "Reactivar hook"
                                 : est.reparar
                                     ? "Reparar instalación"
-                                    : "Actualizar scripts", onClick: instalar }) }) })) : null, est.scripts_nuevos ? (SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(Aviso, { tono: "info", children: "Scripts reci\u00E9n instalados. Cierra el juego y vuelve a abrirlo (o pulsa \u00ABAplicar todo\u00BB) para que se aplique la versi\u00F3n nueva." }) }) })) : null, est.esde === false ? (SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(Aviso, { tono: "atencion", children: "ES-DE: activa \u00ABOther settings \u2192 Enable custom event scripts\u00BB. Sin eso no se aplica al lanzar el juego." }) }) })) : null, SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
+                                    : "Actualizar scripts", onClick: instalar }) }) })) : null, est.scripts_nuevos ? (SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(Aviso, { tono: "info", children: "Scripts reci\u00E9n instalados. Cierra el juego y vuelve a abrirlo (o pulsa \u00ABAplicar\u00BB) para que se aplique la versi\u00F3n nueva." }) }) })) : null, est.esde === false ? (SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(Aviso, { tono: "atencion", children: "ES-DE: activa \u00ABOther settings \u2192 Enable custom event scripts\u00BB. Sin eso no se aplica al lanzar el juego." }) }) })) : null, SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
                             display: "flex",
                             flexWrap: "wrap",
                             gap: "6px",
@@ -1023,7 +1018,7 @@ function Content() {
                                 gap: "6px",
                                 fontSize: "0.68em",
                                 opacity: 0.6,
-                            }, children: [SP_JSX.jsx(GlifoA, {}), " vibrar \u00B7 dos toques seguidos = mando principal"] }) })) : null] }), SP_JSX.jsx(Seccion, { titulo: "Ajustes", color: C.violeta, icono: SP_JSX.jsx(FaSlidersH, { size: 12 }), abierta: Boolean(abiertas.ajustes), onToggle: () => toggle("ajustes"), children: SP_JSX.jsxs(Rejilla, { children: [SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.verde, icono: SP_JSX.jsx(FaCheck, { size: 17 }), anim: "pop", titulo: "Aplicar", detalle: "Eden", onClick: aplicar }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.azul, icono: SP_JSX.jsx(FaSyncAlt, { size: 16 }), anim: "giro", titulo: "Aplicar todo", detalle: "Los 3", onClick: aplicarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.rojo, icono: SP_JSX.jsx(FaUndo, { size: 16 }), anim: "giro", titulo: "Restaurar", detalle: "Todo", onClick: restaurarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.turquesa, icono: SP_JSX.jsx(FaFileAlt, { size: 16 }), anim: "barrido", titulo: "Ver log", detalle: "log.txt", onClick: verLog }) })] }) })] }));
+                            }, children: [SP_JSX.jsx(GlifoA, {}), " vibrar \u00B7 dos toques seguidos = mando principal"] }) })) : null] }), SP_JSX.jsx(Seccion, { titulo: "Ajustes", color: C.violeta, icono: SP_JSX.jsx(FaSlidersH, { size: 12 }), abierta: Boolean(abiertas.ajustes), onToggle: () => toggle("ajustes"), children: SP_JSX.jsxs(Rejilla, { children: [SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.verde, icono: SP_JSX.jsx(FaCheck, { size: 17 }), anim: "pop", titulo: "Aplicar", detalle: "Los 3", onClick: aplicar }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.rojo, icono: SP_JSX.jsx(FaUndo, { size: 16 }), anim: "giro", titulo: "Restaurar", detalle: "Todo", onClick: restaurarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.turquesa, icono: SP_JSX.jsx(FaFileAlt, { size: 16 }), anim: "barrido", titulo: "Ver log", detalle: "log.txt", onClick: verLog }) })] }) })] }));
 }
 var index = definePlugin(() => {
     return {

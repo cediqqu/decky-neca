@@ -1407,16 +1407,9 @@ function Content() {
 
   const aplicar = () =>
     conBloqueo(async () => {
-      const r = await call<[], Salida>("aplicar");
-      abrirVentana(`Aplicar: ${r.mensaje ?? "salida " + r.exit}`, r.salida);
-      await refrescar();
-    });
-
-  const aplicarTodo = () =>
-    conBloqueo(async () => {
       const r = await call<[], Salida & { ok: boolean }>("aplicar_todo");
       abrirVentana(
-        r.ok ? "Aplicar todo: hecho" : "Aplicar todo: con problemas",
+        r.ok ? "Aplicar: hecho" : "Aplicar: con problemas",
         r.salida
       );
       await refrescar();
@@ -1536,7 +1529,7 @@ function Content() {
           <PanelSectionRow>
             <Aviso tono="info">
               Scripts recién instalados. Cierra el juego y vuelve a abrirlo (o
-              pulsa «Aplicar todo») para que se aplique la versión nueva.
+              pulsa «Aplicar») para que se aplique la versión nueva.
             </Aviso>
           </PanelSectionRow>
         </PanelSection>
@@ -1770,18 +1763,8 @@ function Content() {
               icono={<FaCheck size={17} />}
               anim="pop"
               titulo="Aplicar"
-              detalle="Eden"
-              onClick={aplicar}
-            />
-          </div>
-          <div className="ede-celda">
-            <TarjetaAccion
-              color={C.azul}
-              icono={<FaSyncAlt size={16} />}
-              anim="giro"
-              titulo="Aplicar todo"
               detalle="Los 3"
-              onClick={aplicarTodo}
+              onClick={aplicar}
             />
           </div>
           <div className="ede-celda">

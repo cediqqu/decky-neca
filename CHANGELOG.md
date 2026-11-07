@@ -40,14 +40,15 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 - **Dolphin usa `Dolphin.ini` y `Hotkeys.ini`.** Además de `GCPadNew.ini` y
   `WiimoteNew.ini`, el driver activa los puertos de GameCube y ajusta los
   atajos del jugador 1, con backup, escritura atómica y validación.
-- **«Aplicar todo» en el panel.** Escribe Eden, Dolphin y Cemu de una vez, sin
-  depender del hook ni de lanzar un juego.
+- **Un solo «Aplicar»** en el panel. Escribe Eden, Dolphin y Cemu de una vez,
+  sin depender del hook ni de lanzar un juego; se elimina el botón suelto de
+  Eden.
 - **Log con scroll.** **Ver log** abre una ventana desplazable con D-pad,
   stick o dedo. El texto ya no usa `ScrollPanel` (no reaccionaba al D-pad):
   mueve `scrollTop` a mano. Devuelve hasta 800 líneas.
 - **Aviso de scripts recién instalados.** Si el plugin acaba de actualizar los
   scripts, el panel avisa de que hay que cerrar el juego y relanzarlo (o pulsar
-  **Aplicar todo**). El aviso se limpia al aplicar.
+  **Aplicar**). El aviso se limpia al aplicar.
 - **Versión y hash en el log.** Cada aplicar registra `version=`, `hash=`, los
   `Device` escritos, `SIDevice`, `Source` y `Hotkeys`.
 - **Aviso de emulador abierto en el log.** Si Dolphin o Cemu están en ejecución,
