@@ -41,9 +41,8 @@
 #     bash eden-mandos-sdl.sh --limpiar    # borra la cache de ~/eden-autoconfig/sdl
 #
 #  Salida (una linea por mando, separada por "|"):
-#     NOMBRE_EDEN|GUID|PUERTO|TIPO|ES_GAMEPAD|NOMBRE_SDL|SERIE|INDICE_SDL
-#     (PUERTO = "n-esimo mando con ese GUID", lo que guarda Eden;
-#      INDICE_SDL = indice global de SDL, lo que usa Dolphin: "SDL/<indice>/...")
+#     NOMBRE_EDEN|GUID|PUERTO|TIPO|ES_GAMEPAD|NOMBRE_SDL|SERIE
+#     (PUERTO = "n-esimo mando con ese GUID", lo que guarda Eden)
 #  La primera linea empieza por "#" e indica la lib y su version.
 #  NO modifica nada del sistema.
 # =============================================================================
@@ -103,13 +102,6 @@ HINTS = [
     ("SDL_JOYSTICK_HIDAPI_SWITCH", "1"),
     ("SDL_JOYSTICK_ENHANCED_REPORTS", "1"),
     ("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1"),
-]
-# Dolphin no desactiva el HIDAPI de Xbox; estos son sus defaults relevantes.
-HINTS_DOLPHIN = [
-    ("SDL_JOYSTICK_ENHANCED_REPORTS", "1"),
-    ("SDL_JOYSTICK_HIDAPI_PS5_PLAYER_LED", "0"),
-    ("SDL_JOYSTICK_HIDAPI_COMBINE_JOY_CONS", "1"),
-    ("SDL_JOYSTICK_HIDAPI_VERTICAL_JOY_CONS", "0"),
 ]
 # Nombres que da Eden segun el tipo de SDL (su funcion GetControllerName)
 TIPOS = {2: "Xbox 360 Controller", 3: "Xbox One Controller", 4: "DualShock 3 Controller",
@@ -181,14 +173,7 @@ except Exception:
     pass
 sys.stdout.write("#lib %s version %s\n" % (lib, version))
 
-# Para Dolphin no forzamos los hints de Eden: Dolphin deja el HIDAPI de
-# Xbox activado y usa sus propios defaults. Con SDL_HINTS_MODO=dolphin nos
-# limitamos a leer los dispositivos igual que los ve Dolphin.
-if os.environ.get("SDL_HINTS_MODO", "eden").lower() == "dolphin":
-    hints = HINTS_DOLPHIN
-else:
-    hints = HINTS
-for k, v in hints:
+for k, v in HINTS:
     try:
         sdl.SDL_SetHint(k.encode(), v.encode())
     except Exception:
@@ -271,9 +256,8 @@ for i in range(count.value):
         p = puertos.get(guid, 0)
         if es_gp or not solo_gp:
             puertos[guid] = p + 1
-        # 8.o campo: indice global de SDL (Dolphin usa "SDL/<indice>/<nombre>")
         out = [nombre, guid, str(p), str(tipo), "1" if es_gp else "0",
-               nombre_sdl, serial, str(i)]
+               nombre_sdl, serial]
         sys.stdout.write("|".join(x.replace("|", " ").replace("\n", " ") for x in out) + "\n")
     except Exception as e:
         sys.stderr.write("aviso: fallo leyendo el mando %d: %s\n" % (i, e))

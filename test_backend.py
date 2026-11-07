@@ -82,8 +82,7 @@ async def main():
     r = await mod.Plugin().instalar_scripts()
     check("instalar ok", r["ok"] is True, r["salida"])
     for f in ("eden-autoconfig.sh", "eden-mandos-sdl.sh",
-              "eden-mandos-evdev.sh", "eden-diagnostico.sh",
-              "eden-autoconfig.conf"):
+              "eden-diagnostico.sh", "eden-autoconfig.conf"):
         check("existe %s" % f, os.path.isfile(os.path.join(base, f)))
     check("hook de ES-DE",
           os.path.isfile(os.path.join(home, "ES-DE", "scripts", "game-start",
@@ -133,7 +132,6 @@ async def main():
     check("mando 1 del plan", plan["mandos"][0]["nombre"].startswith("DualSense"),
           plan["mandos"][0])
     check("aviso del plan", plan["aviso"] == ["el integrado no entra"], plan["aviso"])
-    check("Dolphin sin plan", est["planes"]["dolphin"] is None)
     check("datos de la maquina", isinstance(est.get("maquina"), dict)
           and set(est["maquina"]) == {"vendor", "producto", "placa"},
           est.get("maquina"))
@@ -563,22 +561,7 @@ async def main():
         antes = fh.read()
     check("habia bloque del plugin", mod.BEGIN in antes)
 
-    # copias de Dolphin y Cemu para comprobar que tambien se restauran
-    dol = os.path.join(home, ".config", "dolphin-emu")
-    os.makedirs(dol, exist_ok=True)
-    with open(os.path.join(dol, "GCPadNew.ini"), "w", encoding="utf-8") as fh:
-        fh.write("[GCPad1]\nDevice = NUEVO\n")
-    dbk = os.path.join(bk, "dolphin")
-    os.makedirs(dbk, exist_ok=True)
-    viejo_dol = os.path.join(dbk, "GCPadNew.ini.20260101-000000")
-    nuevo_dol = os.path.join(dbk, "GCPadNew.ini.20260102-000000")
-    with open(viejo_dol, "w", encoding="utf-8") as fh:
-        fh.write("[GCPad1]\nDevice = VIEJO\n")
-    with open(nuevo_dol, "w", encoding="utf-8") as fh:
-        fh.write("[GCPad1]\nDevice = MAS_NUEVO\n")
-    os.utime(viejo_dol, (1000000, 1000000))
-    os.utime(nuevo_dol, (3000000, 3000000))
-
+    # copias de Cemu para comprobar que tambien se restauran
     cem = os.path.join(home, ".config", "Cemu", "controllerProfiles")
     os.makedirs(cem, exist_ok=True)
     with open(os.path.join(cem, "controller0.xml"), "w", encoding="utf-8") as fh:
@@ -597,11 +580,9 @@ async def main():
     r = await mod.Plugin().restaurar_todo()
     check("restaurar_todo ok", r["ok"] is True, r)
 
-    with open(os.path.join(dol, "GCPadNew.ini"), encoding="utf-8") as fh:
-        check("Dolphin restaurado", "VIEJO" in fh.read())
     with open(os.path.join(cem, "controller0.xml"), encoding="utf-8") as fh:
-        check("Cemu restaurado", "<viejo/>" in fh.read())
-    check("el resumen menciona Dolphin", "Dolphin" in r["salida"], r["salida"])
+        check("Cemu restaurado (latest)", "<mas-nuevo/>" in fh.read())
+
     check("el resumen menciona Cemu", "Cemu" in r["salida"], r["salida"])
 
     stock = os.path.join(base, "stock", "qt-config.ini")
@@ -631,20 +612,17 @@ async def main():
     r = await mod.Plugin().restaurar_todo()
     check("sin copias avisa", r["ok"] is False and "copia" in r["salida"], r)
 
-    # Eden con stock pero Dolphin/Cemu con carpetas de backup vacias:
+    # Eden con stock pero Cemu con carpeta de backup vacia:
     # el resumen debe decir "sin copias", no "restaurado"
     os.makedirs(os.path.dirname(stock), exist_ok=True)
     with open(stock, "w", encoding="utf-8") as fh:
         fh.write("[Controls]\nplayer_0_profile_name=ORIGINAL\n")
-    os.makedirs(os.path.join(bk, "dolphin"), exist_ok=True)
     os.makedirs(os.path.join(bk, "cemu"), exist_ok=True)
     r = await mod.Plugin().restaurar_todo()
-    check("Dolphin sin copias se avisa",
-          "Dolphin: sin copias" in r["salida"], r["salida"])
-    check("Cemu sin copias se avisa",
-          "Cemu: sin copias" in r["salida"], r["salida"])
+    check("Cemu sin copias -> sin cambios",
+          "Cemu: sin cambios" in r["salida"], r["salida"])
     check("no dice restaurado en falso",
-          "Dolphin: restaurado" not in r["salida"], r["salida"])
+          "Cemu: restaurado" not in r["salida"], r["salida"])
     shutil.rmtree(bk, ignore_errors=True)
 
     # el integrado se coloca solo: J1 sin externos, ultimo con externos
@@ -693,305 +671,7 @@ async def main():
           and est["prefs"]["INTEGRADO_MANUAL"] == "si", est["prefs"])
 
     # ------------------------------------------------------------------ 22
-    print("22) Dolphin: Device, SIDevice, Source y Hotkeys")
-    dol = os.path.join(home, ".config", "dolphin-emu")
-    os.makedirs(dol, exist_ok=True)
-
-    ORIG = {}
-    ORIG["GCPadNew.ini"] = (
-        "[GCPad1]\nDevice = SDL/0/Steam Deck Controller\nButtons/A = `Button S`\n"
-        "[GCPad2]\nDevice = SDL/1/Steam Deck Controller\nButtons/A = `Button S`\n"
-        "[GCPad3]\nDevice = SDL/2/Steam Deck Controller\nButtons/A = `Button S`\n"
-        "[GCPad4]\nDevice = SDL/3/Steam Deck Controller\nButtons/A = `Button S`\n"
-    )
-    ORIG["WiimoteNew.ini"] = (
-        "[Wiimote1]\nDevice = SDL/0/Steam Deck Controller\nButtons/A = `Button S`\n"
-        "[Wiimote2]\nDevice = SDL/1/Steam Deck Controller\nButtons/A = `Button S`\n"
-        "[Wiimote3]\nDevice = SDL/2/Steam Deck Controller\nButtons/A = `Button S`\n"
-        "[Wiimote4]\nDevice = SDL/3/Steam Deck Controller\nButtons/A = `Button S`\n"
-        "[BalanceBoard]\nDevice = XInput2/0/Virtual core pointer\nSource = 0"
-    )  # sin \n final a proposito, como el de EmuDeck
-    ORIG["Dolphin.ini"] = (
-        "[Core]\nSIDevice0 = 6\nSIDevice1 = 0\nSIDevice2 = 0\nSIDevice3 = 0\n"
-        "[DSP]\nBackend = Cubeb\n"
-    )
-    ORIG["Hotkeys.ini"] = (
-        "[Hotkeys]\nDevice = SDL/0/Steam Deck Controller\n"
-        "General/Stop = @(Back+`Button W`)\n"
-    )
-
-    def escribir_dolphin(si0=None):
-        for nombre, texto in ORIG.items():
-            if nombre == "Dolphin.ini" and si0 is not None:
-                texto = texto.replace("SIDevice0 = 6", "SIDevice0 = %s" % si0)
-            with open(os.path.join(dol, nombre), "w", encoding="utf-8") as fh:
-                fh.write(texto)
-
-    def leer_dolphin(nombre):
-        with open(os.path.join(dol, nombre), encoding="utf-8") as fh:
-            return fh.read()
-
-    def ini_valor(texto, seccion, clave):
-        actual = None
-        for linea in texto.splitlines():
-            if linea.startswith("["):
-                actual = linea.strip("[]")
-            elif actual == seccion and linea.strip().startswith(clave + " ="):
-                return linea.split("=", 1)[1].strip()
-        return None
-
-    escribir_dolphin()
-    antes_dolphin = {n: leer_dolphin(n) for n in ORIG}
-
-    fake_dol = os.path.join(tmp, "sdl_dolphin.txt")
-    with open(fake_dol, "w", encoding="utf-8") as fh:
-        fh.write(
-            "DualSense Wireless Controller|050000004c050000e60c000000010000"
-            "|0|6|1|DualSense Wireless Controller|aa:aa|2\n"
-            "DualSense Wireless Controller|050000004c050000e60c000000010000"
-            "|1|6|1|DualSense Wireless Controller|bb:bb|5\n"
-            "DualSense Wireless Controller|050000004c050000e60c000000010000"
-            "|2|6|1|DualSense Wireless Controller|cc:cc|7\n"
-            "Asus Rog Ally Controller|03000000bd1200001501000011010000"
-            "|0|1|1|Asus Rog Ally Controller||0\n"
-        )
-    env_dol = os.environ.copy()
-    env_dol["HOME"] = home
-    env_dol["EDEN_AUTOCONFIG_DIR"] = base
-    env_dol["EDEN_FAKE_SDL"] = fake_dol
-    env_dol["TMPDIR"] = tempfile.gettempdir()
-    env_dol.pop("EDEN_AUTOCONFIG_CONF", None)
-
-    script = os.path.join(AQUI, "eden_controller", "eden-autoconfig.sh")
-    conf = os.path.join(base, "eden-autoconfig.conf")
-
-    def conf_dolphin(maximo, backend="sdl"):
-        with open(conf, "w", encoding="utf-8") as fh:
-            fh.write('JUGADORES_MAX="%s"\nORDEN_INTEGRADO="ultimo"\n'
-                     'P1_SERIE=""\nDOLPHIN_BACKEND="%s"\n'
-                     % (maximo, backend))
-
-    def correr_dolphin(*args, maximo=None, backend="sdl"):
-        if maximo is not None:
-            conf_dolphin(maximo, backend)
-        return subprocess.run(["bash", script, "--sistema", "gc"] + list(args),
-                              env=env_dol, capture_output=True, text=True)
-
-    conf_dolphin(4)
-    r = correr_dolphin(maximo=4)
-    check("Dolphin: aplicar ok", r.returncode == 0, r.stdout + r.stderr)
-
-    gc = leer_dolphin("GCPadNew.ini")
-    check("Dolphin: P1 = id 0 de su nombre",
-          ini_valor(gc, "GCPad1", "Device")
-          == "SDL/0/DualSense Wireless Controller", ini_valor(gc, "GCPad1", "Device"))
-    check("Dolphin: 2.o DualSense = id 1 por nombre",
-          ini_valor(gc, "GCPad2", "Device")
-          == "SDL/1/DualSense Wireless Controller", ini_valor(gc, "GCPad2", "Device"))
-    check("Dolphin: 3.o DualSense = id 2 por nombre",
-          ini_valor(gc, "GCPad3", "Device")
-          == "SDL/2/DualSense Wireless Controller", ini_valor(gc, "GCPad3", "Device"))
-    check("Dolphin: P4 = integrado SDL/0 (nombre unico)",
-          ini_valor(gc, "GCPad4", "Device") == "SDL/0/Asus Rog Ally Controller",
-          ini_valor(gc, "GCPad4", "Device"))
-
-    wii = leer_dolphin("WiimoteNew.ini")
-    check("Dolphin: Source insertado en Wiimote1",
-          ini_valor(wii, "Wiimote1", "Source") == "1", wii[:120])
-    check("Dolphin: Source en Wiimote4",
-          ini_valor(wii, "Wiimote4", "Source") == "1", wii[-160:])
-    check("Dolphin: BalanceBoard intacto",
-          ini_valor(wii, "BalanceBoard", "Source") == "0"
-          and ini_valor(wii, "BalanceBoard", "Device")
-          == "XInput2/0/Virtual core pointer", wii[-160:])
-
-    dini = leer_dolphin("Dolphin.ini")
-    puertos = [ini_valor(dini, "Core", "SIDevice%d" % i) for i in range(4)]
-    check("Dolphin: 4 puertos GC activos", puertos == ["6"] * 4, puertos)
-    check("Dolphin: Hotkeys al P1",
-          ini_valor(leer_dolphin("Hotkeys.ini"), "Hotkeys", "Device")
-          == "SDL/0/DualSense Wireless Controller")
-
-    stock = os.path.join(base, "backups", "dolphin", "stock")
-    check("Dolphin: guarda el original",
-          os.path.isfile(os.path.join(stock, "GCPadNew.ini")))
-    with open(os.path.join(stock, "GCPadNew.ini"), encoding="utf-8") as fh:
-        check("Dolphin: stock = estado anterior",
-              fh.read() == antes_dolphin["GCPadNew.ini"])
-
-    # 2 jugadores: los puertos 3-4 y los Wiimotes 3-4 se apagan
-    r = correr_dolphin(maximo=2)
-    check("Dolphin: aplicar 2 jugadores ok", r.returncode == 0, r.stdout + r.stderr)
-    dini = leer_dolphin("Dolphin.ini")
-    puertos = [ini_valor(dini, "Core", "SIDevice%d" % i) for i in range(4)]
-    check("Dolphin: 2 jugadores -> 2 puertos", puertos == ["6", "6", "0", "0"],
-          puertos)
-    wii = leer_dolphin("WiimoteNew.ini")
-    check("Dolphin: Wiimote3 apagado",
-          ini_valor(wii, "Wiimote3", "Source") == "0", wii[-220:])
-
-    # latest = estado anterior al ultimo aplicar (4 jugadores)
-    r = correr_dolphin("--restore", "latest")
-    check("Dolphin: restore latest ok", r.returncode == 0, r.stdout + r.stderr)
-    dini = leer_dolphin("Dolphin.ini")
-    check("Dolphin: latest vuelve al apply anterior",
-          ini_valor(dini, "Core", "SIDevice3") == "6",
-          ini_valor(dini, "Core", "SIDevice3"))
-
-    # stock = estado anterior a N.E.C.A (los cuatro ficheros)
-    r = correr_dolphin("--restore", "stock")
-    check("Dolphin: restore stock ok", r.returncode == 0, r.stdout + r.stderr)
-    for nombre, texto in ORIG.items():
-        check("Dolphin: %s vuelve al original" % nombre,
-              leer_dolphin(nombre) == texto)
-
-    # caso real del usuario: DualSense global 0 + Asus global 1.
-    # Dolphin asigna id por nombre, asi que el Asus debe ser SDL/0, no SDL/1.
-    fake_real = os.path.join(tmp, "sdl_real.txt")
-    with open(fake_real, "w", encoding="utf-8") as fh:
-        fh.write(
-            "DualSense Wireless Controller 1|050000004c050000e60c000000010000"
-            "|0|6|1|DualSense Wireless Controller 1|4c:b9:9b:e9:bc:26|0\n"
-            "Asus Rog Ally Controller|03000000bd1200001501000011010000"
-            "|0|1|1|Asus Rog Ally Controller||1\n"
-        )
-    env_dol["EDEN_FAKE_SDL"] = fake_real
-    r = correr_dolphin(maximo=2)
-    check("Dolphin: caso real aplicar ok", r.returncode == 0,
-          r.stdout + r.stderr)
-    gc = leer_dolphin("GCPadNew.ini")
-    check("Dolphin: P1 real = DualSense id 0",
-          ini_valor(gc, "GCPad1", "Device")
-          == "SDL/0/DualSense Wireless Controller 1",
-          ini_valor(gc, "GCPad1", "Device"))
-    check("Dolphin: P2 integrado = SDL/0, no SDL/1",
-          ini_valor(gc, "GCPad2", "Device")
-          == "SDL/0/Asus Rog Ally Controller", ini_valor(gc, "GCPad2", "Device"))
-    with open(os.path.join(base, "log.txt"), encoding="utf-8") as fh:
-        log = fh.read()
-    check("Dolphin: el log muestra el Device escrito",
-          "GCPad2 Device = SDL/0/Asus Rog Ally Controller" in log, log[-500:])
-
-    r = correr_dolphin("--restore", "stock")
-    check("Dolphin: vuelve al original tras el caso real", r.returncode == 0,
-          r.stdout + r.stderr)
-    env_dol["EDEN_FAKE_SDL"] = fake_dol
-
-    # Aplicar todo desde el panel: Eden + Dolphin + Cemu y limpiar el aviso
-    os.environ["EDEN_FAKE_SDL"] = fake_dol
-    # plantilla minima para Eden y Cemu sin perfil valido (entorno de prueba)
-    tpl = os.path.join(base, "templates")
-    os.makedirs(tpl, exist_ok=True)
-    with open(os.path.join(tpl, "dualsense.player0.txt"), "w",
-              encoding="utf-8") as fh:
-        fh.write("player_0_A=button:b\nplayer_0_B=button:a\n"
-                 "player_0_X=button:y\nplayer_0_Y=button:x\n")
-    shutil.rmtree(os.path.join(home, ".config", "Cemu"), ignore_errors=True)
-    r = await mod.Plugin().aplicar_todo()
-    check("Aplicar todo ok", r["ok"] is True, r)
-    for etiqueta in ("Eden:", "Dolphin:", "Cemu:"):
-        check("Aplicar todo menciona %s" % etiqueta[:-1],
-              etiqueta in r["salida"], r["salida"])
-    with open(os.path.join(base, "log.txt"), encoding="utf-8") as fh:
-        log_txt = fh.read()
-    check("el log guarda version/hash",
-          "version=" in log_txt and "hash=" in log_txt, log_txt[-500:])
-    est = await mod.Plugin().estado()
-    check("Aplicar todo quita el aviso de scripts",
-          est["scripts_nuevos"] is False)
-
-    # Enumeracion dentro del Flatpak (Dolphin usa su propia SDL)
-    escribir_dolphin()
-    flat_dol = os.path.join(home, ".var", "app",
-                            "org.DolphinEmu.dolphin-emu", "config",
-                            "dolphin-emu")
-    os.makedirs(flat_dol, exist_ok=True)
-    for nombre in ORIG:
-        shutil.copyfile(os.path.join(dol, nombre),
-                        os.path.join(flat_dol, nombre))
-
-    fakebin = os.path.join(tmp, "bin")
-    os.makedirs(fakebin, exist_ok=True)
-    fp = os.path.join(fakebin, "flatpak")
-    with open(fp, "w", encoding="utf-8") as fh:
-        fh.write("#!/bin/sh\n"
-                 "if [ \"${FAKE_FLATPAK_FAIL:-}\" = \"1\" ]; then exit 1; fi\n"
-                 "last=\"\"\n"
-                 "for a in \"$@\"; do last=\"$a\"; done\n"
-                 "exec env SDL_HINTS_MODO=dolphin bash \"$last\"\n")
-    os.chmod(fp, 0o755)
-    env_dol["PATH"] = fakebin + ":" + env_dol.get("PATH", "")
-    env_dol["EDEN_FAKE_SDL"] = fake_dol
-
-    r = correr_dolphin("--dry-run", maximo=2)
-    check("Flatpak: dry-run ok", r.returncode == 0, r.stdout + r.stderr)
-    with open(os.path.join(base, "log.txt"), encoding="utf-8") as fh:
-        log = fh.read()
-    lineas = [l for l in log.splitlines()
-              if "dolphin dry-run:" in l and "fuente=" in l]
-    check("Flatpak: se enumera dentro del Flatpak",
-          bool(lineas) and "fuente=flatpak" in lineas[-1], lineas[-1:])
-
-    env_dol["FAKE_FLATPAK_FAIL"] = "1"
-    r = correr_dolphin("--dry-run", maximo=2)
-    check("Flatpak: fallback ok", r.returncode == 0, r.stdout + r.stderr)
-    with open(os.path.join(base, "log.txt"), encoding="utf-8") as fh:
-        log = fh.read()
-    lineas = [l for l in log.splitlines()
-              if "dolphin dry-run:" in l and "fuente=" in l]
-    check("Flatpak: fallback al host",
-          bool(lineas) and "fuente=host" in lineas[-1], lineas[-1:])
-    check("Flatpak: avisa del fallback",
-          "Flatpak" in log and "host" in log, log[-300:])
-    env_dol.pop("FAKE_FLATPAK_FAIL", None)
-
-    shutil.rmtree(os.path.join(home, ".var"), ignore_errors=True)
-    env_dol["PATH"] = env_dol["PATH"].split(":", 1)[-1]
-
-    # evdev: mandos fisicos aunque Steam Input este activo
-    fake_evdev = os.path.join(tmp, "evdev.txt")
-    with open(fake_evdev, "w", encoding="utf-8") as fh:
-        fh.write(
-            "I: Bus=0005 Vendor=054c Product=0ce6 Version=0000\n"
-            'N: Name="DualSense Wireless Controller"\n'
-            "U: Uniq=4c:b9:9b:23:f1:fb\n"
-            "H: Handlers=event10 js0\n\n"
-            "I: Bus=0005 Vendor=054c Product=0ce6 Version=0000\n"
-            'N: Name="DualSense Wireless Controller"\n'
-            "U: Uniq=4c:b9:9b:23:f1:fc\n"
-            "H: Handlers=event3 js1\n\n"
-            "I: Bus=0018 Vendor=0b05 Product=1abe Version=0000\n"
-            'N: Name="Asus Rog Ally Controller"\n'
-            "H: Handlers=event12 js2\n"
-        )
-    env_dol["EDEN_FAKE_EVDEV"] = fake_evdev
-    r = correr_dolphin(maximo=2, backend="evdev")
-    check("evdev: aplicar ok", r.returncode == 0, r.stdout + r.stderr)
-    gc = leer_dolphin("GCPadNew.ini")
-    check("evdev: P1 fisico",
-          ini_valor(gc, "GCPad1", "Device")
-          == "evdev/0/DualSense Wireless Controller",
-          ini_valor(gc, "GCPad1", "Device"))
-    check("evdev: P2 fisico",
-          ini_valor(gc, "GCPad2", "Device")
-          == "evdev/1/DualSense Wireless Controller",
-          ini_valor(gc, "GCPad2", "Device"))
-    dini = leer_dolphin("Dolphin.ini")
-    check("evdev: solo 2 puertos",
-          [ini_valor(dini, "Core", "SIDevice%d" % i) for i in range(4)]
-          == ["6", "6", "0", "0"])
-
-    # adaptador GC real: no se pisa SIDevice0 = 12
-    escribir_dolphin(12)
-    r = correr_dolphin(maximo=1)
-    check("Dolphin: aplicar con adaptador ok", r.returncode == 0,
-          r.stdout + r.stderr)
-    dini = leer_dolphin("Dolphin.ini")
-    check("Dolphin: respeta el adaptador GC real",
-          ini_valor(dini, "Core", "SIDevice0") == "12",
-          ini_valor(dini, "Core", "SIDevice0"))
-    check("Dolphin: avisa del adaptador", "adaptador" in r.stderr.lower(),
-          r.stderr)
+    print("22) aplicar todo y avisos de Steam Input")
 
     # Steam Input: todos los mandos como pads virtuales -> aviso en el panel
     virtuales = os.path.join(tmp, "sdl_virtual.txt")
@@ -1008,6 +688,30 @@ async def main():
     est = await mod.Plugin().estado()
     check("Steam Input avisa del orden de jugadores",
           "Steam Input" in est["aviso"], est["aviso"])
+
+    # Aplicar todo desde el panel: Eden + Cemu y limpiar el aviso
+    os.environ["EDEN_FAKE_SDL"] = virtuales
+    # plantilla minima para Eden y Cemu sin perfil valido (entorno de prueba)
+    tpl = os.path.join(base, "templates")
+    os.makedirs(tpl, exist_ok=True)
+    for nombre in ("dualsense", "ally"):
+        with open(os.path.join(tpl, nombre + ".player0.txt"), "w",
+                  encoding="utf-8") as fh:
+            fh.write("player_0_A=button:b\nplayer_0_B=button:a\n"
+                     "player_0_X=button:y\nplayer_0_Y=button:x\n")
+    shutil.rmtree(os.path.join(home, ".config", "Cemu"), ignore_errors=True)
+    r = await mod.Plugin().aplicar_todo()
+    check("Aplicar todo ok", r["ok"] is True, r)
+    for etiqueta in ("Eden:", "Cemu:"):
+        check("Aplicar todo menciona %s" % etiqueta[:-1],
+              etiqueta in r["salida"], r["salida"])
+    with open(os.path.join(base, "log.txt"), encoding="utf-8") as fh:
+        log_txt = fh.read()
+    check("el log guarda version/hash",
+          "version=" in log_txt and "hash=" in log_txt, log_txt[-500:])
+    est = await mod.Plugin().estado()
+    check("Aplicar todo quita el aviso de scripts",
+          est["scripts_nuevos"] is False)
 
     # Con el integrado desactivado, Eden no debe asignarlo como P2
     # (config de Eden realista: 10 jugadores, como el default de EmuDeck)
@@ -1033,7 +737,7 @@ async def main():
     check("Eden: los dos DualSense son P1/P2", ds_jug == [1, 2], ds_jug)
 
     # 4 DualSense + integrado, con el integrado en medio en la SDL del host:
-    # el ayudante debe renumerar los DualSense 0..3 y dejar el integrado fuera.
+    # el panel muestra los puertos reales; Eden renumera internamente.
     cuatro = os.path.join(tmp, "sdl_4virtual.txt")
     with open(cuatro, "w", encoding="utf-8") as fh:
         fh.write(
@@ -1064,14 +768,12 @@ async def main():
     check("Eden: integrado fuera con 4 DS",
           bool(asus) and all(m["jugador"] is None for m in asus),
           [(m["nombre"], m["jugador"]) for m in asus])
-    check("Eden: puertos 0..3 tras renumerar",
-          sorted(int(m["puerto"]) for m in ds) == [0, 1, 2, 3],
+    check("Eden: el panel muestra los puertos reales",
+          sorted(int(m["puerto"]) for m in ds) == [0, 2, 3, 4],
           [m["puerto"] for m in ds])
-    check("Dolphin por defecto SDL",
-          est["prefs"]["DOLPHIN_BACKEND"] == "sdl",
-          est["prefs"].get("DOLPHIN_BACKEND"))
 
     # El ayudante devuelve los puertos reales (Cemu los necesita)
+    script = os.path.join(AQUI, "eden_controller", "eden-autoconfig.sh")
     env_u = os.environ.copy()
     env_u["HOME"] = home
     env_u["EDEN_AUTOCONFIG_DIR"] = base
@@ -1103,24 +805,18 @@ async def main():
             fh.write("2026-01-01 10:00:00 [INFO] [1] deteccion SDL: ruido\n")
         fh.write("2026-01-01 10:00:00 [INFO] [1] === eden-autoconfig.sh v2 modo=aplicar args='' ===\n")
         fh.write("2026-01-01 10:00:00 [INFO] [1] aplicado. plan: dual:0:0\n")
-        fh.write("[2026-01-01 10:00:01] dolphin aplicar: GCPad1 Device = SDL/0/X\n")
         fh.write("[2026-01-01 10:00:02] wiiu aplicar: Mando 1 = X\n")
     r = await mod.Plugin().ver_log()
     check("el log filtra los --who", "modo=who" not in r["salida"], r["salida"])
-    check("el log conserva el aplicar", "GCPad1 Device" in r["salida"],
+    check("el log conserva el aplicar", "aplicado. plan" in r["salida"],
           r["salida"])
 
-    r = await mod.Plugin().ver_log("dolphin")
-    check("filtro Dolphin", "GCPad1 Device" in r["salida"]
-          and "aplicado. plan" not in r["salida"]
-          and "wiiu aplicar" not in r["salida"], r["salida"])
     r = await mod.Plugin().ver_log("eden")
     check("filtro Eden", "aplicado. plan" in r["salida"]
-          and "GCPad1 Device" not in r["salida"]
           and "wiiu aplicar" not in r["salida"], r["salida"])
     r = await mod.Plugin().ver_log("cemu")
     check("filtro Cemu (wiiu)", "wiiu aplicar" in r["salida"]
-          and "GCPad1 Device" not in r["salida"], r["salida"])
+          and "aplicado. plan" not in r["salida"], r["salida"])
 
     shutil.rmtree(tmp, ignore_errors=True)
 

@@ -1,8 +1,11 @@
 # AGENTS.md — N.E.C.A (Nintendo-EmuDeck Controller Autoconf)
 
-Plugin de Decky para autoconfigurar los mandos de Eden (Switch), Dolphin
-(GameCube/Wii) y Cemu (Wii U) desde el menú rápido de Steam. El proyecto de
-scripts vive ahora **dentro** de esta carpeta.
+Plugin de Decky para autoconfigurar los mandos de Eden (Switch) y Cemu (Wii U)
+desde el menú rápido de Steam. El proyecto de scripts vive ahora **dentro** de
+esta carpeta.
+
+**Dolphin (GameCube/Wii) se retiró temporalmente** en esta versión: no está
+soportado y no debe reintroducirse sin una petición explícita.
 
 ## Estructura
 

@@ -143,7 +143,6 @@ const C = {
     violeta: "#B47BFF",
     naranja: "#FF8A3D",
     turquesa: "#2EE6C8",
-    ambar: "#FFB454",
     dorado: "#F5C518",
     carbon1: "#262628",
     carbon2: "#141416",
@@ -804,7 +803,6 @@ function VentanaLog(props) {
     };
     const filtros = [
         ["todo", "Todo"],
-        ["dolphin", "Dolphin"],
         ["eden", "Eden"],
         ["cemu", "Cemu"],
     ];
@@ -853,7 +851,7 @@ function abrirVentana(titulo, texto, recientePrimero = false) {
     cierre.f = res.Close;
 }
 // ---------------------------------------------------------------------------
-//  Ventana de asignacion (Cemu / Dolphin)
+//  Ventana de asignacion (Cemu)
 // ---------------------------------------------------------------------------
 function VentanaAsignacion(props) {
     const [planes, setPlanes] = SP_REACT.useState(props.planes);
@@ -886,7 +884,7 @@ function VentanaAsignacion(props) {
                             overflowY: "auto",
                             fontSize: "0.9em",
                             lineHeight: 1.4,
-                        }, children: [bloque("wiiu", "Cemu (Wii U)"), bloque("dolphin", "Dolphin (GC/Wii)"), nota ? (SP_JSX.jsx("div", { style: { marginTop: "6px", opacity: 0.75, fontSize: "0.9em" }, children: nota })) : null] }) }) }), SP_JSX.jsxs(DFL.DialogFooter, { children: [SP_JSX.jsx(DFL.DialogButton, { disabled: ocupado, onClick: () => void comprobar(), children: ocupado ? "Comprobando…" : "Comprobar ahora" }), SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" })] })] }));
+                        }, children: [bloque("wiiu", "Cemu (Wii U)"), nota ? (SP_JSX.jsx("div", { style: { marginTop: "6px", opacity: 0.75, fontSize: "0.9em" }, children: nota })) : null] }) }) }), SP_JSX.jsxs(DFL.DialogFooter, { children: [SP_JSX.jsx(DFL.DialogButton, { disabled: ocupado, onClick: () => void comprobar(), children: ocupado ? "Comprobando…" : "Comprobar ahora" }), SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" })] })] }));
 }
 function abrirAsignacion(planes, onNuevo) {
     const cierre = { f: () => { } };
@@ -1034,12 +1032,6 @@ function Content() {
         setPulsoMando(n);
         setTimeout(() => setPulsoMando(0), 520);
     });
-    const cambiarBackend = () => conBloqueo(async () => {
-        const nuevo = await call("ciclar", "dolphin");
-        setEst(nuevo);
-        if (nuevo.aviso)
-            avisar(nuevo.aviso);
-    });
     const elegirIntegrado = (modo) => conBloqueo(async () => {
         const nuevo = await call("integrado_modo", modo);
         setEst(nuevo);
@@ -1068,7 +1060,7 @@ function Content() {
         await refrescar();
     });
     const restaurarTodo = () => {
-        DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: "Restaurar todo", strDescription: "Se restaurara la configuracion anterior de Eden, Dolphin y Cemu, " +
+        DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: "Restaurar todo", strDescription: "Se restaurara Eden y se deshara el ultimo aplicar de Cemu, " +
                 "se quitaran las preferencias del plugin y se desactivara el hook " +
                 "de ES-DE.\n\n" +
                 "Los emuladores deben estar cerrados. Se guarda una copia del " +
@@ -1145,7 +1137,7 @@ function Content() {
                                 gap: "6px",
                                 fontSize: "0.68em",
                                 opacity: 0.6,
-                            }, children: [SP_JSX.jsx(GlifoA, {}), " vibrar \u00B7 dos toques seguidos = mando principal"] }) })) : null] }), SP_JSX.jsx(Seccion, { titulo: "Ajustes", color: C.violeta, icono: SP_JSX.jsx(FaSlidersH, { size: 12 }), abierta: Boolean(abiertas.ajustes), onToggle: () => toggle("ajustes"), children: SP_JSX.jsxs(Rejilla, { children: [SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.verde, icono: SP_JSX.jsx(FaCheck, { size: 17 }), anim: "pop", titulo: "Aplicar", detalle: "Los 3", onClick: aplicar }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.ambar, icono: SP_JSX.jsx(FaGamepad, { size: 16 }), anim: "pop", titulo: "Dolphin", detalle: p.DOLPHIN_BACKEND === "evdev" ? "evdev" : "SDL", onClick: cambiarBackend }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.rojo, icono: SP_JSX.jsx(FaUndo, { size: 16 }), anim: "giro", titulo: "Restaurar", detalle: "Todo", onClick: restaurarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.turquesa, icono: SP_JSX.jsx(FaFileAlt, { size: 16 }), anim: "barrido", titulo: "Ver log", detalle: "log.txt", onClick: verLog }) })] }) })] }));
+                            }, children: [SP_JSX.jsx(GlifoA, {}), " vibrar \u00B7 dos toques seguidos = mando principal"] }) })) : null] }), SP_JSX.jsx(Seccion, { titulo: "Ajustes", color: C.violeta, icono: SP_JSX.jsx(FaSlidersH, { size: 12 }), abierta: Boolean(abiertas.ajustes), onToggle: () => toggle("ajustes"), children: SP_JSX.jsxs(Rejilla, { children: [SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.verde, icono: SP_JSX.jsx(FaCheck, { size: 17 }), anim: "pop", titulo: "Aplicar", detalle: "Eden \u00B7 Cemu", onClick: aplicar }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.rojo, icono: SP_JSX.jsx(FaUndo, { size: 16 }), anim: "giro", titulo: "Restaurar", detalle: "Todo", onClick: restaurarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.turquesa, icono: SP_JSX.jsx(FaFileAlt, { size: 16 }), anim: "barrido", titulo: "Ver log", detalle: "log.txt", onClick: verLog }) })] }) })] }));
 }
 var index = definePlugin(() => {
     return {

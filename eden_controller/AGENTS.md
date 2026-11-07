@@ -106,52 +106,12 @@ jugadores sobrantes quedan `connected=false`.
   aborta. Todo lo opcional va en `try/except` (serial, `SDL_UpdateJoysticks`,
   `SDL_GetVersion`…).
 
-### Dolphin (GameCube / Wii)
-- **No hay perfil referenciado**: a diferencia de Eden (`player_N_profile_name`) o
-  Cemu (`<profile>`), Dolphin usa directamente `GCPadNew.ini`/`WiimoteNew.ini`.
-  Los `Profiles/GCPad|Wiimote/*.ini` que instala EmuDeck son plantillas que se
-  cargan a mano; no se autoaplican.
-- EmuDeck deja `SIDevice0 = 6` y `SIDevice1..3 = 0`: **solo el puerto 1 de
-  GameCube está activo**. Hay que poner `SIDeviceN = 6` para los jugadores del
-  plan y `0` para el resto; `12` es el adaptador GC real y no se toca.
-- Dolphin asigna el id de `SDL/<id>/<nombre>` por **(backend, nombre)**, no por
-  el índice global de SDL: el primer mando de cada nombre es `0`. Por eso el
-  driver usa `PLAN_INDICE_NOMBRE` y no `PLAN_INDICE`. Con un DualSense y el
-  integrado, el integrado debe ser `SDL/0/Asus…`, no `SDL/1/Asus…`.
-- **Puertos de los DualSense virtuales.** El ayudante SDL da el puerto real por
-  guid (el integrado `de28` ocupa uno; Cemu lo necesita para su `uuid`). Eden
-  renumera sus DualSense 0..N-1 dentro de `detectar_mandos_sdl`, porque coloca
-  el integrado al final; el panel hace lo mismo con las tarjetas virtuales.
-- **Dolphin por evdev.** `DOLPHIN_BACKEND=evdev` usa `eden-mandos-evdev.sh` y
-  escribe `evdev/<id>/<nombre>`; así se saltan los pads de Steam. Por defecto
-  es `sdl` (la que funcionaba); evdev es experimental. El id es el n-ésimo con
-  ese nombre en el orden de `/proc` (event).
-- **Dolphin corre en Flatpak y usa SU SDL** (3.2.30), distinta de la del host
-  (3.4.12). Los nombres/orden pueden no coincidir. El driver pone
-  `NUCLEO_SDL_MODO=dolphin` y `NUCLEO_SDL_FLATPAK=<app>`; `nucleo_mandos`
-  ejecuta `eden-mandos-sdl.sh` **dentro del Flatpak** con `SDL_LIB` del sandbox
-  y `SDL_HINTS_MODO=dolphin` (sin forzar el HIDAPI de Xbox). Si falla, cae al
-  host y lo avisa; `log.txt` registra `fuente=flatpak|host`. Sin esto, Dolphin
-  guarda nombres que no corresponden a los mandos físicos.
-- El driver **no crea bindings ni carga perfiles**: los `GC_base`/`Wiimote*` de
-  `Profiles/` son plantillas manuales. Solo cambia `Device`, `SIDevice`,
-  `Source` y `Hotkeys`. Si el usuario carga un perfil, sobrescribe `Device` y
-  hay que volver a aplicar.
-- `WiimoteNew.ini` no trae líneas `Source`. Dolphin por defecto pone
-  **Wiimote1 = Emulated (1)** y **Wiimote2..4 = None (0)**. Hay que **insertar**
-  `Source = 1` en los Wiimotes del plan (y `0` para el resto); `2` es un Wiimote
-  real y se respeta.
-- `Hotkeys.ini` lleva su propio `Device`; si no apunta al P1, los atajos pueden
-  no responder. EmuDeck lo actualiza en su AutoMap.
-- El **AutoMap de EmuDeck** (`autoMapDolphin=true`) copia su plantilla y
-  reescribe `Device`/`SIDevice`/`Source`/Hotkeys al lanzar con su lanzador; eso
-  pisaría a N.E.C.A. Con AutoMap desactivado no toca nada.
-- El `WiimoteNew.ini` de EmuDeck **no termina en salto de línea**; el driver
-  conserva esa propiedad al reescribir.
-- El driver guarda una copia fija del estado anterior en
-  `backups/dolphin/stock/` para que `--restore stock` (lo usa el botón
-  Restaurar) vuelva al estado real anterior a N.E.C.A; `latest` deshace solo el
-  último aplicar. Cemu hace lo mismo en `backups/cemu/stock/`.
+### Puertos de los DualSense virtuales
+- El ayudante SDL devuelve el **puerto real** por guid (el integrado `de28`
+  ocupa uno; Cemu lo necesita para su `uuid`).
+- Eden renumera sus DualSense 0..N-1 dentro de `detectar_mandos_sdl`, porque
+  coloca el integrado al final. El panel muestra los puertos reales del
+  ayudante; el plan de Eden es el que reparte jugadores.
 
 ### ES-DE
 - Evento `game-start`: `$1` ruta del juego, `$2` nombre, `$3` sistema (`switch`),
@@ -173,14 +133,12 @@ jugadores sobrantes quedan `connected=false`.
 | `eden-autoconfig.sh` | **Despachador**: elige driver por `--sistema` y le pasa los argumentos |
 | `eden-nucleo.sh` | Piezas compartidas: rutas, `.conf`, preferencias comunes |
 | `eden-driver-yuzu.sh` | Eden y sus fork: `qt-config.ini` (todo el flujo anterior) |
-| `eden-driver-dolphin.sh` | Dolphin (GC/Wii): `Device`, `SIDevice`, `Source` y `Hotkeys` en sus cuatro ini |
 | `eden-driver-cemu.sh` | Cemu (Wii U): fija el dispositivo (uuid/display_name) en `controllerN.xml` |
 | `eden-plantilla-cemu.xml` | Plantilla de emergencia (Wii U Pro Controller) si no hay `Deck-PN.xml` |
 | `eden-mandos-sdl.sh` | Interroga a libSDL3 (python + ctypes); lista lo que ve Eden |
-| `eden-mandos-evdev.sh` | Lista gamepads físicos por `/proc/bus/input/devices` para Dolphin (`evdev/<id>/<nombre>`) |
 | `eden-diagnostico.sh` | Solo lectura; volcado para que el usuario lo pegue |
 | `instalar.sh` | Copia a `~/eden-autoconfig` (incluido `VERSION`), repone el hook y verifica SDL |
-| `es-de-hooks/10-eden-autoconfig.sh` | Hook `game-start`: `switch` → Eden, `gc`/`wii` → Dolphin, `wiiu` → Cemu |
+| `es-de-hooks/10-eden-autoconfig.sh` | Hook `game-start`: `switch` → Eden, `wiiu` → Cemu |
 | `eden-autoconfig.conf.example` | Variables; el `.conf` instalado no se sobreescribe |
 | `README.md` | Guía de usuario; fuente de verdad de los pasos en la consola |
 
@@ -197,19 +155,15 @@ Orden de llamada: despachador (según `--sistema`) → driver → `main` → `lo
   4º campo es opcional y si falta se usan `GUID_DUALSENSE`/`GUID_INTEGRADO`.
 - En la salida de `eden-mandos-sdl.sh`, las líneas que empiezan por `#` son
   informativas: los parsers **deben saltarlas**.
-- Formato de cada mando (8 campos desde 2026-11):
-  `NOMBRE|GUID|PUERTO|TIPO|ES_GAMEPAD|NOMBRE_SDL|SERIE|INDICE_SDL`.
-  `PUERTO` es el "n-ésimo con ese guid" (Eden); `INDICE_SDL` es el índice global
-  de SDL. **Dolphin NO usa ese índice global**: asigna el id por
-  `(backend, nombre)`, así que hay que usar el n-ésimo con ese **mismo nombre**
-  (`NUCLEO_IND_NOMBRE` / `PLAN_INDICE_NOMBRE`). Si se usa el global, P1 acierta
-  (suele ser 0) pero P2 con otro nombre falla (`SDL/1/Asus…` cuando Dolphin
-  espera `SDL/0/Asus…`).
+- Formato de cada mando (7 campos):
+  `NOMBRE|GUID|PUERTO|TIPO|ES_GAMEPAD|NOMBRE_SDL|SERIE`.
+  `PUERTO` es el "n-ésimo con ese guid" (Eden); Cemu usa ese mismo puerto para
+  su `uuid = <puerto>_<guid>`.
 - Dialecto del GUID (`SDL_GUID_MODO`): Eden guarda el CRC de los bytes 2-3 a
   cero; Cemu lo guarda **real**. Por eso el driver de Cemu llama al ayudante con
   `SDL_FUENTE=sistema SDL_GUID_MODO=cemu` (SDL del sistema sin normalizar y
   `PUERTO` contado solo entre gamepads, como hace Cemu).
-- El **plan compartido** (Dolphin y Cemu) vive en `eden-nucleo.sh`
+- El **plan de Cemu** vive en `eden-nucleo.sh`
   (`nucleo_mandos` + `nucleo_planificar`): clasifica `dual|integrado|otro`,
   respeta `ORDEN_INTEGRADO`, `P1_SERIE` y `JUGADORES_MAX`. Eden mantiene su
   propio planificador. `nucleo_planificar` nunca se llama en subshell: deja
@@ -217,8 +171,8 @@ Orden de llamada: despachador (según `--sistema`) → driver → `main` → `lo
 - Los drivers dejan `plan-<sistema>.txt` (lo lee el panel) y escriben en
   `log.txt`; `nucleo_guardar_plan` / `nucleo_registrar` son los únicos que
   tocan esos ficheros. `nucleo_registrar` incluye `version=` y `hash=` del
-  bundle; los drivers añaden los `Device`/`SIDevice`/`Source`/`Hotkeys`
-  escritos. Si el emulador está abierto, salen con 3 y dejan
+  bundle; los drivers añaden los `Device`/`uuid` escritos. Si el emulador está
+  abierto, salen con 3 y dejan
   `en ejecucion, no aplico` en el log.
 - La version del driver se lee de `VERSION`; `build.sh` la genera y `instalar.sh`
   la copia. No volver a fijarla a mano en el script.

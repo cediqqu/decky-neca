@@ -65,7 +65,6 @@ type Prefs = {
   P1_SERIE: string;
   JUGADORES_MAX: string;
   ORDEN_INTEGRADO: string;
-  DOLPHIN_BACKEND: string;
 };
 
 type Maquina = { vendor: string; producto: string; placa: string };
@@ -1194,7 +1193,6 @@ function VentanaLog(props: { onCerrar: () => void }) {
 
   const filtros = [
     ["todo", "Todo"],
-    ["dolphin", "Dolphin"],
     ["eden", "Eden"],
     ["cemu", "Cemu"],
   ];
@@ -1293,7 +1291,7 @@ function abrirVentana(titulo: string, texto: string, recientePrimero = false) {
 }
 
 // ---------------------------------------------------------------------------
-//  Ventana de asignacion (Cemu / Dolphin)
+//  Ventana de asignacion (Cemu)
 // ---------------------------------------------------------------------------
 function VentanaAsignacion(props: {
   planes: Record<string, Plan | null>;
@@ -1320,7 +1318,7 @@ function VentanaAsignacion(props: {
     }
   };
 
-  const bloque = (clave: "wiiu" | "dolphin", etiqueta: string) => {
+  const bloque = (clave: "wiiu", etiqueta: string) => {
     const pl = planes?.[clave];
     return (
       <div key={clave} style={{ marginBottom: "12px" }}>
@@ -1375,7 +1373,6 @@ function VentanaAsignacion(props: {
             }}
           >
             {bloque("wiiu", "Cemu (Wii U)")}
-            {bloque("dolphin", "Dolphin (GC/Wii)")}
             {nota ? (
               <div style={{ marginTop: "6px", opacity: 0.75, fontSize: "0.9em" }}>
                 {nota}
@@ -1562,13 +1559,6 @@ function Content() {
       setTimeout(() => setPulsoMando(0), 520);
     });
 
-  const cambiarBackend = () =>
-    conBloqueo(async () => {
-      const nuevo = await call<[string], Estado>("ciclar", "dolphin");
-      setEst(nuevo);
-      if (nuevo.aviso) avisar(nuevo.aviso);
-    });
-
   const elegirIntegrado = (modo: string) =>
     conBloqueo(async () => {
       const nuevo = await call<[string], Estado>("integrado_modo", modo);
@@ -1617,7 +1607,7 @@ function Content() {
       <ConfirmModal
         strTitle="Restaurar todo"
         strDescription={
-          "Se restaurara la configuracion anterior de Eden, Dolphin y Cemu, " +
+          "Se restaurara Eden y se deshara el ultimo aplicar de Cemu, " +
           "se quitaran las preferencias del plugin y se desactivara el hook " +
           "de ES-DE.\n\n" +
           "Los emuladores deben estar cerrados. Se guarda una copia del " +
@@ -1941,18 +1931,8 @@ function Content() {
               icono={<FaCheck size={17} />}
               anim="pop"
               titulo="Aplicar"
-              detalle="Los 3"
+              detalle="Eden · Cemu"
               onClick={aplicar}
-            />
-          </div>
-          <div className="ede-celda">
-            <TarjetaAccion
-              color={C.ambar}
-              icono={<FaGamepad size={16} />}
-              anim="pop"
-              titulo="Dolphin"
-              detalle={p.DOLPHIN_BACKEND === "evdev" ? "evdev" : "SDL"}
-              onClick={cambiarBackend}
             />
           </div>
           <div className="ede-celda">

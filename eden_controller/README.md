@@ -1,9 +1,8 @@
 # N.E.C.A — scripts
 
 Autoconfigura **los mandos de los emuladores de Nintendo** al lanzar el juego
-desde ES-DE: **Eden** (Switch), **Dolphin** (GameCube/Wii) y **Cemu** (Wii U).
-El despachador elige el driver con `--sistema switch|gc|wii|wiiu`; sin
-`--sistema` se usa Eden.
+desde ES-DE: **Eden** (Switch) y **Cemu** (Wii U). El despachador elige el
+driver con `--sistema switch|wiiu`; sin `--sistema` se usa Eden.
 
 Así no hay que reasignar a mano los mandos en cada emulador.
 
@@ -611,7 +610,6 @@ eden_controller/
 ├── eden-autoconfig.sh                 # despachador (--sistema)
 ├── eden-nucleo.sh                     # rutas, .conf y preferencias comunes
 ├── eden-driver-yuzu.sh                # Eden / Switch (qt-config.ini)
-├── eden-driver-dolphin.sh             # Dolphin / GC y Wii
 ├── eden-driver-cemu.sh                # Cemu / Wii U (controllerN.xml)
 ├── eden-plantilla-cemu.xml            # plantilla de emergencia para Cemu
 ├── eden-mandos-sdl.sh                 # lista los mandos como los ve Eden (SDL)
@@ -672,41 +670,31 @@ En la Ally, tras instalar:
 
 ---
 
-## 11. Dolphin (GameCube/Wii) y Cemu (Wii U)
+## 11. Cemu (Wii U)
 
-El mismo script sirve para los tres emuladores; se elige con `--sistema`
+El mismo script sirve para los dos emuladores; se elige con `--sistema`
 (sin él, Eden):
 
 ```
-eden-autoconfig.sh --sistema gc     # Dolphin: GCPadNew.ini / WiimoteNew.ini
-eden-autoconfig.sh --sistema wii    # lo mismo (Wii)
 eden-autoconfig.sh --sistema wiiu   # Cemu: controllerProfiles/controllerN.xml
 ```
 
-El hook de ES-DE ya lo hace solo: `switch` → Eden, `gc`/`wii` → Dolphin,
-`wiiu` → Cemu.
-
-**Dolphin** reescribe el dispositivo de cada puerto (`Device = SDL/<indice>/<nombre>` o
-`evdev/<id>/<nombre>` con `DOLPHIN_BACKEND=evdev`),
-activa los puertos de GameCube (`SIDevice0..3`), pone `Source = 1` en los Wiimotes
-emulados y apunta `Hotkeys.ini` al jugador 1. EmuDeck ya deja los botones
-configurados; N.E.C.A no los toca. Si un puerto usa el adaptador GC real
-(`SIDeviceN = 12`), se respeta y se avisa.
+El hook de ES-DE ya lo hace solo: `switch` → Eden, `wiiu` → Cemu.
 
 **Cemu** solo cambia el dispositivo de cada mando. El `uuid` que guarda Cemu es
 `<n>_<guid>` con el CRC **real** (Eden lo pone a cero), por eso el driver pide
 el guid a la SDL del sistema. Se conservan el tipo (GamePad/Pro), el perfil y
 los bindings; las ranuras que sobran quedan en `Disconnected`.
 
-En los dos, el integrado entra según `ORDEN_INTEGRADO`: `ignorar` (por
-defecto), `primero` (Player 1) o `ultimo` (detrás de los DualSense). Si no hay
-ningún DualSense, entra siempre y de primero. `P1_SERIE` sigue mandando.
+El integrado entra según `ORDEN_INTEGRADO`: `ignorar` (por defecto), `primero`
+(Player 1) o `ultimo` (detrás de los DualSense). Si no hay ningún DualSense,
+entra siempre y de primero. `P1_SERIE` sigue mandando.
 
 Cada ejecución (también la del hook, en silencio) deja rastro:
 
 - `~/eden-autoconfig/log.txt`: qué se detectó, el plan y los avisos.
-- `~/eden-autoconfig/plan-wiiu.txt` / `plan-dolphin.txt`: el último plan, que
-  es lo que enseña la sección **Asignación** del panel.
+- `~/eden-autoconfig/plan-wiiu.txt`: el último plan, que es lo que enseña la
+  sección **Asignación** del panel.
 
 Comandos útiles:
 

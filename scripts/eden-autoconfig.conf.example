@@ -88,11 +88,6 @@ EXIGIR_P1_MAC=""
 #     sin jugar).
 AVISAR_SIN_NEGOCIAR=0
 
-# --- Dolphin: backend de mandos ----------------------------------------------
-# sdl   = SDL del Flatpak (por defecto)
-# evdev = mandos fisicos por /dev/input (experimental con Steam Input)
-DOLPHIN_BACKEND="sdl"
-
 # --- Copias de seguridad -----------------------------------------------------
 # Cuantas copias mantener. 0 = no borrar nunca ninguna (por defecto).
 RETENCION_BACKUPS=0

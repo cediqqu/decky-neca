@@ -27,7 +27,7 @@
 #     eden-autoconfig.sh --sistema wiiu --dry-run
 #     eden-autoconfig.sh --sistema wiiu --status
 #     eden-autoconfig.sh --sistema wiiu --diagnostico
-#     eden-autoconfig.sh --sistema wiiu --restore [latest|stock|N]
+#     eden-autoconfig.sh --sistema wiiu --restore [latest|N]
 #
 #  Codigos de salida: 0 ok | 1 error | 2 nada que hacer | 3 Cemu abierto |
 #                     4 no encuentro la configuracion
@@ -77,8 +77,6 @@ c_dir() {
 
 c_perfiles() { printf '%s/controllerProfiles' "$1"; }
 c_backups()  { printf '%s/cemu' "$(nucleo_base)/backups"; }
-# Copia fija del estado anterior a N.E.C.A (la primera vez que se aplica).
-c_stock()    { printf '%s/stock' "$(c_backups)"; }
 
 c_en_ejecucion() {
     pgrep -fa . 2>/dev/null \
@@ -88,7 +86,7 @@ c_en_ejecucion() {
 }
 
 # ---------------------------------------------------------------- mandos ----
-# La lista y el plan los pone el nucleo (igual que Eden/Dolphin).
+# La lista y el plan los pone el nucleo (igual que Eden).
 c_planificar() { nucleo_planificar cemu; }
 
 # -------------------------------------------------------------- plantilla ---
@@ -307,18 +305,11 @@ c_escribir() { # $1 jugador, $2 fichero, $3 uuid, $4 nombre, $5 accion, $6 dir
     # backup del original (si existe)
     bk="$(c_backups)"
     if [ -f "$fichero" ]; then
-        local stock
-        stock="$(c_stock)"
-        mkdir -p "$bk" "$stock" \
-            || { rm -f "$tmp"; c_err "no puedo crear $bk"; return 1; }
+        mkdir -p "$bk" || { rm -f "$tmp"; c_err "no puedo crear $bk"; return 1; }
         stamp="$(date +%Y%m%d-%H%M%S)"
         cp -p "$fichero" "$bk/$(basename "$fichero").$stamp" || {
             rm -f "$tmp"; c_err "no puedo hacer backup de $fichero"; return 1
         }
-        [ -f "$stock/$(basename "$fichero")" ] \
-            || cp -p "$fichero" "$stock/$(basename "$fichero")" || {
-                rm -f "$tmp"; c_err "no puedo guardar el original de $fichero"; return 1
-            }
     fi
 
     chmod --reference="$base" "$tmp" 2>/dev/null || true
@@ -460,31 +451,21 @@ c_cmd_aplicar() {
 }
 
 c_cmd_restore() {
-    local cual="${1:-latest}" bk stock origen dir
+    local cual="${1:-latest}" bk origen dir
     bk="$(c_backups)"
-    stock="$(c_stock)"
     [ -d "$bk" ] || { c_err "no hay copias de Cemu"; return 1; }
     dir="$(c_dir)" || { c_err "no encuentro la configuracion de Cemu"; return 4; }
 
     local nombres
     nombres="$(ls -1 "$bk" 2>/dev/null | sed -n 's/^\(controller[0-9]*\.xml\)\..*/\1/p' | sort -u)"
-    [ -n "$nombres" ] || nombres="$(ls -1 "$stock" 2>/dev/null | sed -n 's/^\(controller[0-9]*\.xml\)$/\1/p' | sort -u)"
-    [ -n "$nombres" ] || { c_err "no hay copias de Cemu"; return 1; }
     local nombre
     for nombre in $nombres; do
-        if [ "$cual" = "stock" ] || [ "$cual" = "original" ]; then
-            # estado anterior a N.E.C.A; si no hay copia fija, la mas antigua
-            origen="$stock/$nombre"
-            [ -f "$origen" ] || origen="$(ls -1t "$bk/$nombre".* 2>/dev/null | tail -n 1)"
-        elif [ "$cual" = "latest" ]; then
+        if [ "$cual" = "latest" ]; then
             origen="$(ls -1t "$bk/$nombre".* 2>/dev/null | head -n 1)"
         else
             origen="$(ls -1t "$bk/$nombre".* 2>/dev/null | sed -n "${cual}p")"
         fi
-        if [ -z "${origen:-}" ] || [ ! -f "$origen" ]; then
-            c_warn "no hay copia de $nombre"
-            continue
-        fi
+        [ -n "${origen:-}" ] || { c_warn "no hay copia de $nombre"; continue; }
         cp -f "$origen" "$(c_perfiles "$dir")/$nombre" \
             && c_say "restaurado $nombre <- $(basename "$origen")"
     done
@@ -501,7 +482,7 @@ USO
   eden-autoconfig.sh --sistema wiiu --dry-run      enseña el plan, sin escribir
   eden-autoconfig.sh --sistema wiiu --status       estado y dispositivos actuales
   eden-autoconfig.sh --sistema wiiu --diagnostico  carpetas y ficheros de Cemu
-  eden-autoconfig.sh --sistema wiiu --restore [latest|stock|N]
+  eden-autoconfig.sh --sistema wiiu --restore [latest|N]
   eden-autoconfig.sh --sistema wiiu --help
 
 Opcional en ~/eden-autoconfig/eden-autoconfig.conf:

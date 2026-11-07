@@ -55,7 +55,6 @@ PREF_DEF = {
     "ORDEN_INTEGRADO": "primero",
     "INTEGRADO_MANUAL": "no",
     "ORDEN_DUALSENSE": "conexion",
-    "DOLPHIN_BACKEND": "sdl",
     "RETENCION_BACKUPS": "10",
 }
 
@@ -227,9 +226,6 @@ def _validar(prefs):
     orden = str(prefs.get("ORDEN_DUALSENSE", "conexion")).strip()
     out["ORDEN_DUALSENSE"] = orden if orden in ORDENES else "conexion"
 
-    backend = str(prefs.get("DOLPHIN_BACKEND", "sdl")).strip().lower()
-    out["DOLPHIN_BACKEND"] = backend if backend in ("sdl", "evdev") else "sdl"
-
     try:
         ret = int(str(prefs.get("RETENCION_BACKUPS", "10")).strip())
     except Exception:
@@ -287,7 +283,6 @@ def _escribir_prefs(prefs):
               'ORDEN_INTEGRADO="%s"' % prefs["ORDEN_INTEGRADO"],
               'INTEGRADO_MANUAL="%s"' % prefs["INTEGRADO_MANUAL"],
               'ORDEN_DUALSENSE="%s"' % prefs["ORDEN_DUALSENSE"],
-              'DOLPHIN_BACKEND="%s"' % prefs["DOLPHIN_BACKEND"],
               "RETENCION_BACKUPS=%s" % prefs["RETENCION_BACKUPS"],
               END, ""]
     nuevo = texto + "\n".join(bloque)
@@ -620,9 +615,9 @@ def _reporte_ds5(bus, motor, seq=None):
 
 
 FICHEROS_SCRIPTS = (
-    SCRIPT, MANDOS, "eden-mandos-evdev.sh", "eden-diagnostico.sh",
-    "eden-nucleo.sh", "eden-driver-yuzu.sh", "eden-driver-dolphin.sh",
-    "eden-driver-cemu.sh", "eden-plantilla-cemu.xml",
+    SCRIPT, MANDOS, "eden-diagnostico.sh", "eden-nucleo.sh",
+    "eden-driver-yuzu.sh", "eden-driver-cemu.sh",
+    "eden-plantilla-cemu.xml",
 )
 
 
@@ -790,13 +785,6 @@ def _parse_mandos(texto):
             virtuales[0]["clase"] = "Integrado"
             virtuales[0]["familia"] = "integrado"
             virtuales[0]["conexion"] = "Interno"
-
-    # Eden: los DualSense virtuales (de28) comparten guid. El plan los
-    # renumera 0..N-1 (el integrado no consume puerto); el panel debe usar
-    # los mismos puertos para casar jugador <-> tarjeta.
-    vds = [m for m in mandos if m["clase"] == "DualSense" and m["virtual"]]
-    for i, m in enumerate(vds):
-        m["puerto"] = str(i)
     return mandos
 
 
@@ -880,9 +868,8 @@ class Plugin:
         aviso = ""
 
         if ok:
-            # El ayudante ya soporta EDEN_FAKE_SDL y aplica el renumerado de
-            # pads virtuales; no lo saltamos para que el panel y --who
-            # trabajen con la misma lista.
+            # El ayudante soporta EDEN_FAKE_SDL; panel y --who trabajan con la
+            # misma lista y los mismos puertos reales.
             rc, salida = await _run(["bash", _script(MANDOS)], timeout=45)
             mandos = _parse_mandos(salida)
             if rc != 0 and not mandos:
@@ -969,10 +956,7 @@ class Plugin:
             "desactualizado": bool(
                 ok and (faltan or (has_bundle and has_inst and has_inst != has_bundle))
             ),
-            "planes": {
-                "wiiu": _leer_plan("wiiu"),
-                "dolphin": _leer_plan("dolphin"),
-            },
+            "planes": {"wiiu": _leer_plan("wiiu")},
             "maquina": _maquina(),
             "aviso": aviso,
         }
@@ -989,12 +973,12 @@ class Plugin:
         return len(_parse_mandos(salida))
 
     async def comprobar(self):
-        """Recalcula el plan de Cemu y Dolphin sin escribir nada (para el panel)."""
+        """Recalcula el plan de Cemu sin escribir nada (para el panel)."""
         ok, _ = _instalado()
         if not ok:
             return await self.estado()
         notas = []
-        for sistema, etiqueta in (("wiiu", "Cemu"), ("gc", "Dolphin")):
+        for sistema, etiqueta in (("wiiu", "Cemu"),):
             rc, salida = await _run(
                 ["bash", _script(SCRIPT), "--sistema", sistema, "--dry-run"],
                 timeout=90,
@@ -1051,11 +1035,6 @@ class Plugin:
         if clave == "max":
             n = int(prefs["JUGADORES_MAX"])
             prefs["JUGADORES_MAX"] = str(1 if n >= 4 else n + 1)
-        elif clave == "dolphin":
-            orden = ["sdl", "evdev"]
-            actual = prefs.get("DOLPHIN_BACKEND", "sdl")
-            i = orden.index(actual) if actual in orden else 0
-            prefs["DOLPHIN_BACKEND"] = orden[(i + 1) % len(orden)]
         else:
             return await self.estado()
 
@@ -1076,7 +1055,7 @@ class Plugin:
         return {"exit": rc, "salida": _corta(salida), "mensaje": _mensaje_exit(rc)}
 
     async def aplicar_todo(self):
-        """Escribe Eden, Dolphin y Cemu con las preferencias guardadas."""
+        """Escribe Eden y Cemu con las preferencias guardadas."""
         ok, _ = _instalado()
         if not ok:
             return {"ok": False, "exit": 4,
@@ -1086,8 +1065,7 @@ class Plugin:
 
         lineas = []
         errores = []
-        for sistema, etiqueta in (("switch", "Eden"), ("gc", "Dolphin"),
-                                  ("wiiu", "Cemu")):
+        for sistema, etiqueta in (("switch", "Eden"), ("wiiu", "Cemu")):
             rc, salida = await _run(
                 ["bash", _script(SCRIPT), "--sistema", sistema], timeout=120)
             texto = _corta(salida).strip()
@@ -1167,11 +1145,10 @@ class Plugin:
         else:
             errores.append("restaurar Eden: %s" % _mensaje_exit(rc))
 
-        # 2b) Dolphin y Cemu: vuelven al estado anterior a N.E.C.A (stock/)
-        for sistema, etiqueta in (("gc", "Dolphin"), ("wiiu", "Cemu")):
+        # 2b) Cemu: deshace el ultimo aplicar (latest)
+        for sistema, etiqueta in (("wiiu", "Cemu"),):
             rc, salida = await _run(
-                ["bash", _script(SCRIPT), "--sistema", sistema,
-                 "--restore", "stock"],
+                ["bash", _script(SCRIPT), "--sistema", sistema, "--restore"],
                 timeout=90)
             texto = _corta(salida).strip()
             lineas_ok = [l.strip() for l in texto.splitlines()
@@ -1284,9 +1261,7 @@ class Plugin:
             limpias.append(linea)
 
         sistema = (sistema or "todo").strip().lower()
-        if sistema == "dolphin":
-            limpias = [l for l in limpias if "dolphin" in l.lower()]
-        elif sistema == "cemu":
+        if sistema == "cemu":
             # El driver de Cemu escribe con la etiqueta "wiiu".
             limpias = [l for l in limpias
                        if "cemu" in l.lower() or "wiiu" in l.lower()]

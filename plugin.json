@@ -8,14 +8,12 @@
       "controller",
       "emulation",
       "eden",
-      "dolphin",
       "cemu",
       "es-de",
       "switch",
-      "wiiu",
-      "gamecube"
+      "wiiu"
     ],
-    "description": "N.E.C.A (Nintendo-EmuDeck Controller Autoconf): autoconfigura los mandos de Eden (Switch), Dolphin (GameCube/Wii) y Cemu (Wii U) antes de lanzar el juego. Sin root y sin tocar tus scripts.",
+    "description": "N.E.C.A (Nintendo-EmuDeck Controller Autoconf): autoconfigura los mandos de Eden (Switch) y Cemu (Wii U) antes de lanzar el juego. Sin root y sin tocar tus scripts.",
     "image": "https://opengraph.githubassets.com/1/CeDiqqu/decky-neca"
   }
 }

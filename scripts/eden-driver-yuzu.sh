@@ -61,6 +61,9 @@ HERE="$(cd -- "$(dirname -- "$0")" && pwd -P 2>/dev/null || echo "$PWD")"
 VERSION="$(sed -n 's/^version:[[:space:]]*//p' "$HERE/VERSION" 2>/dev/null | head -n1)"
 [ -n "$VERSION" ] || VERSION="$(sed -n 's/^version:[[:space:]]*//p' "${EDEN_AUTOCONFIG_DIR:-$HOME/eden-autoconfig}/VERSION" 2>/dev/null | head -n1)"
 VERSION="${VERSION:-desconocida}"
+HASH="$(sed -n 's/^hash:[[:space:]]*//p' "$HERE/VERSION" 2>/dev/null | head -n1)"
+[ -n "$HASH" ] || HASH="$(sed -n 's/^hash:[[:space:]]*//p' "${EDEN_AUTOCONFIG_DIR:-$HOME/eden-autoconfig}/VERSION" 2>/dev/null | head -n1)"
+HASH="${HASH:-?}"
 
 # --------------------------------------------------------------- rutas base
 BASE_DIR="${EDEN_AUTOCONFIG_DIR:-$HOME/eden-autoconfig}"
@@ -394,27 +397,30 @@ cargar_mandos_sdl() {
     local f="$TMPDIR_RUN/sdl.txt" helper="" err
     : >"$f" 2>/dev/null || return 1
 
-    local c
-    for c in "$HERE/eden-mandos-sdl.sh" "$BASE_DIR/eden-mandos-sdl.sh"; do
-        [ -r "$c" ] && { helper="$c"; break; }
-    done
-    if [ -z "$helper" ]; then
-        log WARN "no encuentro eden-mandos-sdl.sh (uso el metodo /sys)"
-        return 1
+    if [ -n "${EDEN_FAKE_SDL:-}" ] && [ -r "$EDEN_FAKE_SDL" ]; then
+        grep -v '^[[:space:]]*$' "$EDEN_FAKE_SDL" >"$f" 2>/dev/null
+        SDL_LISTA="$f"; SDL_OK=1
+    else
+        local c
+        for c in "$HERE/eden-mandos-sdl.sh" "$BASE_DIR/eden-mandos-sdl.sh"; do
+            [ -r "$c" ] && { helper="$c"; break; }
+        done
+        if [ -z "$helper" ]; then
+            log WARN "no encuentro eden-mandos-sdl.sh (uso el metodo /sys)"
+            return 1
+        fi
+        # se pasan al ayudante las variables que puede necesitar del .conf
+        if ! SDL_CRC_CERO="${SDL_CRC_CERO:-}" \
+             EDEN_SDL_LIB="${EDEN_SDL_LIB:-}" \
+             EDEN_SDL_LIB_DIR="${EDEN_SDL_LIB_DIR:-}" \
+             EDEN_APPIMAGE="${EDEN_APPIMAGE:-}" \
+             bash "$helper" >"$f" 2>"$TMPDIR_RUN/sdl.err"; then
+            err="$(tr '\n' ' ' <"$TMPDIR_RUN/sdl.err" 2>/dev/null | cut -c1-300)"
+            log WARN "eden-mandos-sdl.sh fallo: ${err:-sin detalle}"
+            return 1
+        fi
+        SDL_LISTA="$f"; SDL_OK=1
     fi
-    # El ayudante tambien aplica el renumerado de pads virtuales (de28).
-    # En pruebas EDEN_FAKE_SDL hace que use el fichero falso.
-    if ! SDL_CRC_CERO="${SDL_CRC_CERO:-}" \
-         EDEN_SDL_LIB="${EDEN_SDL_LIB:-}" \
-         EDEN_SDL_LIB_DIR="${EDEN_SDL_LIB_DIR:-}" \
-         EDEN_APPIMAGE="${EDEN_APPIMAGE:-}" \
-         EDEN_FAKE_SDL="${EDEN_FAKE_SDL:-}" \
-         bash "$helper" >"$f" 2>"$TMPDIR_RUN/sdl.err"; then
-        err="$(tr '\n' ' ' <"$TMPDIR_RUN/sdl.err" 2>/dev/null | cut -c1-300)"
-        log WARN "eden-mandos-sdl.sh fallo: ${err:-sin detalle}"
-        return 1
-    fi
-    SDL_LISTA="$f"; SDL_OK=1
 
     # ---- comun a los dos caminos ----
     SDL_INFO="$(grep -m1 '^#lib ' "$f" 2>/dev/null | sed 's/^#lib //')"
@@ -468,9 +474,7 @@ detectar_mandos_sdl() {
             dualsense)
                 DS_SDL_N=$((DS_SDL_N + 1))
                 lista_ds="$lista_ds ${port:-0}|$guid|${serial:-}"
-                # Solo la serie real; los pads virtuales comparten guid y no
-                # dan MAC, y usar el guid los colapsaria en uno solo.
-                DS_SDL_MACS="$DS_SDL_MACS ${serial:-}"
+                DS_SDL_MACS="$DS_SDL_MACS ${serial:-$guid}"
                 ;;
             integrado)
                 INTEGRADO_N=$((INTEGRADO_N + 1))
@@ -508,9 +512,6 @@ detectar_mandos_sdl() {
     #   conexion (por defecto) = el orden en que los enumera el sistema
     #   mac                    = por numero de serie (un DualSense concreto es
     #                            siempre P1, aunque cambie el orden de conexion)
-    # modo: si algun dispositivo usa el guid de Valve (de28), Steam Input manda
-    if [ "$hay_de28" -eq 1 ]; then MODO_RED="virtual"; else MODO_RED="nativo"; fi
-
     if [ -n "$lista_ds" ]; then
         local orden="${ORDEN_DUALSENSE:-conexion}" lista_ord
         if [ "$orden" = "mac" ]; then
@@ -524,20 +525,6 @@ detectar_mandos_sdl() {
             lista_ord="$(printf '%s\n' $lista_ds | sort -t'|' -k3,3)"
         else
             lista_ord="$(printf '%s\n' $lista_ds | sort -n -t'|' -k1,1)"
-        fi
-        # En Steam Input el integrado virtual comparte guid y ocupa un puerto
-        # intermedio en la SDL del host; Eden lo ordena al final. Renumeramos
-        # los DualSense 0..N-1 antes de aplicar P1_SERIE.
-        if [ "$MODO_RED" = "virtual" ]; then
-            local itemv nuevo_ord="" nv=0
-            for itemv in $lista_ord; do
-                nuevo_ord="$nuevo_ord $nv|${itemv#*|}"
-                nv=$((nv + 1))
-            done
-            lista_ord="${nuevo_ord# }"
-            if [ -n "${SDL_INT_PAR:-}" ]; then
-                SDL_INT_PAR="$nv:${SDL_INT_PAR#*:}"
-            fi
         fi
         # P1_SERIE: ese mando concreto va SIEMPRE primero (P1)
         if [ -n "${P1_SERIE:-}" ]; then
@@ -559,6 +546,9 @@ detectar_mandos_sdl() {
         SDL_DS_LISTA="$(printf '%s\n' $lista_ord | awk -F'|' 'NF{printf "%s:%s ", $1, $2}')"
         SDL_DS_LISTA="${SDL_DS_LISTA% }"
     fi
+
+    # modo: si algun dispositivo usa el guid de Valve (de28), Steam Input manda
+    if [ "$hay_de28" -eq 1 ]; then MODO_RED="virtual"; else MODO_RED="nativo"; fi
 
     # ---- escenario ----
     if [ "$DS_SDL_N" -gt 0 ]; then
@@ -647,8 +637,13 @@ EOF
         [ "$visto" -eq 0 ] && lista="$lista $mac" && ORDEN_DS="$ORDEN_DS $mac"
     done
     DS_SDL_MACS="${lista# }"
-    # DS_SDL_N ya es el numero de lineas/mandos de SDL. No se recalcula desde
-    # las MACs: los pads virtuales no tienen serie y comparten guid.
+    # si no hay MACs (p.ej. USB), el numero de nodos es la cuenta
+    if [ -z "$DS_SDL_MACS" ]; then
+        DS_SDL_N=0
+    else
+        DS_SDL_N=0
+        for mac in $DS_SDL_MACS; do DS_SDL_N=$((DS_SDL_N + 1)); done
+    fi
 
     # Bluetooth (cuenta DualSense aunque Steam Input los oculte a Eden)
     DS_BT_N=0; DS_BT_MACS=""
@@ -1121,7 +1116,6 @@ planificar_sdl() {
     fi
 
     PLAN_RESUMEN="$resumen"
-    log INFO "plan SDL: $PLAN_JUGADORES"
     plan_desconectar_resto "$i"
     return 0
 }
@@ -1156,8 +1150,8 @@ planificar() {
         INCLUIR_INT=1
         p1_es_integrado=1
     fi
-    # En Steam Input, si no se puede identificar el integrado, INTEGRADO_N=0
-    # y no se anade; pero no forzamos INCLUIR_INT=0 (asi se respeta ignorar).
+    # en escenario Steam Input no podemos identificar el integrado
+    if [ "$ESCENARIO" = "steam_input" ]; then INCLUIR_INT=0; fi
 
     # ¿ponemos el integrado primero?
     local primero_int=0
@@ -1169,37 +1163,17 @@ planificar() {
         [ "$p1_es_integrado" -eq 1 ] && primero_int=1
     fi
 
-    # --- escenario Steam Input: solo los DualSense reales (+ integrado si toca)
+    # --- escenario Steam Input: asignamos los pads virtuales 1..N -----------
     if [ "$ESCENARIO" = "steam_input" ]; then
-        local nds="$DS_N" k=0
-        [ "$nds" -eq 0 ] && nds="$VIRT_N"
-        if [ "$nds" -eq 0 ]; then return 2; fi
-
-        if [ "$primero_int" -eq 1 ] && [ "$INCLUIR_INT" -eq 1 ] \
-           && [ "$INTEGRADO_N" -gt 0 ]; then
-            PLAN_JUGADORES="$PLAN_JUGADORES integrado:0:0"
-            resumen="$resumen
-      Player 1 = INTEGRADO [$INTEGRADO_NOMBRES]   (port 0)"
-            i=1
-        fi
-        while [ "$k" -lt "$nds" ] && [ "$i" -lt "$JUGADORES_MAX" ] \
-              && [ "$i" -lt "$N_TOTALES" ]; do
+        local np="$VIRT_N"
+        [ "$np" -gt "$JUGADORES_MAX" ] && np="$JUGADORES_MAX"
+        if [ "$np" -eq 0 ]; then return 2; fi
+        while [ "$i" -lt "$np" ]; do
             PLAN_JUGADORES="$PLAN_JUGADORES dual:$i:$i"
             resumen="$resumen
-      Player $((i + 1)) = DualSense $((k + 1))   (port $i)"
-            i=$((i + 1)); k=$((k + 1))
-        done
-        if [ "$primero_int" -eq 0 ] && [ "$INCLUIR_INT" -eq 1 ] \
-           && [ "$INTEGRADO_N" -gt 0 ] && [ "$i" -lt "$JUGADORES_MAX" ] \
-           && [ "$i" -lt "$N_TOTALES" ]; then
-            PLAN_JUGADORES="$PLAN_JUGADORES integrado:$i:$i"
-            resumen="$resumen
-      Player $((i + 1)) = INTEGRADO [$INTEGRADO_NOMBRES]   (port $i)"
+      Player $((i + 1)) = pad virtual Steam $i   (port $i)"
             i=$((i + 1))
-        fi
-        [ "$INCLUIR_INT" -eq 1 ] && [ "$INTEGRADO_N" -eq 0 ] && \
-            warn "Steam Input: no puedo identificar el integrado; puede entrar otro pad"
-        [ "$i" -gt 0 ] || return 2
+        done
         PLAN_RESUMEN="$resumen"
         plan_desconectar_resto "$i"
         return 0
@@ -1768,7 +1742,7 @@ avisar_guid_no_visto() { # $1 = tipo, $2 = fichero plantilla
     fi
     say ""
     say "OK: $QC actualizado."
-    log INFO "aplicado. plan: $PLAN_JUGADORES ; escenario=$ESCENARIO ds_sdl=$DS_SDL_N ds_bt=$DS_BT_N virt=$VIRT_N"
+    log INFO "aplicado. plan: $PLAN_JUGADORES ; version=$VERSION hash=$HASH escenario=$ESCENARIO ds_sdl=$DS_SDL_N ds_bt=$DS_BT_N virt=$VIRT_N"
     # linea unica, util tambien con --quiet (aparece en el log de ES-DE)
     printf '%s: %s | escenario=%s | DualSense(SDL)=%s DualSense(BT)=%s virtuales=%s\n' \
         "$PROG" "$(printf '%s' "$PLAN_JUGADORES" | sed 's/^ //')" "$ESCENARIO" \

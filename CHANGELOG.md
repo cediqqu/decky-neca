@@ -8,61 +8,33 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 <!-- Añade aquí los cambios sin versión. Al publicar, crea ## [x.y.z] - YYYY-MM-DD. -->
 
-### Corregido
+### Cambiado
 
-- **Dolphin: los jugadores 2–4 ahora funcionan.** EmuDeck deja activo solo el
-  puerto 1 de GameCube (`SIDevice1..3 = 0`) y los Wiimotes 2–4 en `Source = 0`;
-  el driver ahora escribe `SIDevice0..3` en `Dolphin.ini` e **inserta**
-  `Source = 1` en los Wiimotes del plan (EmuDeck no trae esa línea). También
-  apunta `Hotkeys.ini` al jugador 1. Respeta el adaptador GC real
-  (`SIDeviceN = 12`) y los Wiimotes reales (`Source = 2`).
-- **Dolphin: el Player 2 con otro mando ya funciona.** Dolphin asigna el id de
-  `SDL/<id>/<nombre>` por nombre de dispositivo, no por el índice global de SDL
-  (con un DualSense y el integrado, ambos son `id 0` de su nombre). El driver
-  ahora usa el n-ésimo con ese mismo nombre; antes escribía `SDL/1/Asus…` y
-  Dolphin esperaba `SDL/0/Asus…`.
-- **Dolphin enumera dentro de su Flatpak.** Dolphin identifica por nombre+id de
-  **su** SDL (Flatpak 3.2.30), no de la del host (3.4.12). El driver ahora
-  ejecuta el helper dentro de `org.DolphinEmu.dolphin-emu` con
-  `SDL_HINTS_MODO=dolphin` (sin forzar el HIDAPI de Xbox). Así los `Device`
-  coinciden con los mandos que ve Dolphin. Si el Flatpak falla, cae al host y
-  lo avisa; el log registra `fuente=flatpak|host`.
-- **El log muestra los `Device` escritos.** Cada aplicar deja en `log.txt` el
-  `GCPadN Device`, `SIDevice0..3`, `Source` y `Hotkeys` resultantes, para poder
-  verlo desde **Ver log** sin abrir una consola.
-- **Restaurar vuelve al estado anterior a N.E.C.A en Dolphin y Cemu.** Cada
-  driver guarda una copia fija en `backups/<emu>/stock/` la primera vez que
-  aplica; **Restaurar** usa esa copia (`--restore stock`), no el último backup.
-  `--restore latest` sigue disponible para deshacer solo el último aplicar.
-
-### Añadido
-
-- **Dolphin usa `Dolphin.ini` y `Hotkeys.ini`.** Además de `GCPadNew.ini` y
-  `WiimoteNew.ini`, el driver activa los puertos de GameCube y ajusta los
-  atajos del jugador 1, con backup, escritura atómica y validación.
-- **Un solo «Aplicar»** en el panel. Escribe Eden, Dolphin y Cemu de una vez,
-  sin depender del hook ni de lanzar un juego; se elimina el botón suelto de
-  Eden.
-- **Log con scroll.** **Ver log** abre una ventana desplazable con D-pad,
-  stick o dedo. El texto ya no usa `ScrollPanel` (no reaccionaba al D-pad):
-  mueve `scrollTop` a mano. Devuelve hasta 800 líneas.
+- **Eden y Cemu vuelven a la lógica de 2.0.0.** Se retira la renumeración de
+  puertos de los DualSense virtuales y los experimentos de Steam Input. Ambos
+  emuladores aplican como en la última versión estable.
+- **Un solo «Aplicar»** en el panel. Escribe Eden y Cemu de una vez, sin
+  depender del hook ni de lanzar un juego; se elimina el botón suelto de Eden.
+- **Log con scroll.** **Ver log** abre una ventana desplazable con D-pad, stick
+  o dedo. El texto mueve `scrollTop` a mano y devuelve hasta 800 líneas.
+- **Filtros del log por emulador.** **Ver log** permite ver **Todo**, **Eden** o
+  **Cemu**; el de Eden muestra su último bloque y el de Cemu acepta las líneas
+  `wiiu`. Los bloques de `--who` (ruido del refresco) se ocultan.
 - **Aviso de scripts recién instalados.** Si el plugin acaba de actualizar los
   scripts, el panel avisa de que hay que cerrar el juego y relanzarlo (o pulsar
   **Aplicar**). El aviso se limpia al aplicar.
 - **Versión y hash en el log.** Cada aplicar registra `version=`, `hash=`, los
-  `Device` escritos, `SIDevice`, `Source` y `Hotkeys`.
-- **Aviso de emulador abierto en el log.** Si Dolphin o Cemu están en ejecución,
-  el log deja `en ejecucion, no aplico` en vez de fallar en silencio.
-- **Dolphin por evdev.** Con Steam Input, Dolphin usaba los pads virtuales y el
-  orden lo decidía Steam. El nuevo modo `evdev` lee los mandos físicos por
-  `/dev/input` y escribe `Device = evdev/<id>/<nombre>`. La tarjeta **Dolphin**
-  de Ajustes cicla SDL/evdev; **SDL es el valor por defecto** y evdev queda como
-  opción experimental. Incluye `eden-mandos-evdev.sh` y su instalación.
-- **Puertos de los DualSense virtuales.** El ayudante contaba el integrado como
-  un puerto más entre los pads `de28`; Eden lo ordena al final, así que P2
-  apuntaba a DS3 y P4 al Asus. Eden ahora renumera sus DualSense 0..N-1 (el
-  integrado no consume puerto) y Cemu conserva los puertos reales por guid
-  (`0,2,3,4`), que es lo que necesita su `uuid`.
+  `Device`/`uuid` escritos y los avisos.
+- **Aviso de emulador abierto en el log.** Si Eden o Cemu están en ejecución, el
+  log deja `en ejecucion, no aplico` en vez de fallar en silencio.
+
+### Eliminado
+
+- **Dolphin retirado temporalmente.** Se eliminan su driver, el hook de
+  GameCube/Wii, la tarjeta y el backend del panel, los tests y la documentación.
+  Los datos de Dolphin que hubiera en `~/eden-autoconfig` (plantillas, backups y
+  configuraciones) **no se borran**; simplemente dejan de aplicarse. Se valorará
+  recuperarlo en el futuro.
 
 ## [2.0.0] - 2026-11-06
 
