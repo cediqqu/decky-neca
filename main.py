@@ -1284,16 +1284,26 @@ class Plugin:
             limpias.append(linea)
 
         sistema = (sistema or "todo").strip().lower()
-        if sistema in ("dolphin", "cemu"):
-            limpias = [l for l in limpias if sistema in l.lower()]
+        if sistema == "dolphin":
+            limpias = [l for l in limpias if "dolphin" in l.lower()]
+        elif sistema == "cemu":
+            # El driver de Cemu escribe con la etiqueta "wiiu".
+            limpias = [l for l in limpias
+                       if "cemu" in l.lower() or "wiiu" in l.lower()]
         elif sistema == "eden":
-            # Ultimo bloque de Eden (el aplicar mas reciente)
+            # Ultimo bloque de Eden: desde su cabecera hasta el siguiente
+            # driver (que empieza por "[fecha]").
             idx = None
             for i, l in enumerate(limpias):
                 if "=== eden-autoconfig.sh" in l:
                     idx = i
             if idx is not None:
-                limpias = limpias[idx:]
+                bloque = []
+                for l in limpias[idx:]:
+                    if bloque and l.startswith("["):
+                        break
+                    bloque.append(l)
+                limpias = bloque
             else:
                 limpias = [l for l in limpias if "eden" in l.lower()]
         return {"salida": "".join(limpias[-600:]) or "(log vacio)"}

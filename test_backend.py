@@ -1096,15 +1096,31 @@ async def main():
         check("Cemu uuid %s raw" % u, ("uuid         = %s" % u) in out,
               out[-600:])
 
-    # El log del panel filtra los bloques de --who (ruido del refresco)
+    # El log del panel filtra por emulador y quita los bloques de --who
     with open(os.path.join(base, "log.txt"), "w", encoding="utf-8") as fh:
         fh.write("2026-01-01 10:00:00 [INFO] [1] === eden-autoconfig.sh v2 modo=who args='--who' ===\n")
         for _ in range(6):
             fh.write("2026-01-01 10:00:00 [INFO] [1] deteccion SDL: ruido\n")
+        fh.write("2026-01-01 10:00:00 [INFO] [1] === eden-autoconfig.sh v2 modo=aplicar args='' ===\n")
+        fh.write("2026-01-01 10:00:00 [INFO] [1] aplicado. plan: dual:0:0\n")
         fh.write("[2026-01-01 10:00:01] dolphin aplicar: GCPad1 Device = SDL/0/X\n")
+        fh.write("[2026-01-01 10:00:02] wiiu aplicar: Mando 1 = X\n")
     r = await mod.Plugin().ver_log()
     check("el log filtra los --who", "modo=who" not in r["salida"], r["salida"])
-    check("el log conserva el aplicar", "GCPad1 Device" in r["salida"], r["salida"])
+    check("el log conserva el aplicar", "GCPad1 Device" in r["salida"],
+          r["salida"])
+
+    r = await mod.Plugin().ver_log("dolphin")
+    check("filtro Dolphin", "GCPad1 Device" in r["salida"]
+          and "aplicado. plan" not in r["salida"]
+          and "wiiu aplicar" not in r["salida"], r["salida"])
+    r = await mod.Plugin().ver_log("eden")
+    check("filtro Eden", "aplicado. plan" in r["salida"]
+          and "GCPad1 Device" not in r["salida"]
+          and "wiiu aplicar" not in r["salida"], r["salida"])
+    r = await mod.Plugin().ver_log("cemu")
+    check("filtro Cemu (wiiu)", "wiiu aplicar" in r["salida"]
+          and "GCPad1 Device" not in r["salida"], r["salida"])
 
     shutil.rmtree(tmp, ignore_errors=True)
 
