@@ -703,46 +703,26 @@ function Seccion(props) {
 // ---------------------------------------------------------------------------
 function VentanaTexto(props) {
     const texto = (props.texto || "").replace(/\s+$/, "");
-    const ref = SP_REACT.useRef(null);
-    // Scroll con D-pad/stick. El texto no tiene hijos enfocables, asi que
-    // ScrollPanel no se movia; movemos scrollTop a mano.
-    const mover = (evt) => {
-        const boton = evt.detail?.button;
-        const el = ref.current;
-        if (!el)
-            return;
-        const paso = Math.max(40, Math.floor(el.clientHeight * 0.8));
-        if (boton === DFL.GamepadButton.DIR_UP) {
-            if (el.scrollTop > 0) {
-                el.scrollTop -= paso;
-                evt.stopPropagation();
-            }
-        }
-        else if (boton === DFL.GamepadButton.DIR_DOWN) {
-            if (el.scrollTop + el.clientHeight < el.scrollHeight - 1) {
-                el.scrollTop += paso;
-                evt.stopPropagation();
-            }
-        }
-    };
+    const lineas = texto ? texto.split("\n") : ["(vacio)"];
+    // Bloques enfocables: ScrollPanel sigue al bloque con foco. Sin hijos
+    // enfocables no se movia con el D-pad.
+    const bloques = [];
+    for (let i = 0; i < lineas.length; i += 12) {
+        bloques.push(lineas.slice(i, i + 12).join("\n"));
+    }
     return (SP_JSX.jsxs(DFL.ModalRoot, { strTitle: props.titulo, bAllowFullSize: true, onCancel: props.onCerrar, children: [SP_JSX.jsx(DFL.DialogBody, { style: {
                     height: "58vh",
                     maxHeight: "58vh",
                     padding: 0,
                     overflow: "hidden",
-                    display: "flex",
-                    flexDirection: "column",
-                }, children: SP_JSX.jsx(DFL.Focusable, { preferredFocus: true, onGamepadDirection: mover, style: { flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }, children: SP_JSX.jsx("div", { ref: ref, style: {
-                            flex: 1,
-                            minHeight: 0,
-                            overflowY: "auto",
-                            padding: "12px 16px 16px",
-                            fontFamily: "monospace",
-                            fontSize: "0.85em",
-                            lineHeight: 1.35,
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                        }, children: texto || "(vacio)" }) }) }), SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) })] }));
+                }, children: SP_JSX.jsx(DFL.ScrollPanel, { children: SP_JSX.jsx("div", { style: { padding: "8px 12px" }, children: bloques.map((bloque, i) => (SP_JSX.jsx(DFL.Focusable, { preferredFocus: i === bloques.length - 1, style: { padding: "2px 4px", borderRadius: "6px" }, children: SP_JSX.jsx("pre", { style: {
+                                    margin: 0,
+                                    fontFamily: "monospace",
+                                    fontSize: "0.84em",
+                                    lineHeight: 1.35,
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
+                                }, children: bloque }) }, i))) }) }) }), SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) })] }));
 }
 function abrirVentana(titulo, texto) {
     const cierre = { f: () => { } };
