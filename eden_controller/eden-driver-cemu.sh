@@ -423,6 +423,7 @@ c_cmd_aplicar() {
     dir="$(c_dir)" || { c_err "no encuentro la configuracion de Cemu"; return 4; }
 
     if c_en_ejecucion; then
+        nucleo_log "cemu aplicar: Cemu en ejecucion, no aplico"
         c_err "Cemu esta en ejecucion. Cierralo y vuelve a intentarlo."
         return 3
     fi

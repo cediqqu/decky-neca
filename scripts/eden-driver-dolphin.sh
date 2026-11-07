@@ -461,6 +461,7 @@ d_cmd_aplicar() {
     dir="$(d_dir)" || { d_err "no encuentro la configuracion de Dolphin"; return 4; }
 
     if d_en_ejecucion; then
+        nucleo_log "dolphin aplicar: Dolphin en ejecucion, no aplico"
         d_err "Dolphin esta en ejecucion. Cierralo y vuelve a intentarlo."
         return 3
     fi

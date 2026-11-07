@@ -96,6 +96,39 @@ def _estado_dir():
     return os.path.join(_home(), ".config", "eden-autoconfig-decky")
 
 
+def _marca_scripts():
+    return os.path.join(_estado_dir(), "scripts-instalados")
+
+
+def _marcar_scripts():
+    """Deja constancia de que los scripts se acaban de instalar/actualizar."""
+    try:
+        os.makedirs(_estado_dir(), exist_ok=True)
+        with open(_marca_scripts(), "w", encoding="utf-8") as fh:
+            fh.write("%d\n" % int(time.time()))
+    except Exception as exc:
+        log.warning("no pude marcar la instalacion de scripts: %s", exc)
+
+
+def _limpiar_marca_scripts():
+    try:
+        os.remove(_marca_scripts())
+    except FileNotFoundError:
+        pass
+    except Exception:
+        pass
+
+
+def _scripts_recientes(segundos=1800):
+    """True si los scripts se instalaron hace menos de `segundos`."""
+    try:
+        with open(_marca_scripts(), "r", encoding="utf-8") as fh:
+            cuando = int(fh.read().strip() or 0)
+        return 0 <= (time.time() - cuando) < segundos
+    except Exception:
+        return False
+
+
 def _script(nombre):
     return os.path.join(_base(), nombre)
 
@@ -819,6 +852,8 @@ class Plugin:
         log.info("scripts desactualizados: auto-instalando desde el bundle")
         rc, salida = await _run(["bash", inst], timeout=180)
         log.info("auto-instalacion: exit %s %s", rc, _corta(salida)[-300:])
+        if rc == 0:
+            _marcar_scripts()
 
     async def _unload(self):
         log.info("N.E.C.A descargado (no se toca ~/eden-autoconfig)")
@@ -913,6 +948,7 @@ class Plugin:
             "esde": _esde_eventos(),
             "version": _version_bundle(),
             "hash_instalado": has_inst,
+            "scripts_nuevos": _scripts_recientes(),
             "faltan": faltan,
             "reparar": bool(ok and faltan),
             "desactualizado": bool(
@@ -1021,6 +1057,43 @@ class Plugin:
         await self.estado()
         rc, salida = await _run(["bash", _script(SCRIPT)], timeout=120)
         return {"exit": rc, "salida": _corta(salida), "mensaje": _mensaje_exit(rc)}
+
+    async def aplicar_todo(self):
+        """Escribe Eden, Dolphin y Cemu con las preferencias guardadas."""
+        ok, _ = _instalado()
+        if not ok:
+            return {"ok": False, "exit": 4,
+                    "salida": "Los scripts no estan instalados."}
+        # sincroniza antes (p. ej. el integrado con 4 DualSense)
+        await self.estado()
+
+        lineas = []
+        errores = []
+        for sistema, etiqueta in (("switch", "Eden"), ("gc", "Dolphin"),
+                                  ("wiiu", "Cemu")):
+            rc, salida = await _run(
+                ["bash", _script(SCRIPT), "--sistema", sistema], timeout=120)
+            texto = _corta(salida).strip()
+            ultima = texto.splitlines()[-1].strip() if texto else ""
+            if rc == 0:
+                lineas.append("%s: %s" % (etiqueta, ultima or "aplicado"))
+            elif rc == 2:
+                lineas.append("%s: nada que asignar, sin cambios" % etiqueta)
+            elif rc == 3:
+                errores.append("%s: en ejecucion, cierralo y reintenta" % etiqueta)
+            elif rc == 4:
+                lineas.append("%s: no encontrado, sin cambios" % etiqueta)
+            else:
+                errores.append("%s: %s" % (etiqueta,
+                                           ultima or _mensaje_exit(rc)))
+
+        salida = "\n".join(lineas + errores) or "nada que hacer"
+        if not errores:
+            _limpiar_marca_scripts()
+        return {"ok": not errores,
+                "exit": 0 if not errores else 1,
+                "salida": salida,
+                "mensaje": "hecho" if not errores else "con problemas"}
 
     async def restaurar_todo(self):
         """Vuelve al estado anterior a N.E.C.A: config, preferencias y hook."""
@@ -1179,7 +1252,7 @@ class Plugin:
             return {"salida": "todavia no hay log (%s)" % _log_txt()}
         except Exception as exc:
             return {"salida": "no puedo leer el log: %s" % exc}
-        return {"salida": "".join(lineas[-40:]) or "(log vacio)"}
+        return {"salida": "".join(lineas[-800:]) or "(log vacio)"}
 
     async def instalar_scripts(self):
         inst = os.path.join(SCRIPTS_DIR, INSTALADOR)
@@ -1187,6 +1260,8 @@ class Plugin:
             return {"ok": False, "exit": 1,
                     "salida": "falta %s en el plugin (bundle incompleto)" % inst}
         rc, salida = await _run(["bash", inst], timeout=240, cwd=SCRIPTS_DIR)
+        if rc == 0:
+            _marcar_scripts()
         return {"ok": rc == 0, "exit": rc, "salida": _corta(salida)}
 
 

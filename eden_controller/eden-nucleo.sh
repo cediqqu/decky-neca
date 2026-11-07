@@ -367,8 +367,14 @@ nucleo_guardar_plan() { # $1 = sistema, $2 = modo
 
 # Vuelca el plan al log (una linea por cosa, facil de leer con tail)
 nucleo_registrar() { # $1 = sistema, $2 = modo
-    local i
-    nucleo_log "$1 $2: SDL=$([ "$SDL_OK" -eq 1 ] && echo ok || echo "error(${SDL_ERR:-?})") lib=${SDL_LIB:-?} detectados=${#NUCLEO_TODOS[@]} max=${JUGADORES_MAX:-?}"
+    local i ver hash vf
+    vf="$(nucleo_base)/VERSION"
+    ver=""; hash=""
+    if [ -r "$vf" ]; then
+        ver="$(sed -n 's/^version:[[:space:]]*//p' "$vf" | head -n 1)"
+        hash="$(sed -n 's/^hash:[[:space:]]*//p' "$vf" | head -n 1)"
+    fi
+    nucleo_log "$1 $2: version=${ver:-?} hash=${hash:-?} SDL=$([ "$SDL_OK" -eq 1 ] && echo ok || echo "error(${SDL_ERR:-?})") lib=${SDL_LIB:-?} detectados=${#NUCLEO_TODOS[@]} max=${JUGADORES_MAX:-?}"
     for i in "${!PLAN_UUID[@]}"; do
         nucleo_log "$1 $2: Mando $((i + 1)) = ${PLAN_SDL[$i]} [${PLAN_CLASE[$i]}] uuid=${PLAN_UUID[$i]}"
     done

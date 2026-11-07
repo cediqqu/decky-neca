@@ -196,7 +196,10 @@ Orden de llamada: despachador (según `--sistema`) → driver → `main` → `lo
   `SDL_OK`/`SDL_ERR` y los arrays `NUCLEO_*` para poder explicar el plan.
 - Los drivers dejan `plan-<sistema>.txt` (lo lee el panel) y escriben en
   `log.txt`; `nucleo_guardar_plan` / `nucleo_registrar` son los únicos que
-  tocan esos ficheros.
+  tocan esos ficheros. `nucleo_registrar` incluye `version=` y `hash=` del
+  bundle; los drivers añaden los `Device`/`SIDevice`/`Source`/`Hotkeys`
+  escritos. Si el emulador está abierto, salen con 3 y dejan
+  `en ejecucion, no aplico` en el log.
 - La version del driver se lee de `VERSION`; `build.sh` la genera y `instalar.sh`
   la copia. No volver a fijarla a mano en el script.
 - El driver de Eden desactiva el **applet de mandos** al aplicar: evita la

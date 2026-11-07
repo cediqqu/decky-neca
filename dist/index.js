@@ -699,30 +699,25 @@ function Seccion(props) {
                 } }), props.abierta ? (SP_JSX.jsx("div", { className: "ede-aparecer", children: props.children })) : null] }));
 }
 // ---------------------------------------------------------------------------
-//  Ventana emergente de texto (paginada: D-pad y dedo)
+//  Ventana emergente de texto (con scroll: D-pad, stick o dedo)
 // ---------------------------------------------------------------------------
-const LINEAS_POR_PAGINA = 16;
 function VentanaTexto(props) {
-    const [pagina, setPagina] = SP_REACT.useState(0);
-    const lineas = (props.texto || "").replace(/\s+$/, "").split("\n");
-    const total = Math.max(1, Math.ceil(lineas.length / LINEAS_POR_PAGINA));
-    const actual = Math.min(pagina, total - 1);
-    const desde = actual * LINEAS_POR_PAGINA;
-    const hasta = Math.min(desde + LINEAS_POR_PAGINA, lineas.length);
-    return (SP_JSX.jsxs(DFL.ModalRoot, { strTitle: props.titulo, bAllowFullSize: true, onCancel: props.onCerrar, children: [SP_JSX.jsx(DFL.DialogBody, { children: SP_JSX.jsx(DFL.DialogBodyText, { style: {
-                        fontFamily: "monospace",
-                        fontSize: "0.85em",
-                        lineHeight: 1.35,
-                        whiteSpace: "pre-wrap",
-                        wordBreak: "break-word",
-                        maxHeight: "45vh",
-                        overflowY: "auto",
-                    }, children: lineas.slice(desde, hasta).join("\n") }) }), SP_JSX.jsxs(DFL.DialogFooter, { children: [SP_JSX.jsx(DFL.DialogButton, { disabled: actual <= 0, onClick: () => setPagina(actual - 1), children: "◀ Anteriores" }), SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }), SP_JSX.jsx(DFL.DialogButton, { disabled: actual >= total - 1, onClick: () => setPagina(actual + 1), children: "Siguientes ▶" })] }), SP_JSX.jsxs("div", { style: {
-                    textAlign: "center",
-                    fontSize: "0.75em",
-                    opacity: 0.6,
-                    marginTop: "8px",
-                }, children: ["lineas ", lineas.length ? desde + 1 : 0, "-", hasta, " de ", lineas.length] })] }));
+    const texto = (props.texto || "").replace(/\s+$/, "");
+    return (SP_JSX.jsxs(DFL.ModalRoot, { strTitle: props.titulo, bAllowFullSize: true, onCancel: props.onCerrar, children: [SP_JSX.jsx(DFL.DialogBody, { style: {
+                    height: "58vh",
+                    maxHeight: "58vh",
+                    padding: 0,
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                }, children: SP_JSX.jsx("div", { style: { flex: 1, minHeight: 0 }, children: SP_JSX.jsx(DFL.ScrollPanel, { children: SP_JSX.jsx("div", { style: {
+                                padding: "12px 16px 16px",
+                                fontFamily: "monospace",
+                                fontSize: "0.85em",
+                                lineHeight: 1.35,
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                            }, children: texto || "(vacio)" }) }) }) }), SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) })] }));
 }
 function abrirVentana(titulo, texto) {
     const cierre = { f: () => { } };
@@ -928,9 +923,14 @@ function Content() {
         abrirVentana(`Aplicar: ${r.mensaje ?? "salida " + r.exit}`, r.salida);
         await refrescar();
     });
+    const aplicarTodo = () => conBloqueo(async () => {
+        const r = await call("aplicar_todo");
+        abrirVentana(r.ok ? "Aplicar todo: hecho" : "Aplicar todo: con problemas", r.salida);
+        await refrescar();
+    });
     const verLog = () => conBloqueo(async () => {
         const r = await call("ver_log");
-        abrirVentana("Log (ultimas lineas)", r.salida);
+        abrirVentana("Log (log.txt)", r.salida);
     });
     const instalar = () => conBloqueo(async () => {
         const r = await call("instalar_scripts");
@@ -976,7 +976,7 @@ function Content() {
                                 ? "Reactivar hook"
                                 : est.reparar
                                     ? "Reparar instalación"
-                                    : "Actualizar scripts", onClick: instalar }) }) })) : null, est.esde === false ? (SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(Aviso, { tono: "atencion", children: "ES-DE: activa \u00ABOther settings \u2192 Enable custom event scripts\u00BB. Sin eso no se aplica al lanzar el juego." }) }) })) : null, SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
+                                    : "Actualizar scripts", onClick: instalar }) }) })) : null, est.scripts_nuevos ? (SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(Aviso, { tono: "info", children: "Scripts reci\u00E9n instalados. Cierra el juego y vuelve a abrirlo (o pulsa \u00ABAplicar todo\u00BB) para que se aplique la versi\u00F3n nueva." }) }) })) : null, est.esde === false ? (SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(Aviso, { tono: "atencion", children: "ES-DE: activa \u00ABOther settings \u2192 Enable custom event scripts\u00BB. Sin eso no se aplica al lanzar el juego." }) }) })) : null, SP_JSX.jsx(DFL.PanelSection, { children: SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
                             display: "flex",
                             flexWrap: "wrap",
                             gap: "6px",
@@ -1015,7 +1015,7 @@ function Content() {
                                 gap: "6px",
                                 fontSize: "0.68em",
                                 opacity: 0.6,
-                            }, children: [SP_JSX.jsx(GlifoA, {}), " vibrar \u00B7 dos toques seguidos = mando principal"] }) })) : null] }), SP_JSX.jsx(Seccion, { titulo: "Ajustes", color: C.violeta, icono: SP_JSX.jsx(FaSlidersH, { size: 12 }), abierta: Boolean(abiertas.ajustes), onToggle: () => toggle("ajustes"), children: SP_JSX.jsxs(Rejilla, { children: [SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.verde, icono: SP_JSX.jsx(FaCheck, { size: 17 }), anim: "pop", titulo: "Aplicar", detalle: "Ahora", onClick: aplicar }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.rojo, icono: SP_JSX.jsx(FaUndo, { size: 16 }), anim: "giro", titulo: "Restaurar", detalle: "Todo", onClick: restaurarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.turquesa, icono: SP_JSX.jsx(FaFileAlt, { size: 16 }), anim: "barrido", titulo: "Ver log", detalle: "log.txt", onClick: verLog }) })] }) })] }));
+                            }, children: [SP_JSX.jsx(GlifoA, {}), " vibrar \u00B7 dos toques seguidos = mando principal"] }) })) : null] }), SP_JSX.jsx(Seccion, { titulo: "Ajustes", color: C.violeta, icono: SP_JSX.jsx(FaSlidersH, { size: 12 }), abierta: Boolean(abiertas.ajustes), onToggle: () => toggle("ajustes"), children: SP_JSX.jsxs(Rejilla, { children: [SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.verde, icono: SP_JSX.jsx(FaCheck, { size: 17 }), anim: "pop", titulo: "Aplicar", detalle: "Eden", onClick: aplicar }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.azul, icono: SP_JSX.jsx(FaSyncAlt, { size: 16 }), anim: "giro", titulo: "Aplicar todo", detalle: "Los 3", onClick: aplicarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.rojo, icono: SP_JSX.jsx(FaUndo, { size: 16 }), anim: "giro", titulo: "Restaurar", detalle: "Todo", onClick: restaurarTodo }) }), SP_JSX.jsx("div", { className: "ede-celda", children: SP_JSX.jsx(TarjetaAccion, { color: C.turquesa, icono: SP_JSX.jsx(FaFileAlt, { size: 16 }), anim: "barrido", titulo: "Ver log", detalle: "log.txt", onClick: verLog }) })] }) })] }));
 }
 var index = definePlugin(() => {
     return {

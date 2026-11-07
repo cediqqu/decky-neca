@@ -10,6 +10,7 @@ import {
   ModalRoot,
   PanelSection,
   PanelSectionRow,
+  ScrollPanel,
   showModal,
   staticClasses,
 } from "@decky/ui";
@@ -97,6 +98,7 @@ type Estado = {
   esde: boolean | null;
   version: string;
   hash_instalado: string;
+  scripts_nuevos: boolean;
   desactualizado: boolean;
   reparar: boolean;
   faltan: string[];
@@ -1045,62 +1047,46 @@ function Seccion(props: {
 }
 
 // ---------------------------------------------------------------------------
-//  Ventana emergente de texto (paginada: D-pad y dedo)
+//  Ventana emergente de texto (con scroll: D-pad, stick o dedo)
 // ---------------------------------------------------------------------------
-const LINEAS_POR_PAGINA = 16;
-
 function VentanaTexto(props: {
   titulo: string;
   texto: string;
   onCerrar: () => void;
 }) {
-  const [pagina, setPagina] = useState(0);
-
-  const lineas = (props.texto || "").replace(/\s+$/, "").split("\n");
-  const total = Math.max(1, Math.ceil(lineas.length / LINEAS_POR_PAGINA));
-  const actual = Math.min(pagina, total - 1);
-  const desde = actual * LINEAS_POR_PAGINA;
-  const hasta = Math.min(desde + LINEAS_POR_PAGINA, lineas.length);
-
+  const texto = (props.texto || "").replace(/\s+$/, "");
   return (
     <ModalRoot strTitle={props.titulo} bAllowFullSize onCancel={props.onCerrar}>
-      <DialogBody>
-        <DialogBodyText
-          style={{
-            fontFamily: "monospace",
-            fontSize: "0.85em",
-            lineHeight: 1.35,
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-            maxHeight: "45vh",
-            overflowY: "auto",
-          }}
-        >
-          {lineas.slice(desde, hasta).join("\n")}
-        </DialogBodyText>
-      </DialogBody>
-      <DialogFooter>
-        <DialogButton disabled={actual <= 0} onClick={() => setPagina(actual - 1)}>
-          {"◀ Anteriores"}
-        </DialogButton>
-        <DialogButtonPrimary onClick={props.onCerrar}>Cerrar</DialogButtonPrimary>
-        <DialogButton
-          disabled={actual >= total - 1}
-          onClick={() => setPagina(actual + 1)}
-        >
-          {"Siguientes ▶"}
-        </DialogButton>
-      </DialogFooter>
-      <div
+      <DialogBody
         style={{
-          textAlign: "center",
-          fontSize: "0.75em",
-          opacity: 0.6,
-          marginTop: "8px",
+          height: "58vh",
+          maxHeight: "58vh",
+          padding: 0,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        lineas {lineas.length ? desde + 1 : 0}-{hasta} de {lineas.length}
-      </div>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <ScrollPanel>
+            <div
+              style={{
+                padding: "12px 16px 16px",
+                fontFamily: "monospace",
+                fontSize: "0.85em",
+                lineHeight: 1.35,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              {texto || "(vacio)"}
+            </div>
+          </ScrollPanel>
+        </div>
+      </DialogBody>
+      <DialogFooter>
+        <DialogButtonPrimary onClick={props.onCerrar}>Cerrar</DialogButtonPrimary>
+      </DialogFooter>
     </ModalRoot>
   );
 }
@@ -1404,10 +1390,20 @@ function Content() {
       await refrescar();
     });
 
+  const aplicarTodo = () =>
+    conBloqueo(async () => {
+      const r = await call<[], Salida & { ok: boolean }>("aplicar_todo");
+      abrirVentana(
+        r.ok ? "Aplicar todo: hecho" : "Aplicar todo: con problemas",
+        r.salida
+      );
+      await refrescar();
+    });
+
   const verLog = () =>
     conBloqueo(async () => {
       const r = await call<[], { salida: string }>("ver_log");
-      abrirVentana("Log (ultimas lineas)", r.salida);
+      abrirVentana("Log (log.txt)", r.salida);
     });
 
   const instalar = () =>
@@ -1509,6 +1505,17 @@ function Content() {
               }
               onClick={instalar}
             />
+          </PanelSectionRow>
+        </PanelSection>
+      ) : null}
+
+      {est.scripts_nuevos ? (
+        <PanelSection>
+          <PanelSectionRow>
+            <Aviso tono="info">
+              Scripts recién instalados. Cierra el juego y vuelve a abrirlo (o
+              pulsa «Aplicar todo») para que se aplique la versión nueva.
+            </Aviso>
           </PanelSectionRow>
         </PanelSection>
       ) : null}
@@ -1741,8 +1748,18 @@ function Content() {
               icono={<FaCheck size={17} />}
               anim="pop"
               titulo="Aplicar"
-              detalle="Ahora"
+              detalle="Eden"
               onClick={aplicar}
+            />
+          </div>
+          <div className="ede-celda">
+            <TarjetaAccion
+              color={C.azul}
+              icono={<FaSyncAlt size={16} />}
+              anim="giro"
+              titulo="Aplicar todo"
+              detalle="Los 3"
+              onClick={aplicarTodo}
             />
           </div>
           <div className="ede-celda">

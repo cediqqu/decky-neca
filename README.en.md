@@ -122,9 +122,10 @@ come from E.C.A, uninstall the old plugin first.
    Cemu and Dolphin plan. **Comprobar ahora** (Check now) recalculates it without
    writing anything.
 7. **Ajustes** (Settings) contains **Aplicar** (Apply, writes Eden),
-   **Restaurar** (Restore, Eden, Dolphin and Cemu) and **Ver log** (View log).
-   Dolphin and Cemu are applied when the game launches, or manually with
-   `--sistema gc` and `--sistema wiiu`.
+   **Aplicar todo** (Apply all: Eden, Dolphin and Cemu), **Restaurar**
+   (Restore, all three) and **Ver log** (View log, scrollable). Dolphin and Cemu
+   are also applied when the game launches, or manually with `--sistema gc` and
+   `--sistema wiiu`.
 
 Each card shows the family **icon** (PlayStation, Xbox, Switch, Steam or
 built-in), the **connection** (Bluetooth, USB, Internal or Virtual) and the short
@@ -228,10 +229,21 @@ If you uninstall without restoring, the hook remains in
 plugin is gone. Uninstalling does not delete `~/eden-autoconfig`: your
 templates, backups and `.conf` live there.
 
+### Log and diagnostics
+
+- **Ver log** (View log) opens `log.txt` in a scrollable window. Each apply
+  records the script version and hash, the written `Device` lines, `SIDevice`,
+  `Source` and any warnings.
+- If Dolphin or Cemu is open, nothing is written and the log says so
+  (`en ejecucion, no aplico`). Close it completely and launch again.
+- After installing or updating scripts, the panel shows a notice; close the
+  game and relaunch, or press **Aplicar todo** (Apply all).
+
 ## Known limits
 
-- **Apply from the panel only writes Eden.** Dolphin and Cemu are applied when
-  the game launches from ES-DE or with `--sistema gc|wiiu`.
+- **Aplicar** writes only Eden; **Aplicar todo** writes Eden, Dolphin and Cemu.
+  Dolphin and Cemu are also applied when the game launches from ES-DE or with
+  `--sistema gc|wiiu`.
 - **Restore from the panel affects all three emulators.** To undo only the
   last Dolphin or Cemu apply, use `--restore latest`.
 - Only **one specific controller can be pinned as Player 1** (`P1_SERIE`). The

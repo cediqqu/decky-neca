@@ -113,9 +113,10 @@ vienes de E.C.A, desinstala primero el plugin viejo.
    1,5 s) sobre su tarjeta. La **★** marca el Player 1 actual.
 6. El icono de **Asignación** en la cabecera de **Mandos** abre el último plan de
    Cemu y Dolphin. **Comprobar ahora** lo recalcula sin escribir nada.
-7. En **Ajustes** están **Aplicar** (escribe Eden), **Restaurar** (Eden, Dolphin
-   y Cemu) y **Ver log**. Dolphin y Cemu se aplican al lanzar el juego, o a mano
-   con `--sistema gc` y `--sistema wiiu`.
+7. En **Ajustes** están **Aplicar** (escribe Eden), **Aplicar todo** (Eden,
+   Dolphin y Cemu), **Restaurar** (los tres) y **Ver log** (con scroll).
+   Dolphin y Cemu se aplican también al lanzar el juego, o a mano con
+   `--sistema gc` y `--sistema wiiu`.
 
 Cada tarjeta muestra el **icono** de la familia (PlayStation, Xbox, Switch, Steam
 o integrado), la **conexión** (Bluetooth, USB, Interno o Virtual) y la **MAC**
@@ -217,10 +218,21 @@ Si desinstalas sin restaurar, el hook seguirá en
 no esté. `~/eden-autoconfig` no se borra al desinstalar: ahí están tus plantillas,
 backups y el `.conf`.
 
+### Log y diagnóstico
+
+- **Ver log** abre `log.txt` en una ventana con scroll. Cada aplicar deja la
+  versión y el hash de los scripts, los `Device` escritos, `SIDevice`, `Source`
+  y los avisos.
+- Si Dolphin o Cemu están abiertos, no se escribe y queda en el log
+  (`en ejecucion, no aplico`). Ciérralos del todo y vuelve a lanzar.
+- Tras instalar o actualizar scripts, el panel avisa; cierra el juego y vuelve
+  a abrirlo, o pulsa **Aplicar todo**.
+
 ## Límites conocidos
 
-- **Aplicar desde el panel solo escribe Eden.** Dolphin y Cemu se aplican al
-  lanzar el juego desde ES-DE o con `--sistema gc|wiiu`.
+- **Aplicar** escribe solo Eden; **Aplicar todo** escribe Eden, Dolphin y Cemu.
+  Dolphin y Cemu también se aplican al lanzar el juego desde ES-DE o con
+  `--sistema gc|wiiu`.
 - **Restaurar desde el panel afecta a los tres emuladores.** Para deshacer solo
   el último aplicar de Dolphin o Cemu, usa `--restore latest`.
 - Solo se puede fijar **un mando concreto como Player 1** (`P1_SERIE`). El resto

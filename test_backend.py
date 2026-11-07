@@ -91,6 +91,7 @@ async def main():
     est = await mod.Plugin().estado()
     check("ahora instalado", est["instalado"] is True)
     check("no marca desactualizado", est["desactualizado"] is False)
+    check("scripts recien instalados", est["scripts_nuevos"] is True)
     check("sin SDL avisa y no rompe", "SDL" in est["aviso"] or est["mandos"] == [],
           est["aviso"])
 
@@ -873,6 +874,29 @@ async def main():
     check("Dolphin: vuelve al original tras el caso real", r.returncode == 0,
           r.stdout + r.stderr)
     env_dol["EDEN_FAKE_SDL"] = fake_dol
+
+    # Aplicar todo desde el panel: Eden + Dolphin + Cemu y limpiar el aviso
+    os.environ["EDEN_FAKE_SDL"] = fake_dol
+    # plantilla minima para Eden y Cemu sin perfil valido (entorno de prueba)
+    tpl = os.path.join(base, "templates")
+    os.makedirs(tpl, exist_ok=True)
+    with open(os.path.join(tpl, "dualsense.player0.txt"), "w",
+              encoding="utf-8") as fh:
+        fh.write("player_0_A=button:b\nplayer_0_B=button:a\n"
+                 "player_0_X=button:y\nplayer_0_Y=button:x\n")
+    shutil.rmtree(os.path.join(home, ".config", "Cemu"), ignore_errors=True)
+    r = await mod.Plugin().aplicar_todo()
+    check("Aplicar todo ok", r["ok"] is True, r)
+    for etiqueta in ("Eden:", "Dolphin:", "Cemu:"):
+        check("Aplicar todo menciona %s" % etiqueta[:-1],
+              etiqueta in r["salida"], r["salida"])
+    with open(os.path.join(base, "log.txt"), encoding="utf-8") as fh:
+        log_txt = fh.read()
+    check("el log guarda version/hash",
+          "version=" in log_txt and "hash=" in log_txt, log_txt[-500:])
+    est = await mod.Plugin().estado()
+    check("Aplicar todo quita el aviso de scripts",
+          est["scripts_nuevos"] is False)
 
     # adaptador GC real: no se pisa SIDevice0 = 12
     escribir_dolphin(12)
