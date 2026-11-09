@@ -12,9 +12,10 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 - **La estrella del P1 sigue al jugador real.** Si el integrado es Player 1,
   ningún DualSense conserva la estrella; la tarjeta del integrado la muestra.
-- **El integrado solo es P1 sin DualSense.** Al conectar un mando, el DualSense
-  pasa a P1 y el integrado a Último o Desactivado según el cupo. Con DualSense
-  conectados, la tarjeta ya no ofrece «Primer jugador»; cicla Último/Desactivado.
+- **El integrado puede volver a ser P1 con mandos extra.** Al elegir
+  «Jugador 1», los DualSense corren un puesto y los que sobran quedan
+  desactivados según el cupo. Sin elección manual, con 0 DualSense es P1; con
+  DualSense pasa a Último o Desactivado.
 - **Sin integrado fantasma.** Si SDL no expone el mando de la consola, el plan
   ya no añade `INTEGRADO [] (port )` ni roba el P1; los DualSense empiezan en P1.
 - **Plan esperado del integrado en consolas conocidas.** En una ROG Xbox Ally X,
@@ -52,6 +53,10 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 ### Cambiado
 
+- **Botón Integrado de ancho completo.** Ya no es una tarjeta cuadrada: ocupa
+  todo el ancho y los mandos extra se colocan debajo. A la izquierda muestra un
+  icono de estado: estrella para P1, flecha para Último y prohibido para
+  Desactivado. Las tarjetas de mandos desactivados se ven en gris.
 - **Iconos de Switch y cupos en el botón Mandos.** Los cuatro huecos usan el
   icono de Nintendo Switch y el botón muestra `activos/cupo` (por ejemplo,
   `3/4`) para distinguir los jugadores activos del tope configurado. Los huecos

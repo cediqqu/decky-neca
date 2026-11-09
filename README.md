@@ -108,11 +108,12 @@ vienes de E.C.A, desinstala primero el plugin viejo.
    estado del hook.
 3. El botón **Mandos** con cuatro huecos cicla el tope de jugadores (1 a 4) y
    muestra **activos/cupo** (por ejemplo, `3/4`).
-4. La tarjeta **Integrado** cicla **Último jugador → Desactivado** y muestra el
-   jugador real que ocupa (`Jugador 3 - Último`). Con **0 DualSense** es siempre
-   **Jugador 1**. Al conectar un DualSense, este pasa a P1 y el integrado a
-   último o desactivado según el cupo; la tarjeta ya no ofrece «Primer jugador»
-   con mandos externos.
+4. El botón **Integrado** ocupa todo el ancho, con un icono de estado a la
+   izquierda (estrella = P1, flecha = Último, prohibido = Desactivado), y los
+   mandos extra van debajo. Cicla **Jugador 1 → Último → Desactivado**. Con **0
+   DualSense** es siempre P1. Sin elección manual, con DualSense pasa a último o
+   desactivado según el cupo. Si eliges **Jugador 1** con mandos extra, estos
+   corren un puesto y los que sobran se desactivan.
 5. Para fijar un mando concreto como Player 1, **dos toques seguidos** (menos de
    1,5 s) sobre su tarjeta. La **★** marca el Player 1 actual.
 6. El icono de **Asignación** en la cabecera de **Mandos** abre el último plan de

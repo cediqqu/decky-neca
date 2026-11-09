@@ -385,7 +385,7 @@ function IconoConexion(props) {
     return SP_JSX.jsx(FaMicrochip, { size: s });
 }
 function IconoTile(props) {
-    const color = colorDe(props.m);
+    const color = props.color ?? colorDe(props.m);
     return (SP_JSX.jsx("span", { className: "ede-icono-tile", children: SP_JSX.jsx("span", { className: "ede-anim-pop", style: { display: "inline-flex" }, children: SP_JSX.jsx("span", { className: "ede-icono-caja", style: {
                     width: `${props.lado}px`,
                     height: `${props.lado}px`,
@@ -458,9 +458,11 @@ function estiloTarjeta(color) {
 // --- tarjeta cuadrada (2 o mas mandos) -------------------------------------
 function MandoCuadrado(props) {
     const { m, mostrarMac, destello, onClick } = props;
-    const color = colorDe(m);
+    const apagado = !m.jugador;
+    const color = apagado ? C.gris : colorDe(m);
     return (SP_JSX.jsx(BotonTarjeta, { onClick: onClick, children: SP_JSX.jsxs("div", { className: "ede-tarjeta", style: {
                 ...estiloTarjeta(color),
+                opacity: apagado ? 0.62 : 1,
                 ...(destello
                     ? {
                         border: `1px solid ${C.azul}`,
@@ -483,12 +485,12 @@ function MandoCuadrado(props) {
                         gap: "3px",
                         flex: 1,
                         padding: "10px 5px 5px",
-                    }, children: [SP_JSX.jsx(IconoTile, { m: m, lado: 34 }), SP_JSX.jsxs("div", { style: {
+                    }, children: [SP_JSX.jsx(IconoTile, { m: m, lado: 34, color: color }), SP_JSX.jsxs("div", { style: {
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "3px",
                                 fontSize: "0.6em",
-                                color: colorConexion(m.conexion),
+                                color: apagado ? C.gris : colorConexion(m.conexion),
                             }, children: [SP_JSX.jsx(IconoConexion, { conexion: m.conexion, size: 8 }), m.conexion] }), !m.jugador ? (SP_JSX.jsx("div", { style: {
                                 fontSize: "0.58em",
                                 fontWeight: 700,
@@ -630,24 +632,60 @@ function ChipEstado(props) {
                     textOverflow: "ellipsis",
                 }, children: props.texto })] }));
 }
-// --- tarjeta del mando integrado -------------------------------------------
-function detalleIntegrado(modo, jugador, detectado, disponible) {
-    if (!detectado)
-        return "No detectado";
-    if (!jugador) {
-        if (modo === "ignorar")
-            return "Desactivado";
-        return disponible ? "Desactivado" : "No disponible";
+// --- boton del mando integrado (ancho completo) ---------------------------
+function IconoEstadoIntegrado(props) {
+    if (!props.detectado)
+        return SP_JSX.jsx(FaQuestion, { size: 15 });
+    if (props.jugador === 1) {
+        return SP_JSX.jsx(FaStar, { className: "ede-estrella", size: 16 });
     }
-    if (modo === "ultimo")
-        return `Jugador ${jugador} - Último`;
-    if (modo === "primero")
-        return "Jugador 1";
-    return `Jugador ${jugador} - Forzado`;
+    if (!props.jugador || props.modo === "ignorar") {
+        return SP_JSX.jsx(FaBan, { size: 15 });
+    }
+    if (!props.disponible)
+        return SP_JSX.jsx(FaBan, { size: 15 });
+    return SP_JSX.jsx(FaChevronDown, { size: 16 });
 }
-function TarjetaIntegrado(props) {
-    const detalle = detalleIntegrado(props.modo, props.jugador, props.detectado, props.disponible);
-    return (SP_JSX.jsx(TarjetaAccion, { color: C.naranja, icono: props.icono, anim: "pop", titulo: "Integrado", detalle: detalle, principal: props.principal, onClick: props.onClick }));
+function BotonIntegrado(props) {
+    const apagado = !props.jugador || props.modo === "ignorar";
+    const color = apagado || !props.detectado ? C.gris : C.naranja;
+    const colorEstado = props.jugador === 1
+        ? C.dorado
+        : (apagado ? C.gris : C.azul);
+    return (SP_JSX.jsx(BotonTarjeta, { onClick: props.onClick, children: SP_JSX.jsxs("div", { className: "ede-tarjeta", style: {
+                ...estiloTarjeta(color),
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                width: "100%",
+                padding: "10px 12px",
+            }, children: [SP_JSX.jsx("span", { style: {
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "30px",
+                        height: "30px",
+                        borderRadius: "9px",
+                        background: hexA(colorEstado, 0.16),
+                        color: colorEstado,
+                        flex: "0 0 auto",
+                    }, children: SP_JSX.jsx(IconoEstadoIntegrado, { jugador: props.jugador, modo: props.modo, detectado: props.detectado, disponible: props.disponible }) }), props.icono, SP_JSX.jsxs("div", { style: { minWidth: 0, flex: 1 }, children: [SP_JSX.jsx("div", { style: { fontWeight: 700, fontSize: "0.8em", lineHeight: 1.2 }, children: "Integrado" }), SP_JSX.jsx("div", { style: {
+                                fontSize: "0.66em",
+                                opacity: 0.65,
+                                lineHeight: 1.2,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }, children: props.nombre || "Mando de la consola" })] }), props.jugador ? (SP_JSX.jsxs("span", { style: {
+                        fontSize: "0.66em",
+                        fontWeight: 700,
+                        color,
+                        background: hexA(color, 0.16),
+                        border: `1px solid ${hexA(color, 0.35)}`,
+                        borderRadius: "999px",
+                        padding: "2px 7px",
+                        flex: "0 0 auto",
+                    }, children: ["P", props.jugador] })) : null, SP_JSX.jsx(FaChevronRight, { size: 11, style: { opacity: 0.4, flex: "0 0 auto" } })] }) }));
 }
 function IconoTarjeta(props) {
     return (SP_JSX.jsx("span", { className: "ede-icono-tile", children: SP_JSX.jsx("span", { className: `ede-anim-${props.anim ?? "pop"}`, children: SP_JSX.jsx("span", { className: "ede-icono-caja", style: {
@@ -662,7 +700,7 @@ function IconoTarjeta(props) {
 }
 function TarjetaAccion(props) {
     const color = props.color ?? C.azul;
-    return (SP_JSX.jsx(BotonTarjeta, { onClick: props.onClick, children: SP_JSX.jsxs("div", { className: "ede-tarjeta", style: {
+    return (SP_JSX.jsx(BotonTarjeta, { onClick: props.onClick, children: SP_JSX.jsx("div", { className: "ede-tarjeta", style: {
                 ...estiloTarjeta(color),
                 display: "flex",
                 flexDirection: "column",
@@ -672,22 +710,15 @@ function TarjetaAccion(props) {
                 width: "100%",
                 padding: 0,
                 textAlign: "center",
-            }, children: [props.principal ? (SP_JSX.jsx(FaStar, { className: "ede-estrella", style: {
-                        position: "absolute",
-                        top: "4px",
-                        right: "6px",
-                        color: C.dorado,
-                        fontSize: "0.88em",
-                        filter: `drop-shadow(0 0 4px ${hexA(C.dorado, 0.9)})`,
-                    } })) : null, SP_JSX.jsxs("div", { style: {
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px",
-                        padding: "10px 6px",
-                        width: "100%",
-                    }, children: [SP_JSX.jsx(IconoTarjeta, { icono: props.icono, color: color, anim: props.anim }), SP_JSX.jsx("div", { style: { fontSize: "0.7em", fontWeight: 700, lineHeight: 1.15 }, children: props.titulo }), props.detalle ? (SP_JSX.jsx("div", { style: { fontSize: "0.62em", opacity: 0.7, lineHeight: 1.15 }, children: props.detalle })) : null] })] }) }));
+            }, children: SP_JSX.jsxs("div", { style: {
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                    padding: "10px 6px",
+                    width: "100%",
+                }, children: [SP_JSX.jsx(IconoTarjeta, { icono: props.icono, color: color, anim: props.anim }), SP_JSX.jsx("div", { style: { fontSize: "0.7em", fontWeight: 700, lineHeight: 1.15 }, children: props.titulo }), props.detalle ? (SP_JSX.jsx("div", { style: { fontSize: "0.62em", opacity: 0.7, lineHeight: 1.15 }, children: props.detalle })) : null] }) }) }));
 }
 // --- rejilla de 2 columnas -------------------------------------------------
 function Rejilla(props) {
@@ -1098,11 +1129,9 @@ function Content() {
         if (nuevo.aviso)
             avisar(nuevo.aviso);
     });
-    // la tarjeta cicla: sin DS siempre P1; con DS, ultimo o desactivado
+    // la tarjeta cicla: Jugador 1 -> Ultimo -> Desactivado
     const siguienteIntegrado = () => {
-        const orden = (est?.ds_conectados ?? 0) === 0
-            ? ["primero"]
-            : ["ultimo", "ignorar"];
+        const orden = ["primero", "ultimo", "ignorar"];
         const i = orden.indexOf(p.ORDEN_INTEGRADO);
         return orden[(i + 1) % orden.length];
     };
@@ -1204,20 +1233,17 @@ function Content() {
                                     }, children: [1, 2, 3, 4].map((n) => {
                                         const on = n <= maxJugador;
                                         return (SP_JSX.jsx("span", { className: `ede-slot ${on ? "on" : "off"}${pulsoMando === n ? " pulso" : ""}`, style: on ? { color: COLOR_JUGADOR[n - 1] } : undefined, children: SP_JSX.jsx(BsNintendoSwitch, { size: 15 }) }, n));
-                                    }) })] }) }) }) }), SP_JSX.jsxs(Seccion, { titulo: "Mandos", color: acento, icono: SP_JSX.jsx(BsNintendoSwitch, { size: 13 }), abierta: true, accion: SP_JSX.jsxs("span", { style: { display: "flex", alignItems: "center", gap: "6px" }, children: [SP_JSX.jsx(BotonIcono, { titulo: "Asignaci\u00F3n", icono: SP_JSX.jsx(FaFileAlt, { size: 12 }), onClick: () => abrirAsignacion(est.planes, setEst) }), SP_JSX.jsx(BotonIcono, { titulo: "Recargar mandos", icono: SP_JSX.jsx(FaSyncAlt, { size: 12 }), onClick: () => conBloqueo(refrescar) })] }), children: [!mostrarIntegrado && externos.length === 0 ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("div", { style: { opacity: 0.8 }, children: "No se detecta ningun mando. Enciende el mando y pulsa Recargar." }) })) : (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
-                                display: "grid",
-                                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                                gap: "6px",
-                                width: "100%",
-                            }, children: [mostrarIntegrado ? (SP_JSX.jsx("div", { className: "ede-celda", style: {
+                                    }) })] }) }) }) }), SP_JSX.jsxs(Seccion, { titulo: "Mandos", color: acento, icono: SP_JSX.jsx(BsNintendoSwitch, { size: 13 }), abierta: true, accion: SP_JSX.jsxs("span", { style: { display: "flex", alignItems: "center", gap: "6px" }, children: [SP_JSX.jsx(BotonIcono, { titulo: "Asignaci\u00F3n", icono: SP_JSX.jsx(FaFileAlt, { size: 12 }), onClick: () => abrirAsignacion(est.planes, setEst) }), SP_JSX.jsx(BotonIcono, { titulo: "Recargar mandos", icono: SP_JSX.jsx(FaSyncAlt, { size: 12 }), onClick: () => conBloqueo(refrescar) })] }), children: [!mostrarIntegrado && externos.length === 0 ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("div", { style: { opacity: 0.8 }, children: "No se detecta ningun mando. Enciende el mando y pulsa Recargar." }) })) : (SP_JSX.jsxs(DFL.PanelSectionRow, { children: [mostrarIntegrado ? (SP_JSX.jsx(BotonIntegrado, { icono: SP_JSX.jsx(IconoMaquina, { maquina: est.maquina, nombre: integradoNombre, size: 20 }), jugador: integradoJugador, modo: p.ORDEN_INTEGRADO, detectado: integradoDetectado, disponible: integradoDisponible, nombre: maquinaNombre || integradoNombre, onClick: () => elegirIntegrado(siguienteIntegrado()) })) : null, externos.length > 0 ? (SP_JSX.jsx("div", { style: {
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                                    gap: "6px",
+                                    width: "100%",
+                                    marginTop: mostrarIntegrado ? "6px" : 0,
+                                }, children: externos.map((m) => (SP_JSX.jsx("div", { className: "ede-celda", style: {
                                         minWidth: 0,
                                         maxWidth: "100%",
                                         borderRadius: "16px",
-                                    }, children: SP_JSX.jsx(TarjetaIntegrado, { icono: SP_JSX.jsx(IconoMaquina, { maquina: est.maquina, nombre: integradoNombre }), jugador: integradoJugador, modo: p.ORDEN_INTEGRADO, detectado: integradoDetectado, disponible: integradoDisponible, principal: integradoJugador === 1, onClick: () => elegirIntegrado(siguienteIntegrado()) }) })) : null, externos.map((m) => (SP_JSX.jsx("div", { className: "ede-celda", style: {
-                                        minWidth: 0,
-                                        maxWidth: "100%",
-                                        borderRadius: "16px",
-                                    }, children: SP_JSX.jsx(MandoCuadrado, { m: m, mostrarMac: true, destello: destello === m.serie, onClick: () => tocarMando(m) }) }, `${m.guid}-${m.puerto}`)))] }) })), aviso ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(Aviso, { tono: "atencion", onClick: limpiarAviso, children: aviso }) })) : null, est.mandos.length > 1 ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
+                                    }, children: SP_JSX.jsx(MandoCuadrado, { m: m, mostrarMac: true, destello: destello === m.serie, onClick: () => tocarMando(m) }) }, `${m.guid}-${m.puerto}`))) })) : null] })), aviso ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(Aviso, { tono: "atencion", onClick: limpiarAviso, children: aviso }) })) : null, est.mandos.length > 1 ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "6px",

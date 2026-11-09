@@ -113,11 +113,12 @@ come from E.C.A, uninstall the old plugin first.
    and the hook state.
 3. The **Mandos** (Controllers) button with four slots cycles the player limit
    (1 to 4) and shows **active/slots** (for example, `3/4`).
-4. The **Integrado** (Built-in) card cycles **Last player → Off** and shows the
-   actual player it takes (`Jugador 3 - Último`). With **0 DualSense** it is
-   always **Player 1**. When a DualSense connects, it becomes P1 and the built-in
-   controller goes last or off depending on the player cap; the card no longer
-   offers "Player 1" with external controllers.
+4. The **Integrado** (Built-in) button is full width, with a state icon on the
+   left (star = P1, down arrow = last, ban = off), and the extra controllers sit
+   below it. It cycles **Player 1 → Last player → Off**. With **0 DualSense** it
+   is always P1. Without a manual choice, with DualSense it goes last or off
+   depending on the player cap. If you choose **Player 1** with extra
+   controllers, they shift one slot and the surplus ones are disabled.
 5. To pin a specific controller as Player 1, **double-tap** its card (less than
    1.5 s apart). The **★** marks the current Player 1.
 6. The **Asignación** (Assignment) icon in the **Mandos** header shows the last

@@ -405,8 +405,8 @@ function IconoConexion(props: { conexion: string; size?: number }) {
   return <FaMicrochip size={s} />;
 }
 
-function IconoTile(props: { m: Mando; lado: number }) {
-  const color = colorDe(props.m);
+function IconoTile(props: { m: Mando; lado: number; color?: string }) {
+  const color = props.color ?? colorDe(props.m);
   return (
     <span className="ede-icono-tile">
       <span className="ede-anim-pop" style={{ display: "inline-flex" }}>
@@ -514,13 +514,15 @@ function MandoCuadrado(props: {
   onClick: () => void;
 }) {
   const { m, mostrarMac, destello, onClick } = props;
-  const color = colorDe(m);
+  const apagado = !m.jugador;
+  const color = apagado ? C.gris : colorDe(m);
   return (
     <BotonTarjeta onClick={onClick}>
       <div
         className="ede-tarjeta"
         style={{
           ...estiloTarjeta(color),
+          opacity: apagado ? 0.62 : 1,
           ...(destello
             ? {
                 border: `1px solid ${C.azul}`,
@@ -549,14 +551,14 @@ function MandoCuadrado(props: {
             padding: "10px 5px 5px",
           }}
         >
-          <IconoTile m={m} lado={34} />
+          <IconoTile m={m} lado={34} color={color} />
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: "3px",
               fontSize: "0.6em",
-              color: colorConexion(m.conexion),
+              color: apagado ? C.gris : colorConexion(m.conexion),
             }}
           >
             <IconoConexion conexion={m.conexion} size={8} />
@@ -853,48 +855,108 @@ function ChipEstado(props: { icono: ReactNode; texto: string; color: string }) {
   );
 }
 
-// --- tarjeta del mando integrado -------------------------------------------
-function detalleIntegrado(
-  modo: string,
-  jugador: number | null,
-  detectado: boolean,
-  disponible: boolean,
-): string {
-  if (!detectado) return "No detectado";
-  if (!jugador) {
-    if (modo === "ignorar") return "Desactivado";
-    return disponible ? "Desactivado" : "No disponible";
+// --- boton del mando integrado (ancho completo) ---------------------------
+function IconoEstadoIntegrado(props: {
+  jugador: number | null;
+  modo: string;
+  detectado: boolean;
+  disponible: boolean;
+}) {
+  if (!props.detectado) return <FaQuestion size={15} />;
+  if (props.jugador === 1) {
+    return <FaStar className="ede-estrella" size={16} />;
   }
-  if (modo === "ultimo") return `Jugador ${jugador} - Último`;
-  if (modo === "primero") return "Jugador 1";
-  return `Jugador ${jugador} - Forzado`;
+  if (!props.jugador || props.modo === "ignorar") {
+    return <FaBan size={15} />;
+  }
+  if (!props.disponible) return <FaBan size={15} />;
+  return <FaChevronDown size={16} />;
 }
 
-function TarjetaIntegrado(props: {
+function BotonIntegrado(props: {
   icono: ReactNode;
   jugador: number | null;
   modo: string;
   detectado: boolean;
   disponible: boolean;
-  principal: boolean;
+  nombre: string;
   onClick: () => void;
 }) {
-  const detalle = detalleIntegrado(
-    props.modo,
-    props.jugador,
-    props.detectado,
-    props.disponible,
-  );
+  const apagado = !props.jugador || props.modo === "ignorar";
+  const color = apagado || !props.detectado ? C.gris : C.naranja;
+  const colorEstado = props.jugador === 1
+    ? C.dorado
+    : (apagado ? C.gris : C.azul);
   return (
-    <TarjetaAccion
-      color={C.naranja}
-      icono={props.icono}
-      anim="pop"
-      titulo="Integrado"
-      detalle={detalle}
-      principal={props.principal}
-      onClick={props.onClick}
-    />
+    <BotonTarjeta onClick={props.onClick}>
+      <div
+        className="ede-tarjeta"
+        style={{
+          ...estiloTarjeta(color),
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          width: "100%",
+          padding: "10px 12px",
+        }}
+      >
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "30px",
+            height: "30px",
+            borderRadius: "9px",
+            background: hexA(colorEstado, 0.16),
+            color: colorEstado,
+            flex: "0 0 auto",
+          }}
+        >
+          <IconoEstadoIntegrado
+            jugador={props.jugador}
+            modo={props.modo}
+            detectado={props.detectado}
+            disponible={props.disponible}
+          />
+        </span>
+        {props.icono}
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: "0.8em", lineHeight: 1.2 }}>
+            Integrado
+          </div>
+          <div
+            style={{
+              fontSize: "0.66em",
+              opacity: 0.65,
+              lineHeight: 1.2,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {props.nombre || "Mando de la consola"}
+          </div>
+        </div>
+        {props.jugador ? (
+          <span
+            style={{
+              fontSize: "0.66em",
+              fontWeight: 700,
+              color,
+              background: hexA(color, 0.16),
+              border: `1px solid ${hexA(color, 0.35)}`,
+              borderRadius: "999px",
+              padding: "2px 7px",
+              flex: "0 0 auto",
+            }}
+          >
+            P{props.jugador}
+          </span>
+        ) : null}
+        <FaChevronRight size={11} style={{ opacity: 0.4, flex: "0 0 auto" }} />
+      </div>
+    </BotonTarjeta>
   );
 }
 
@@ -936,7 +998,6 @@ function TarjetaAccion(props: {
   detalle?: string;
   color?: string;
   anim?: AnimIcono;
-  principal?: boolean;
   onClick: () => void;
 }) {
   const color = props.color ?? C.azul;
@@ -956,19 +1017,7 @@ function TarjetaAccion(props: {
           textAlign: "center",
         }}
       >
-        {props.principal ? (
-          <FaStar
-            className="ede-estrella"
-            style={{
-              position: "absolute",
-              top: "4px",
-              right: "6px",
-              color: C.dorado,
-              fontSize: "0.88em",
-              filter: `drop-shadow(0 0 4px ${hexA(C.dorado, 0.9)})`,
-            }}
-          />
-        ) : null}
+
         <div
           style={{
             display: "flex",
@@ -1665,11 +1714,9 @@ function Content() {
       if (nuevo.aviso) avisar(nuevo.aviso);
     });
 
-  // la tarjeta cicla: sin DS siempre P1; con DS, ultimo o desactivado
+  // la tarjeta cicla: Jugador 1 -> Ultimo -> Desactivado
   const siguienteIntegrado = () => {
-    const orden = (est?.ds_conectados ?? 0) === 0
-      ? ["primero"]
-      : ["ultimo", "ignorar"];
+    const orden = ["primero", "ultimo", "ignorar"];
     const i = orden.indexOf(p.ORDEN_INTEGRADO);
     return orden[(i + 1) % orden.length];
   };
@@ -1957,58 +2004,53 @@ function Content() {
           </PanelSectionRow>
         ) : (
           <PanelSectionRow>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: "6px",
-                width: "100%",
-              }}
-            >
-              {mostrarIntegrado ? (
-                <div
-                  className="ede-celda"
-                  style={{
-                    minWidth: 0,
-                    maxWidth: "100%",
-                    borderRadius: "16px",
-                  }}
-                >
-                  <TarjetaIntegrado
-                    icono={
-                      <IconoMaquina
-                        maquina={est.maquina}
-                        nombre={integradoNombre}
-                      />
-                    }
-                    jugador={integradoJugador}
-                    modo={p.ORDEN_INTEGRADO}
-                    detectado={integradoDetectado}
-                    disponible={integradoDisponible}
-                    principal={integradoJugador === 1}
-                    onClick={() => elegirIntegrado(siguienteIntegrado())}
+            {mostrarIntegrado ? (
+              <BotonIntegrado
+                icono={
+                  <IconoMaquina
+                    maquina={est.maquina}
+                    nombre={integradoNombre}
+                    size={20}
                   />
-                </div>
-              ) : null}
-              {externos.map((m) => (
-                <div
-                  key={`${m.guid}-${m.puerto}`}
-                  className="ede-celda"
-                  style={{
-                    minWidth: 0,
-                    maxWidth: "100%",
-                    borderRadius: "16px",
-                  }}
-                >
-                  <MandoCuadrado
-                    m={m}
-                    mostrarMac={true}
-                    destello={destello === m.serie}
-                    onClick={() => tocarMando(m)}
-                  />
-                </div>
-              ))}
-            </div>
+                }
+                jugador={integradoJugador}
+                modo={p.ORDEN_INTEGRADO}
+                detectado={integradoDetectado}
+                disponible={integradoDisponible}
+                nombre={maquinaNombre || integradoNombre}
+                onClick={() => elegirIntegrado(siguienteIntegrado())}
+              />
+            ) : null}
+            {externos.length > 0 ? (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: "6px",
+                  width: "100%",
+                  marginTop: mostrarIntegrado ? "6px" : 0,
+                }}
+              >
+                {externos.map((m) => (
+                  <div
+                    key={`${m.guid}-${m.puerto}`}
+                    className="ede-celda"
+                    style={{
+                      minWidth: 0,
+                      maxWidth: "100%",
+                      borderRadius: "16px",
+                    }}
+                  >
+                    <MandoCuadrado
+                      m={m}
+                      mostrarMac={true}
+                      destello={destello === m.serie}
+                      onClick={() => tocarMando(m)}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </PanelSectionRow>
         )}
         {aviso ? (

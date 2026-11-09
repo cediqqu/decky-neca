@@ -203,9 +203,8 @@ async def main():
     check("max vuelve a 4", est["prefs"]["JUGADORES_MAX"] == "4", est["prefs"])
 
     est = await mod.Plugin().integrado_modo("primero")
-    check("con DS, primero pasa a ultimo",
-          est["prefs"]["ORDEN_INTEGRADO"] == "ultimo"
-          and est["prefs"]["INTEGRADO_MANUAL"] == "no", est["prefs"])
+    check("integrado -> Jugador 1",
+          est["prefs"]["ORDEN_INTEGRADO"] == "primero", est["prefs"])
     check("Jugador 1 limpia el principal externo", est["prefs"]["P1_SERIE"] == "")
     est = await mod.Plugin().integrado_modo("ultimo")
     check("integrado -> ultimo", est["prefs"]["ORDEN_INTEGRADO"] == "ultimo")
@@ -675,12 +674,12 @@ async def main():
     check("con hueco -> ultimo", est["prefs"]["ORDEN_INTEGRADO"] == "ultimo",
           est["prefs"])
 
-    # Con DualSense, "Primero" no vale: pasa a ultimo o desactivado.
+    # La eleccion manual "Primero" se respeta tambien con DualSense.
     await mod.Plugin().integrado_modo("primero")
     est = await mod.Plugin().estado()
-    check("primero con DS pasa a ultimo",
-          est["prefs"]["ORDEN_INTEGRADO"] == "ultimo"
-          and est["prefs"]["INTEGRADO_MANUAL"] == "no", est["prefs"])
+    check("la eleccion manual manda",
+          est["prefs"]["ORDEN_INTEGRADO"] == "primero"
+          and est["prefs"]["INTEGRADO_MANUAL"] == "si", est["prefs"])
 
     # "Desactivado" manual si se respeta.
     await mod.Plugin().integrado_modo("ignorar")
@@ -979,14 +978,15 @@ async def main():
                         got["I"] = m["jugador"]
                 exp = {"D%d" % (k + 1): None for k in range(d)}
                 exp["I"] = None
-                modo_ef = modo
-                if d > 0 and modo == "primero":
-                    modo_ef = "ignorar" if d >= cupo else "ultimo"
                 if d == 0:
                     exp["I"] = 1
-                elif modo_ef == "ignorar":
+                elif modo == "ignorar":
                     for k in range(min(d, cupo)):
                         exp["D%d" % (k + 1)] = k + 1
+                elif modo == "primero":
+                    exp["I"] = 1
+                    for k in range(min(d, cupo - 1)):
+                        exp["D%d" % (k + 1)] = k + 2
                 else:
                     n = min(d, cupo - 1)
                     for k in range(n):
@@ -1035,9 +1035,9 @@ async def main():
     est = await mod.Plugin().estado()
     integ = [m for m in est["mandos"] if m["clase"] == "Integrado"]
     ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
-    check("integrado virtual con 4 DS: se desactiva",
-          integ and integ[0]["jugador"] is None
-          and [m["jugador"] for m in ds] == [1, 2, 3, 4],
+    check("integrado virtual primero: P1 e integrado",
+          integ and integ[0]["jugador"] == 1
+          and [m["jugador"] for m in ds] == [2, 3, 4, None],
           [(m["nombre"], m["jugador"]) for m in est["mandos"]])
 
     prefs["ORDEN_INTEGRADO"] = "ignorar"
@@ -1120,11 +1120,11 @@ async def main():
           (est["maquina"] or {}).get("producto", "").startswith("ROG Xbox Ally X"),
           est.get("maquina"))
     ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
-    check("consola conocida: con DS lleno, integrado off",
-          est["jugador_integrado"] is None,
+    check("consola conocida: integrado esperado P1",
+          est["jugador_integrado"] == 1,
           (est["jugador_integrado"], est["mandos"]))
-    check("consola conocida: DS P1..P3",
-          [m["jugador"] for m in ds][:3] == [1, 2, 3],
+    check("consola conocida: DS P2/P3",
+          [m["jugador"] for m in ds][:3] == [2, 3, None],
           [(m["puerto"], m["jugador"]) for m in ds])
 
     # 0 DS: el integrado es siempre P1, aunque estuviera en Desactivado.
@@ -1140,7 +1140,7 @@ async def main():
           est["prefs"]["ORDEN_INTEGRADO"] == "primero"
           and est["jugador_integrado"] == 1, est["prefs"])
 
-    # 1 DS: el DualSense pasa a P1 y el integrado a ultimo.
+    # 1 DS + manual P1: el integrado sigue P1 y el DS corre a P2.
     os.environ["EDEN_FAKE_SDL"] = uno
     prefs = mod._leer_prefs()
     prefs["ORDEN_INTEGRADO"] = "primero"
@@ -1148,7 +1148,20 @@ async def main():
     mod._escribir_prefs(prefs)
     est = await mod.Plugin().estado()
     ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
-    check("1 DS: DS P1 y integrado P2",
+    check("1 DS manual: integrado P1 y DS P2",
+          est["prefs"]["ORDEN_INTEGRADO"] == "primero"
+          and [m["jugador"] for m in ds] == [2]
+          and est["jugador_integrado"] == 1
+          and ds and not ds[0]["es_principal"],
+          (est["prefs"], [(m["nombre"], m["jugador"], m["es_principal"])
+                          for m in est["mandos"]]))
+
+    # 1 DS automatico: el DS pasa a P1 y el integrado a P2.
+    prefs["INTEGRADO_MANUAL"] = "no"
+    mod._escribir_prefs(prefs)
+    est = await mod.Plugin().estado()
+    ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
+    check("1 DS auto: DS P1 y integrado P2",
           est["prefs"]["ORDEN_INTEGRADO"] == "ultimo"
           and [m["jugador"] for m in ds] == [1]
           and est["jugador_integrado"] == 2

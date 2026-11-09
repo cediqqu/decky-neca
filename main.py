@@ -363,16 +363,13 @@ def _auto_integrado(prefs, ds_n):
         tope = 4
     manual = prefs.get("INTEGRADO_MANUAL") == "si"
 
-    # Regla de la consola: sin DualSense el integrado es siempre P1. En cuanto
-    # hay un mando extra, el P1 es el DualSense y el integrado pasa a ultimo o
-    # se desactiva si no queda hueco. "Primero" deja de valer con DS.
+    # Sin DualSense el integrado es siempre P1. Con DualSense, si el usuario
+    # eligio manualmente (incluido P1), se respeta; si no, va ultimo o se
+    # desactiva cuando el cupo esta lleno.
     if ds_n == 0:
         deseado = "primero"
-        if manual and prefs["ORDEN_INTEGRADO"] == "primero":
+        if prefs["ORDEN_INTEGRADO"] == "primero":
             return prefs, ""
-    elif prefs["ORDEN_INTEGRADO"] == "primero":
-        deseado = "ignorar" if ds_n >= tope else "ultimo"
-        prefs["INTEGRADO_MANUAL"] = "no"
     elif manual:
         return prefs, ""
     else:
