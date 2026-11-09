@@ -91,10 +91,16 @@ nucleo_mandos() {
     fi
     SDL_OK=1
     SDL_LIB="$(printf '%s\n' "$out" | grep -m1 '^#lib ' | sed 's/^#lib //')"
-    while IFS='|' read -r nombre guid puerto tipo esgp sdl serie indice; do
+    local idx_sdl=0
+    while IFS='|' read -r nombre guid puerto tipo esgp sdl serie _indice; do
         case "$nombre" in ''|'#'*) continue ;; esac
         [ "${esgp:-0}" = "1" ] || continue
-        local clase="otro"
+        local clase="otro" g="$guid"
+        # Cemu (SDL2/HIDAPI) guarda el bus Bluetooth como 03; SDL3 lo da como
+        # 05. El CRC real (bytes 2-3) no se toca.
+        if [ "$modo" = "cemu" ] && [ "${g:0:2}" = "05" ]; then
+            g="03${g:2}"
+        fi
         # "Wireless Controller" vale para DualShock/DualSense, pero un
         # "Xbox Wireless Controller" NO es un DualSense (lo mete el patron).
         if nucleo_coincide "$nombre" "${DUALSENSE_PATRON:-*dualsense*}" \
@@ -103,7 +109,8 @@ nucleo_mandos() {
         elif nucleo_coincide "$nombre" "${INTEGRADO_PATRON:-}"; then
             clase="integrado"
         fi
-        NUCLEO_RAW+=("$nombre|${sdl:-$nombre}|${serie:-}|${indice:-0}|$clase|${puerto:-0}_${guid}")
+        NUCLEO_RAW+=("$nombre|${sdl:-$nombre}|${serie:-}|$idx_sdl|$clase|${puerto:-0}_$g")
+        idx_sdl=$((idx_sdl + 1))
     done <<<"$out"
 
     # Si no hay integrado pero Steam expone un unico pad virtual suelto (el

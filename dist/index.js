@@ -780,7 +780,7 @@ function VentanaLog(props) {
     const [texto, setTexto] = SP_REACT.useState("");
     const [cargando, setCargando] = SP_REACT.useState(false);
     const ref = SP_REACT.useRef(null);
-    const cerrarRef = SP_REACT.useRef(null);
+    const filtroRef = SP_REACT.useRef(null);
     const cargar = async (f) => {
         setFiltro(f);
         setCargando(true);
@@ -803,14 +803,8 @@ function VentanaLog(props) {
         if (el)
             el.scrollTop = el.scrollHeight;
     }, [texto]);
-    const moverBoton = (dir) => {
-        const el = ref.current;
-        if (!el)
-            return;
-        el.scrollBy({ top: dir * el.clientHeight * 0.8 });
-    };
     // D-pad/stick sobre el propio bloque de log; al llegar abajo pasa el foco a
-    // Cerrar, y al llegar arriba deja que suba a los filtros.
+    // los filtros, y al llegar arriba no hay nada encima.
     const desplazar = (evt) => {
         const el = ref.current;
         if (!el)
@@ -825,8 +819,8 @@ function VentanaLog(props) {
         const arriba = el.scrollTop <= 0;
         const abajo = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
         if ((dir < 0 && arriba) || (dir > 0 && abajo)) {
-            if (dir > 0 && cerrarRef.current)
-                cerrarRef.current.focus();
+            if (dir > 0 && filtroRef.current)
+                filtroRef.current.focus();
             return;
         }
         evt.preventDefault();
@@ -845,24 +839,12 @@ function VentanaLog(props) {
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
-            }, children: [SP_JSX.jsx("div", { style: {
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "6px",
-                        padding: "8px 12px 4px",
-                    }, children: filtros.map(([clave, etiqueta]) => (SP_JSX.jsx(DFL.DialogButton, { disabled: cargando, onClick: () => void cargar(clave), style: {
-                            flex: "1 1 64px",
-                            minWidth: "64px",
-                            padding: "6px 8px",
-                            ...(filtro === clave
-                                ? { borderColor: C.azul, borderWidth: "2px" }
-                                : {}),
-                        }, children: etiqueta }, clave))) }), SP_JSX.jsx(DFL.Focusable, { preferredFocus: true, onActivate: () => { }, onGamepadDirection: desplazar, noFocusRing: true, style: {
+            }, children: [SP_JSX.jsx(DFL.Focusable, { preferredFocus: true, onActivate: () => { }, onGamepadDirection: desplazar, noFocusRing: true, style: {
                         flex: 1,
                         minHeight: 0,
                         display: "flex",
                         flexDirection: "column",
-                        margin: "4px 12px",
+                        margin: "8px 12px 4px",
                     }, children: SP_JSX.jsx("div", { ref: ref, style: {
                             flex: 1,
                             minHeight: 0,
@@ -881,9 +863,17 @@ function VentanaLog(props) {
                                 lineHeight: 1.35,
                             }, children: texto || "(log vacio)" }) }) }), SP_JSX.jsxs("div", { style: {
                         display: "flex",
+                        flexWrap: "wrap",
                         gap: "6px",
                         padding: "4px 12px 8px",
-                    }, children: [SP_JSX.jsx(DFL.DialogButton, { onClick: () => moverBoton(-1), children: "\u25B2 Subir" }), SP_JSX.jsx(DFL.DialogButton, { onClick: () => moverBoton(1), children: "\u25BC Bajar" }), SP_JSX.jsx(DFL.DialogButtonPrimary, { ref: cerrarRef, onClick: props.onCerrar, children: "Cerrar" })] })] }) }));
+                    }, children: [filtros.map(([clave, etiqueta]) => (SP_JSX.jsx(DFL.DialogButton, { ref: filtro === clave ? filtroRef : undefined, disabled: cargando, onClick: () => void cargar(clave), style: {
+                                flex: "1 1 64px",
+                                minWidth: "64px",
+                                padding: "6px 8px",
+                                ...(filtro === clave
+                                    ? { borderColor: C.azul, borderWidth: "2px" }
+                                    : {}),
+                            }, children: etiqueta }, clave))), SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" })] })] }) }));
 }
 function abrirVentana(titulo, texto, recientePrimero = false) {
     const cierre = { f: () => { } };

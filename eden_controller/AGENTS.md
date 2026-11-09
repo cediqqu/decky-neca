@@ -163,6 +163,10 @@ Orden de llamada: despachador (según `--sistema`) → driver → `main` → `lo
   cero; Cemu lo guarda **real**. Por eso el driver de Cemu llama al ayudante con
   `SDL_FUENTE=sistema SDL_GUID_MODO=cemu` (SDL del sistema sin normalizar y
   `PUERTO` contado solo entre gamepads, como hace Cemu).
+- **Cemu y el byte de bus.** Con Steam Input desactivado, SDL3 marca Bluetooth
+  como `05` en el primer byte del GUID; Cemu (SDL2/HIDAPI) lo guarda como `03`.
+  `nucleo_mandos` traduce `05 -> 03` solo en modo `cemu` y conserva el CRC real.
+  Sin esa traducción el `uuid` no coincide y Cemu no conecta ningún mando.
 - El **plan de Cemu** vive en `eden-nucleo.sh`
   (`nucleo_mandos` + `nucleo_planificar`): clasifica `dual|integrado|otro`,
   respeta `ORDEN_INTEGRADO`, `P1_SERIE` y `JUGADORES_MAX`. Eden mantiene su
@@ -180,7 +184,8 @@ Orden de llamada: despachador (según `--sistema`) → driver → `main` → `lo
   ventana que pide OK al iniciar el juego. Eden solo usa el valor si ademas
   `controller_applet_mode\default=false`; `forzar_applet_apagado` escribe las
   dos lineas y no toca nada si ya estan bien.
-- Cemu identifica el mando por `uuid = <puerto>_<guid>`; `display_name`,
+- Cemu identifica el mando por `uuid = <puerto>_<guid>` (bus SDL2: Bluetooth
+  `03`, USB `03`); `display_name`,
   `<profile>` y `<type>` no intervienen en la búsqueda. El driver solo cambia el
   dispositivo: conserva tipo, perfil, bindings y las entradas no-SDL (DSU).
 - Si cambias `eden-mandos-sdl.sh` de forma incompatible, actualiza la guarda de

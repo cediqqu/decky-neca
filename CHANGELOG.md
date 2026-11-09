@@ -8,8 +8,18 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 <!-- Añade aquí los cambios sin versión. Al publicar, crea ## [x.y.z] - YYYY-MM-DD. -->
 
+### Corregido
+
+- **Cemu con Steam Input desactivado.** SDL3 marca el bus Bluetooth como `05` y
+  Cemu (SDL2/HIDAPI) lo guarda como `03`. El `uuid` no coincidía y Cemu no
+  conectaba ningún mando. El driver traduce solo ese byte y conserva el CRC
+  real.
+
 ### Cambiado
 
+- **Los filtros del log pasan abajo.** **Todo / Eden / Cemu** están en la fila
+  inferior, junto a **Cerrar**; se quitan **▲ Subir** y **▼ Bajar**. El scroll
+  sigue siendo con D-pad/stick.
 - **Eden y Cemu vuelven a la lógica de 2.0.0.** Se retira la renumeración de
   puertos de los DualSense virtuales y los experimentos de Steam Input. Ambos
   emuladores aplican como en la última versión estable.

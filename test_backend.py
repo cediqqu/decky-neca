@@ -798,6 +798,26 @@ async def main():
         check("Cemu uuid %s raw" % u, ("uuid         = %s" % u) in out,
               out[-600:])
 
+    # Con Steam Input off, SDL3 da el bus Bluetooth como 05 y Cemu (SDL2) lo
+    # guarda como 03. El CRC real no se toca.
+    fisico = os.path.join(tmp, "sdl_bt.txt")
+    with open(fisico, "w", encoding="utf-8") as fh:
+        for n, mac in enumerate(("4c:b9:9b:e9:bc:26", "48:18:fd:11:4a:0a",
+                                 "4c:b9:9b:23:f1:fb", "d0:bc:c1:02:fb:9d")):
+            fh.write("DualSense Wireless Controller|"
+                     "050057564c050000e60c000000006800|%d|6|1|"
+                     "DualSense Wireless Controller|%s\n" % (n, mac))
+    env_u["EDEN_FAKE_SDL"] = fisico
+    r = subprocess.run(["bash", script, "--sistema", "wiiu", "--dry-run"],
+                       env=env_u, capture_output=True, text=True)
+    check("Cemu dry-run bus SDL2 ok", r.returncode == 0, r.stdout + r.stderr)
+    out = r.stdout + r.stderr
+    for u in ("0_", "1_", "2_", "3_"):
+        check("Cemu uuid %s bus 03" % u,
+              ("uuid         = %s030057564c050000e60c000000006800" % u) in out,
+              out[-600:])
+    check("Cemu no escribe el bus 05", "050057564c05" not in out, out[-600:])
+
     # El log del panel filtra por emulador y quita los bloques de --who
     with open(os.path.join(base, "log.txt"), "w", encoding="utf-8") as fh:
         fh.write("2026-01-01 10:00:00 [INFO] [1] === eden-autoconfig.sh v2 modo=who args='--who' ===\n")

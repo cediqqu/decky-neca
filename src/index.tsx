@@ -1174,7 +1174,7 @@ function VentanaLog(props: { onCerrar: () => void }) {
   const [texto, setTexto] = useState("");
   const [cargando, setCargando] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const cerrarRef = useRef<HTMLDivElement>(null);
+  const filtroRef = useRef<HTMLDivElement>(null);
 
   const cargar = async (f: string) => {
     setFiltro(f);
@@ -1198,14 +1198,8 @@ function VentanaLog(props: { onCerrar: () => void }) {
     if (el) el.scrollTop = el.scrollHeight;
   }, [texto]);
 
-  const moverBoton = (dir: number) => {
-    const el = ref.current;
-    if (!el) return;
-    el.scrollBy({ top: dir * el.clientHeight * 0.8 });
-  };
-
   // D-pad/stick sobre el propio bloque de log; al llegar abajo pasa el foco a
-  // Cerrar, y al llegar arriba deja que suba a los filtros.
+  // los filtros, y al llegar arriba no hay nada encima.
   const desplazar = (evt: GamepadEvent) => {
     const el = ref.current;
     if (!el) return;
@@ -1219,7 +1213,7 @@ function VentanaLog(props: { onCerrar: () => void }) {
     const arriba = el.scrollTop <= 0;
     const abajo = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
     if ((dir < 0 && arriba) || (dir > 0 && abajo)) {
-      if (dir > 0 && cerrarRef.current) cerrarRef.current.focus();
+      if (dir > 0 && filtroRef.current) filtroRef.current.focus();
       return;
     }
     evt.preventDefault();
@@ -1245,32 +1239,6 @@ function VentanaLog(props: { onCerrar: () => void }) {
           flexDirection: "column",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "6px",
-            padding: "8px 12px 4px",
-          }}
-        >
-          {filtros.map(([clave, etiqueta]) => (
-            <DialogButton
-              key={clave}
-              disabled={cargando}
-              onClick={() => void cargar(clave)}
-              style={{
-                flex: "1 1 64px",
-                minWidth: "64px",
-                padding: "6px 8px",
-                ...(filtro === clave
-                  ? { borderColor: C.azul, borderWidth: "2px" }
-                  : {}),
-              }}
-            >
-              {etiqueta}
-            </DialogButton>
-          ))}
-        </div>
         <Focusable
           preferredFocus
           onActivate={() => {}}
@@ -1281,7 +1249,7 @@ function VentanaLog(props: { onCerrar: () => void }) {
             minHeight: 0,
             display: "flex",
             flexDirection: "column",
-            margin: "4px 12px",
+            margin: "8px 12px 4px",
           }}
         >
           <div
@@ -1314,13 +1282,30 @@ function VentanaLog(props: { onCerrar: () => void }) {
         <div
           style={{
             display: "flex",
+            flexWrap: "wrap",
             gap: "6px",
             padding: "4px 12px 8px",
           }}
         >
-          <DialogButton onClick={() => moverBoton(-1)}>▲ Subir</DialogButton>
-          <DialogButton onClick={() => moverBoton(1)}>▼ Bajar</DialogButton>
-          <DialogButtonPrimary ref={cerrarRef} onClick={props.onCerrar}>
+          {filtros.map(([clave, etiqueta]) => (
+            <DialogButton
+              key={clave}
+              ref={filtro === clave ? filtroRef : undefined}
+              disabled={cargando}
+              onClick={() => void cargar(clave)}
+              style={{
+                flex: "1 1 64px",
+                minWidth: "64px",
+                padding: "6px 8px",
+                ...(filtro === clave
+                  ? { borderColor: C.azul, borderWidth: "2px" }
+                  : {}),
+              }}
+            >
+              {etiqueta}
+            </DialogButton>
+          ))}
+          <DialogButtonPrimary onClick={props.onCerrar}>
             Cerrar
           </DialogButtonPrimary>
         </div>

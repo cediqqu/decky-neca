@@ -683,8 +683,11 @@ El hook de ES-DE ya lo hace solo: `switch` → Eden, `wiiu` → Cemu.
 
 **Cemu** solo cambia el dispositivo de cada mando. El `uuid` que guarda Cemu es
 `<n>_<guid>` con el CRC **real** (Eden lo pone a cero), por eso el driver pide
-el guid a la SDL del sistema. Se conservan el tipo (GamePad/Pro), el perfil y
-los bindings; las ranuras que sobran quedan en `Disconnected`.
+el guid a la SDL del sistema. Además, Cemu (SDL2/HIDAPI) guarda el bus Bluetooth
+como `03`, mientras que SDL3 lo marca como `05`; el driver traduce ese primer
+byte y conserva el CRC. Sin Steam Input, esa traducción es la que hace que Cemu
+encuentre los mandos. Se conservan el tipo (GamePad/Pro), el perfil y los
+bindings; las ranuras que sobran quedan en `Disconnected`.
 
 El integrado entra según `ORDEN_INTEGRADO`: `ignorar` (por defecto), `primero`
 (Player 1) o `ultimo` (detrás de los DualSense). Si no hay ningún DualSense,
