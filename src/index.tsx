@@ -95,6 +95,8 @@ type Estado = {
   escenario: string;
   ds_conectados: number;
   otros_conectados: number;
+  jugador_integrado: number | null;
+  integrado_nombre: string;
   hook: boolean;
   esde: boolean | null;
   version: string;
@@ -762,6 +764,23 @@ function IconoMaquina(props: {
     return <SiSteamdeck size={lado} />;
   }
   if (
+    t.includes("xbox ally") ||
+    (t.includes("xbox") && (t.includes("rog") || t.includes("ally")))
+  ) {
+    return (
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "1px",
+        }}
+      >
+        <SiAsus size={lado * 0.78} />
+        <FaXbox size={lado * 0.62} />
+      </span>
+    );
+  }
+  if (
     t.includes("asustek") ||
     t.includes("asus") ||
     t.includes("rog") ||
@@ -839,9 +858,13 @@ function detalleIntegrado(
   modo: string,
   jugador: number | null,
   detectado: boolean,
+  disponible: boolean,
 ): string {
   if (!detectado) return "No detectado";
-  if (!jugador) return "Desactivado";
+  if (!jugador) {
+    if (modo === "ignorar") return "Desactivado";
+    return disponible ? "Desactivado" : "No disponible";
+  }
   if (modo === "ultimo") return `Jugador ${jugador} - Último`;
   if (modo === "primero") return "Jugador 1";
   return `Jugador ${jugador} - Forzado`;
@@ -852,12 +875,14 @@ function TarjetaIntegrado(props: {
   jugador: number | null;
   modo: string;
   detectado: boolean;
+  disponible: boolean;
   onClick: () => void;
 }) {
   const detalle = detalleIntegrado(
     props.modo,
     props.jugador,
     props.detectado,
+    props.disponible,
   );
   return (
     <TarjetaAccion
@@ -1701,21 +1726,30 @@ function Content() {
   const p = est.prefs;
   const integrado =
     est.mandos.find((m) => m.clase === "Integrado") ?? null;
-  const externos = est.mandos.filter((m) => m.clase !== "Integrado");
-  const integradoNombre = integrado?.nombre ?? "";
+  const integradoNombre = integrado?.nombre || est.integrado_nombre || "";
   const maquinaNombre = nombreMaquina(est.maquina);
+  const integradoNombrePlan = (est.integrado_nombre || "").trim().toLowerCase();
+  const externos = est.mandos.filter((m) => {
+    if (m.clase === "Integrado") return false;
+    if (!integradoNombrePlan) return true;
+    return (m.nombre || "").toLowerCase() !== integradoNombrePlan
+      && (m.sdl || "").toLowerCase() !== integradoNombrePlan;
+  });
   const mostrarIntegrado = Boolean(integrado) || Boolean(maquinaNombre);
+  const integradoJugador = integrado?.jugador ?? est.jugador_integrado ?? null;
+  const integradoDisponible = Boolean(integrado)
+    || est.jugador_integrado != null;
+  const integradoDetectado = integradoDisponible || Boolean(maquinaNombre);
   const acento = C.azul;
   const cupo = Number(p.JUGADORES_MAX);
-  const activos = new Set(
+  const jugadores = new Set(
     est.mandos
       .map((m) => m.jugador)
       .filter((n): n is number => n !== null),
-  ).size;
-  const maxJugador = Math.max(
-    0,
-    ...est.mandos.map((m) => m.jugador ?? 0),
   );
+  if (est.jugador_integrado != null) jugadores.add(est.jugador_integrado);
+  const activos = jugadores.size;
+  const maxJugador = Math.max(0, ...Array.from(jugadores));
 
   return (
     <div
@@ -1929,9 +1963,10 @@ function Content() {
                         nombre={integradoNombre}
                       />
                     }
-                    jugador={integrado?.jugador ?? null}
+                    jugador={integradoJugador}
                     modo={p.ORDEN_INTEGRADO}
-                    detectado={Boolean(integrado)}
+                    detectado={integradoDetectado}
+                    disponible={integradoDisponible}
                     onClick={() => elegirIntegrado(siguienteIntegrado())}
                   />
                 </div>

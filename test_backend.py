@@ -367,7 +367,8 @@ async def main():
     )
     check("pads virtuales por puerto", pw["virtual"] == {"0": 1, "1": 2}, pw)
     check("vacio no rompe", mod._parse_who("") ==
-          {"dual": {}, "virtual": {}, "integrado": None})
+          {"dual": {}, "virtual": {}, "integrado": None,
+           "integrado_nombre": ""})
 
     # ------------------------------------------------------------------ 15
     print("15) mando principal automatico")
@@ -1024,6 +1025,95 @@ async def main():
           integ and integ[0]["jugador"] is None
           and [m["jugador"] for m in ds] == [1, 2, 3, 4],
           [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+
+    # Aunque el pad virtual tenga serie (y el fallback no lo promueva), el
+    # plan de --who dice que es el integrado: el panel debe usar ese dato.
+    virtual_serial = os.path.join(tmp, "sdl_virtual_serial.txt")
+    with open(virtual_serial, "w", encoding="utf-8") as fh:
+        for k in range(4):
+            fh.write(
+                "DualSense %d|050057564c050000e60c000000006800"
+                "|%d|6|1|DualSense %d|4c:b9:9b:e9:bc:%02x\n"
+                % (k + 1, k, k + 1, k)
+            )
+        fh.write("Steam Virtual Gamepad|03000000de280000ff11000001000000"
+                 "|0|1|1|Steam Virtual Gamepad|aa:aa\n")
+    os.environ["EDEN_FAKE_SDL"] = virtual_serial
+    prefs = mod._leer_prefs()
+    prefs["JUGADORES_MAX"] = "4"
+    prefs["ORDEN_INTEGRADO"] = "ultimo"
+    prefs["INTEGRADO_MANUAL"] = "si"
+    prefs["P1_SERIE"] = ""
+    mod._escribir_prefs(prefs)
+    est = await mod.Plugin().estado()
+    integ = [m for m in est["mandos"] if m["clase"] == "Integrado"]
+    ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
+    check("plan marca el integrado aunque tenga serie",
+          len(integ) == 1 and integ[0]["nombre"] == "Steam Virtual Gamepad",
+          [(m["nombre"], m["clase"]) for m in est["mandos"]])
+    check("plan integrado P4", integ and integ[0]["jugador"] == 4,
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+    check("estado expone jugador_integrado",
+          est["jugador_integrado"] == 4
+          and (est["integrado_nombre"] or "").lower() == "steam virtual gamepad",
+          (est.get("jugador_integrado"), est.get("integrado_nombre")))
+    check("plan integrado: DS4 fuera",
+          [m["jugador"] for m in ds] == [1, 2, 3, None],
+          [(m["puerto"], m["jugador"]) for m in ds])
+
+    # Sin integrado real en SDL no debe aparecer un "INTEGRADO [] (port )"
+    # fantasma que robe P1. La consola sigue siendo una ROG Xbox Ally X.
+    sin_integrado = os.path.join(tmp, "sdl_sin_integrado.txt")
+    with open(sin_integrado, "w", encoding="utf-8") as fh:
+        for k in range(4):
+            fh.write(
+                "DualSense %d|050057564c050000e60c000000006800"
+                "|%d|6|1|DualSense %d|4c:b9:9b:e9:bc:%02x\n"
+                % (k + 1, k, k + 1, k)
+            )
+    prefs = mod._leer_prefs()
+    prefs["JUGADORES_MAX"] = "3"
+    prefs["ORDEN_INTEGRADO"] = "primero"
+    prefs["INTEGRADO_MANUAL"] = "si"
+    prefs["P1_SERIE"] = ""
+    mod._escribir_prefs(prefs)
+    os.environ["EDEN_FAKE_SDL"] = sin_integrado
+    env_u["EDEN_FAKE_SDL"] = sin_integrado
+    r = subprocess.run(["bash", script, "--who"],
+                       env=env_u, capture_output=True, text=True)
+    out = r.stdout + r.stderr
+    check("sin integrado: no hay INTEGRADO fantasma",
+          "INTEGRADO" not in out and "Player 1 = DualSense 1" in out,
+          out[-500:])
+    original_maquina = mod._maquina
+    mod._maquina = lambda: {
+        "vendor": "ASUSTeK COMPUTER INC.",
+        "producto": "ROG Xbox Ally X RC73XA_RC73XA",
+        "placa": "RC73XA",
+    }
+    est = await mod.Plugin().estado()
+    check("maquina ROG Xbox Ally X",
+          (est["maquina"] or {}).get("producto", "").startswith("ROG Xbox Ally X"),
+          est.get("maquina"))
+    ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
+    check("consola conocida: integrado esperado P1",
+          est["jugador_integrado"] == 1,
+          (est["jugador_integrado"], est["mandos"]))
+    check("consola conocida: DS P2/P3",
+          [m["jugador"] for m in ds][:3] == [2, 3, None],
+          [(m["puerto"], m["jugador"]) for m in ds])
+
+    # Consola desconocida: sin integrado real no se asume nada.
+    mod._maquina = lambda: {"vendor": "Generic", "producto": "PC",
+                            "placa": "Generic"}
+    est = await mod.Plugin().estado()
+    ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
+    check("consola desconocida: sin integrado fantasma",
+          est["jugador_integrado"] is None
+          and [m["jugador"] for m in ds][:3] == [1, 2, 3],
+          (est["jugador_integrado"],
+           [(m["puerto"], m["jugador"]) for m in ds]))
+    mod._maquina = original_maquina
 
     prefs = mod._leer_prefs()
     prefs["JUGADORES_MAX"] = "4"

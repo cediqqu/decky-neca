@@ -390,18 +390,49 @@ def _parse_who(texto):
       Player 3 = INTEGRADO [Asus...]  (port 0)
       Player 1 = pad virtual Steam 0   (port 0)
     """
-    plan = {"dual": {}, "virtual": {}, "integrado": None}
+    plan = {"dual": {}, "virtual": {}, "integrado": None,
+            "integrado_nombre": ""}
     for m in RE_WHO.finditer(texto or ""):
         jugador = int(m.group(1))
         que = m.group(2).strip().lower()
         puerto = m.group(3)
         if "integrado" in que:
             plan["integrado"] = jugador
+            mn = re.search(r"\[([^\]]+)\]", que)
+            plan["integrado_nombre"] = mn.group(1).strip() if mn else ""
         elif "virtual" in que:
             plan["virtual"][puerto] = jugador
         elif "dualsense" in que:
             plan["dual"][puerto] = jugador
     return plan
+
+
+def _marcar_integrado_plan(mandos, plan):
+    """Marca como Integrado el mando que el plan llama INTEGRADO.
+
+    El panel clasifica por nombre/guid, pero el driver puede identificarlo
+    ademas por el plan (p. ej. un Steam Virtual Gamepad que no parece Asus).
+    """
+    if any(m["clase"] == "Integrado" for m in mandos):
+        return
+    nombre = (plan.get("integrado_nombre") or "").strip().lower()
+    if nombre:
+        for m in mandos:
+            if m["clase"] == "DualSense":
+                continue
+            if nombre in (m.get("nombre", "").lower(),
+                          m.get("sdl", "").lower()):
+                m["clase"] = "Integrado"
+                m["familia"] = "integrado"
+                m["conexion"] = "Interno"
+                return
+    virtuales = [m for m in mandos
+                 if m["clase"] in ("Otro", "Pad virtual")
+                 and m["virtual"] and not m["serie"]]
+    if len(virtuales) == 1:
+        virtuales[0]["clase"] = "Integrado"
+        virtuales[0]["familia"] = "integrado"
+        virtuales[0]["conexion"] = "Interno"
 
 
 def _sincronizar_principal(prefs, ds):
@@ -677,6 +708,18 @@ def _maquina():
     }
 
 
+def _maquina_con_integrado(m):
+    """True si la maquina es una handheld con mando integrado conocido."""
+    t = " ".join([(m or {}).get("vendor", ""),
+                  (m or {}).get("producto", ""),
+                  (m or {}).get("placa", "")]).lower()
+    return any(x in t for x in (
+        "asus", "asustek", "rog", "ally",
+        "valve", "steam deck", "jupiter", "galileo",
+        "msi", "claw", "lenovo", "legion",
+    ))
+
+
 def _leer_plan(nombre):
     """Lee ~/eden-autoconfig/plan-<sistema>.txt (lo escriben los drivers)."""
     ruta = os.path.join(_base(), "plan-%s.txt" % nombre)
@@ -867,6 +910,7 @@ class Plugin:
         salida = ""
         salida_who = ""
         aviso = ""
+        maquina = _maquina()
 
         if ok:
             # El ayudante soporta EDEN_FAKE_SDL; panel y --who trabajan con la
@@ -892,9 +936,15 @@ class Plugin:
 
         # Los jugadores los decide el script (`--who`): aqui no se reimplementa.
         if ok:
-            _rc, salida_who = await _run(
-                ["bash", _script(SCRIPT), "--who"], timeout=60)
+            args_who = ["bash", _script(SCRIPT), "--who"]
+            # En una consola con mando integrado, Steam Input solo lo expone
+            # dentro de la sesion de ES-DE. Para las tarjetas mostramos el plan
+            # esperado; el aplicar/hook sigue usando la deteccion real.
+            if _maquina_con_integrado(maquina):
+                args_who.append("--asumir-integrado")
+            _rc, salida_who = await _run(args_who, timeout=60)
         plan = _parse_who(salida_who if ok else "")
+        _marcar_integrado_plan(mandos, plan)
 
         limite = int(prefs["JUGADORES_MAX"])
         for m in mandos:
@@ -947,6 +997,8 @@ class Plugin:
             "escenario": _escenario(mandos),
             "ds_conectados": ds_n,
             "otros_conectados": len([m for m in mandos if m["clase"] == "Otro"]),
+            "jugador_integrado": plan["integrado"],
+            "integrado_nombre": plan.get("integrado_nombre", ""),
             "hook": _hook_instalado(),
             "esde": _esde_eventos(),
             "version": _version_bundle(),
@@ -958,7 +1010,7 @@ class Plugin:
                 ok and (faltan or (has_bundle and has_inst and has_inst != has_bundle))
             ),
             "planes": {"wiiu": _leer_plan("wiiu")},
-            "maquina": _maquina(),
+            "maquina": maquina,
             "aviso": aviso,
         }
 

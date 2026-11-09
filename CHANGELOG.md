@@ -10,12 +10,22 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 ### Corregido
 
+- **Sin integrado fantasma.** Si SDL no expone el mando de la consola, el plan
+  ya no añade `INTEGRADO [] (port )` ni roba el P1; los DualSense empiezan en P1.
+- **Plan esperado del integrado en consolas conocidas.** En una ROG Xbox Ally X,
+  Steam Deck, MSI Claw o Legion Go, el panel muestra el puesto que ocupará el
+  mando integrado aunque Steam Input solo lo exponga dentro de ES-DE. El
+  aplicar y el hook siguen usando la detección real.
+- **Icono ASUS + Xbox.** La tarjeta y el chip de la ROG Xbox Ally X usan el
+  logo ASUS junto al de Xbox; el resto de equipos ASUS mantienen el logo ASUS.
 - **El integrado virtual de Steam se reconoce como Integrado.** Cuando el mando
   de la consola llega como un único `Steam Virtual Gamepad` (sin número de
   serie), el panel lo clasificaba como «Pad virtual» y la tarjeta mostraba
   siempre `No detectado`, aunque el plan sí le reservaba un puesto. Ahora se
   promueve a Integrado, igual que hace el driver, y desaparece la tarjeta
-  duplicada.
+  duplicada. Además, el panel usa el nombre y el jugador de la línea
+  `INTEGRADO [...]` de `--who` aunque el mando no encaje por nombre; la tarjeta
+  muestra el puesto real o `Desactivado`, no `No detectado`.
 - **Animación de resaltado en los DualSense.** El icono de las tarjetas de
   mando tiene el mismo pop, brillo y escala que el del integrado al enfocar.
 - **La MAC ya no se recorta.** Las tarjetas muestran la MAC completa; si no

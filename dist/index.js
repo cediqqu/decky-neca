@@ -581,6 +581,14 @@ function IconoMaquina(props) {
         t.includes("deck controller")) {
         return SP_JSX.jsx(SiSteamdeck, { size: lado });
     }
+    if (t.includes("xbox ally") ||
+        (t.includes("xbox") && (t.includes("rog") || t.includes("ally")))) {
+        return (SP_JSX.jsxs("span", { style: {
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "1px",
+            }, children: [SP_JSX.jsx(SiAsus, { size: lado * 0.78 }), SP_JSX.jsx(FaXbox, { size: lado * 0.62 })] }));
+    }
     if (t.includes("asustek") ||
         t.includes("asus") ||
         t.includes("rog") ||
@@ -623,11 +631,14 @@ function ChipEstado(props) {
                 }, children: props.texto })] }));
 }
 // --- tarjeta del mando integrado -------------------------------------------
-function detalleIntegrado(modo, jugador, detectado) {
+function detalleIntegrado(modo, jugador, detectado, disponible) {
     if (!detectado)
         return "No detectado";
-    if (!jugador)
-        return "Desactivado";
+    if (!jugador) {
+        if (modo === "ignorar")
+            return "Desactivado";
+        return disponible ? "Desactivado" : "No disponible";
+    }
     if (modo === "ultimo")
         return `Jugador ${jugador} - Último`;
     if (modo === "primero")
@@ -635,7 +646,7 @@ function detalleIntegrado(modo, jugador, detectado) {
     return `Jugador ${jugador} - Forzado`;
 }
 function TarjetaIntegrado(props) {
-    const detalle = detalleIntegrado(props.modo, props.jugador, props.detectado);
+    const detalle = detalleIntegrado(props.modo, props.jugador, props.detectado, props.disponible);
     return (SP_JSX.jsx(TarjetaAccion, { color: C.naranja, icono: props.icono, anim: "pop", titulo: "Integrado", detalle: detalle, onClick: props.onClick }));
 }
 function IconoTarjeta(props) {
@@ -1120,16 +1131,31 @@ function Content() {
     }
     const p = est.prefs;
     const integrado = est.mandos.find((m) => m.clase === "Integrado") ?? null;
-    const externos = est.mandos.filter((m) => m.clase !== "Integrado");
-    const integradoNombre = integrado?.nombre ?? "";
+    const integradoNombre = integrado?.nombre || est.integrado_nombre || "";
     const maquinaNombre = nombreMaquina(est.maquina);
+    const integradoNombrePlan = (est.integrado_nombre || "").trim().toLowerCase();
+    const externos = est.mandos.filter((m) => {
+        if (m.clase === "Integrado")
+            return false;
+        if (!integradoNombrePlan)
+            return true;
+        return (m.nombre || "").toLowerCase() !== integradoNombrePlan
+            && (m.sdl || "").toLowerCase() !== integradoNombrePlan;
+    });
     const mostrarIntegrado = Boolean(integrado) || Boolean(maquinaNombre);
+    const integradoJugador = integrado?.jugador ?? est.jugador_integrado ?? null;
+    const integradoDisponible = Boolean(integrado)
+        || est.jugador_integrado != null;
+    const integradoDetectado = integradoDisponible || Boolean(maquinaNombre);
     const acento = C.azul;
     const cupo = Number(p.JUGADORES_MAX);
-    const activos = new Set(est.mandos
+    const jugadores = new Set(est.mandos
         .map((m) => m.jugador)
-        .filter((n) => n !== null)).size;
-    const maxJugador = Math.max(0, ...est.mandos.map((m) => m.jugador ?? 0));
+        .filter((n) => n !== null));
+    if (est.jugador_integrado != null)
+        jugadores.add(est.jugador_integrado);
+    const activos = jugadores.size;
+    const maxJugador = Math.max(0, ...Array.from(jugadores));
     return (SP_JSX.jsxs("div", { className: "ede-panel", style: {
             "--ede-acento": acento,
             "--ede-acento-halo": hexA(acento, 0.45),
@@ -1178,7 +1204,7 @@ function Content() {
                                         minWidth: 0,
                                         maxWidth: "100%",
                                         borderRadius: "16px",
-                                    }, children: SP_JSX.jsx(TarjetaIntegrado, { icono: SP_JSX.jsx(IconoMaquina, { maquina: est.maquina, nombre: integradoNombre }), jugador: integrado?.jugador ?? null, modo: p.ORDEN_INTEGRADO, detectado: Boolean(integrado), onClick: () => elegirIntegrado(siguienteIntegrado()) }) })) : null, externos.map((m) => (SP_JSX.jsx("div", { className: "ede-celda", style: {
+                                    }, children: SP_JSX.jsx(TarjetaIntegrado, { icono: SP_JSX.jsx(IconoMaquina, { maquina: est.maquina, nombre: integradoNombre }), jugador: integradoJugador, modo: p.ORDEN_INTEGRADO, detectado: integradoDetectado, disponible: integradoDisponible, onClick: () => elegirIntegrado(siguienteIntegrado()) }) })) : null, externos.map((m) => (SP_JSX.jsx("div", { className: "ede-celda", style: {
                                         minWidth: 0,
                                         maxWidth: "100%",
                                         borderRadius: "16px",

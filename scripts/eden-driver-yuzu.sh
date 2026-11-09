@@ -109,6 +109,7 @@ VERBOSE=0
 DRY_RUN=0
 FORCE=0
 MODO="aplicar"        # aplicar | status | dryrun | who | save-template | restore | list-backups | help
+ASUMIR_INTEGRADO=0    # solo --who: mostrar el integrado aunque SDL no lo exponga
 TMPDIR_RUN=""
 
 # =============================================================================
@@ -1074,18 +1075,30 @@ planificar_sdl() {
         *)       INCLUIR_INT=1 ;;
     esac
     # si no hay ningun DualSense, el integrado entra como P1
-    if [ "${DS_SDL_N:-0}" -eq 0 ] && [ "${INTEGRADO_N:-0}" -gt 0 ]; then
+    if [ "${DS_SDL_N:-0}" -eq 0 ] \
+       && { [ "${INTEGRADO_N:-0}" -gt 0 ] || [ "${ASUMIR_INTEGRADO:-0}" -eq 1 ]; }; then
         INCLUIR_INT=1
         primero_int=1
     fi
-    # no se puede asignar el integrado si SDL no nos ha dado su puerto y guid
-    [ "$INCLUIR_INT" -eq 1 ] && [ -z "${SDL_INT_PAR:-}" ] && INCLUIR_INT=0
+    # no se puede asignar el integrado si SDL no nos ha dado su puerto y guid.
+    # El panel puede pedir un --who "esperado" en consolas con mando integrado
+    # (Steam Input solo lo expone al lanzar): se usa un puerto/guid de relleno
+    # solo para el resumen, nunca para aplicar.
+    if [ "$INCLUIR_INT" -eq 1 ] && [ -z "${SDL_INT_PAR:-}" ]; then
+        if [ "${ASUMIR_INTEGRADO:-0}" -eq 1 ]; then
+            SDL_INT_PAR="0:00000000000000000000000000000000"
+            INTEGRADO_NOMBRES="${INTEGRADO_NOMBRES:-Steam Input}"
+        else
+            INCLUIR_INT=0
+            primero_int=0
+        fi
+    fi
 
     if [ "${DS_SDL_N:-0}" -eq 0 ] && [ "$INCLUIR_INT" -eq 0 ]; then
         return 2
     fi
 
-    if [ "$primero_int" -eq 1 ]; then
+    if [ "$INCLUIR_INT" -eq 1 ] && [ "$primero_int" -eq 1 ]; then
         par="${SDL_INT_PAR%%:*}"; pg="${SDL_INT_PAR#*:}"
         PLAN_JUGADORES="$PLAN_JUGADORES integrado:0:$par:$pg"
         resumen="$resumen
@@ -1868,6 +1881,7 @@ parse_args() {
             --status) MODO="status" ;;
             --dry-run|--dryrun) MODO="dryrun" ;;
             --who) MODO="who" ;;
+            --asumir-integrado) ASUMIR_INTEGRADO=1 ;;
             --mandos) MODO="mandos" ;;
             --save-template)
                 MODO="save-template"
