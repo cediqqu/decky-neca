@@ -780,7 +780,8 @@ def _parse_mandos(texto):
     # si no hay integrado pero hay un unico pad virtual suelto, es el integrado
     if not any(m["clase"] == "Integrado" for m in mandos):
         virtuales = [m for m in mandos
-                     if m["clase"] == "Otro" and m["virtual"] and not m["serie"]]
+                     if m["clase"] in ("Otro", "Pad virtual")
+                     and m["virtual"] and not m["serie"]]
         if len(virtuales) == 1:
             virtuales[0]["clase"] = "Integrado"
             virtuales[0]["familia"] = "integrado"

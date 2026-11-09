@@ -406,23 +406,31 @@ function IconoConexion(props: { conexion: string; size?: number }) {
 function IconoTile(props: { m: Mando; lado: number }) {
   const color = colorDe(props.m);
   return (
-    <div
-      style={{
-        width: `${props.lado}px`,
-        height: `${props.lado}px`,
-        borderRadius: "9px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flex: "0 0 auto",
-        background: `linear-gradient(145deg, ${hexA(color, 0.35)}, ${hexA(color, 0.06)})`,
-        border: `1px solid ${hexA(color, 0.5)}`,
-        boxShadow: `inset 0 0 10px ${hexA(color, 0.15)}`,
-        color,
-      }}
-    >
-      <IconoFamilia familia={props.m.familia} size={props.lado * 0.55} />
-    </div>
+    <span className="ede-icono-tile">
+      <span className="ede-anim-pop" style={{ display: "inline-flex" }}>
+        <span
+          className="ede-icono-caja"
+          style={
+            {
+              width: `${props.lado}px`,
+              height: `${props.lado}px`,
+              borderRadius: "9px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flex: "0 0 auto",
+              background: `linear-gradient(145deg, ${hexA(color, 0.35)}, ${hexA(color, 0.06)})`,
+              border: `1px solid ${hexA(color, 0.5)}`,
+              boxShadow: `inset 0 0 10px ${hexA(color, 0.15)}`,
+              color,
+              "--ede-glow": hexA(color, 0.6),
+            } as CSSProperties
+          }
+        >
+          <IconoFamilia familia={props.m.familia} size={props.lado * 0.55} />
+        </span>
+      </span>
+    </span>
   );
 }
 

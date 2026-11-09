@@ -10,6 +10,14 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 ### Corregido
 
+- **El integrado virtual de Steam se reconoce como Integrado.** Cuando el mando
+  de la consola llega como un único `Steam Virtual Gamepad` (sin número de
+  serie), el panel lo clasificaba como «Pad virtual» y la tarjeta mostraba
+  siempre `No detectado`, aunque el plan sí le reservaba un puesto. Ahora se
+  promueve a Integrado, igual que hace el driver, y desaparece la tarjeta
+  duplicada.
+- **Animación de resaltado en los DualSense.** El icono de las tarjetas de
+  mando tiene el mismo pop, brillo y escala que el del integrado al enfocar.
 - **La MAC ya no se recorta.** Las tarjetas muestran la MAC completa; si no
   cabe en una línea, salta a la siguiente.
 - **La tarjeta del integrado muestra el jugador real.** `Jugador 3 - Último`,

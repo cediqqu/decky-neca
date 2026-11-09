@@ -972,6 +972,59 @@ async def main():
     check("matriz 60 escenarios: jugadores y desactivados",
           not errores, errores[:3])
 
+    # El integrado puede llegar como un unico pad virtual de Steam (no como
+    # "Asus"): el panel debe clasificarlo igual que el driver.
+    virtual = os.path.join(tmp, "sdl_virtual_integrado.txt")
+    with open(virtual, "w", encoding="utf-8") as fh:
+        for k in range(4):
+            fh.write(
+                "DualSense %d|050057564c050000e60c000000006800"
+                "|%d|6|1|DualSense %d|4c:b9:9b:e9:bc:%02x\n"
+                % (k + 1, k, k + 1, k)
+            )
+        fh.write("Steam Virtual Gamepad|03000000de280000ff11000001000000"
+                 "|0|1|1|Steam Virtual Gamepad|\n")
+    os.environ["EDEN_FAKE_SDL"] = virtual
+    prefs = mod._leer_prefs()
+    prefs["JUGADORES_MAX"] = "4"
+    prefs["ORDEN_INTEGRADO"] = "ultimo"
+    prefs["INTEGRADO_MANUAL"] = "si"
+    prefs["P1_SERIE"] = ""
+    mod._escribir_prefs(prefs)
+    est = await mod.Plugin().estado()
+    integ = [m for m in est["mandos"] if m["clase"] == "Integrado"]
+    check("integrado virtual detectado", len(integ) == 1
+          and integ[0]["nombre"] == "Steam Virtual Gamepad", est["mandos"])
+    check("integrado virtual no es tarjeta externa",
+          not any(m["clase"] == "Pad virtual" for m in est["mandos"]),
+          [(m["nombre"], m["clase"]) for m in est["mandos"]])
+    check("integrado virtual P4", integ and integ[0]["jugador"] == 4,
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+    ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
+    check("integrado virtual: DS4 fuera",
+          [m["jugador"] for m in ds] == [1, 2, 3, None],
+          [(m["puerto"], m["jugador"]) for m in ds])
+
+    prefs["ORDEN_INTEGRADO"] = "primero"
+    mod._escribir_prefs(prefs)
+    est = await mod.Plugin().estado()
+    integ = [m for m in est["mandos"] if m["clase"] == "Integrado"]
+    ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
+    check("integrado virtual primero: P1 e integrado",
+          integ and integ[0]["jugador"] == 1
+          and [m["jugador"] for m in ds] == [2, 3, 4, None],
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+
+    prefs["ORDEN_INTEGRADO"] = "ignorar"
+    mod._escribir_prefs(prefs)
+    est = await mod.Plugin().estado()
+    integ = [m for m in est["mandos"] if m["clase"] == "Integrado"]
+    ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
+    check("integrado virtual desactivado: 4 DS",
+          integ and integ[0]["jugador"] is None
+          and [m["jugador"] for m in ds] == [1, 2, 3, 4],
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+
     prefs = mod._leer_prefs()
     prefs["JUGADORES_MAX"] = "4"
     prefs["ORDEN_INTEGRADO"] = "ignorar"
