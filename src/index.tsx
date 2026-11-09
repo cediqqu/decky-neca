@@ -876,6 +876,7 @@ function TarjetaIntegrado(props: {
   modo: string;
   detectado: boolean;
   disponible: boolean;
+  principal: boolean;
   onClick: () => void;
 }) {
   const detalle = detalleIntegrado(
@@ -891,6 +892,7 @@ function TarjetaIntegrado(props: {
       anim="pop"
       titulo="Integrado"
       detalle={detalle}
+      principal={props.principal}
       onClick={props.onClick}
     />
   );
@@ -934,6 +936,7 @@ function TarjetaAccion(props: {
   detalle?: string;
   color?: string;
   anim?: AnimIcono;
+  principal?: boolean;
   onClick: () => void;
 }) {
   const color = props.color ?? C.azul;
@@ -953,6 +956,19 @@ function TarjetaAccion(props: {
           textAlign: "center",
         }}
       >
+        {props.principal ? (
+          <FaStar
+            className="ede-estrella"
+            style={{
+              position: "absolute",
+              top: "4px",
+              right: "6px",
+              color: C.dorado,
+              fontSize: "0.88em",
+              filter: `drop-shadow(0 0 4px ${hexA(C.dorado, 0.9)})`,
+            }}
+          />
+        ) : null}
         <div
           style={{
             display: "flex",
@@ -1649,9 +1665,11 @@ function Content() {
       if (nuevo.aviso) avisar(nuevo.aviso);
     });
 
-  // la tarjeta cicla: Jugador 1 -> Ultimo jugador -> Apagado
+  // la tarjeta cicla: sin DS siempre P1; con DS, ultimo o desactivado
   const siguienteIntegrado = () => {
-    const orden = ["primero", "ultimo", "ignorar"];
+    const orden = (est?.ds_conectados ?? 0) === 0
+      ? ["primero"]
+      : ["ultimo", "ignorar"];
     const i = orden.indexOf(p.ORDEN_INTEGRADO);
     return orden[(i + 1) % orden.length];
   };
@@ -1967,6 +1985,7 @@ function Content() {
                     modo={p.ORDEN_INTEGRADO}
                     detectado={integradoDetectado}
                     disponible={integradoDisponible}
+                    principal={integradoJugador === 1}
                     onClick={() => elegirIntegrado(siguienteIntegrado())}
                   />
                 </div>

@@ -357,18 +357,27 @@ def _quitar_bloque():
 
 def _auto_integrado(prefs, ds_n):
     """Sin eleccion manual: Jugador 1 sin externos, ultimo en cuanto hay uno."""
-    if prefs.get("INTEGRADO_MANUAL") == "si":
-        return prefs, ""
     try:
         tope = int(prefs.get("JUGADORES_MAX", "4"))
     except Exception:
         tope = 4
+    manual = prefs.get("INTEGRADO_MANUAL") == "si"
+
+    # Regla de la consola: sin DualSense el integrado es siempre P1. En cuanto
+    # hay un mando extra, el P1 es el DualSense y el integrado pasa a ultimo o
+    # se desactiva si no queda hueco. "Primero" deja de valer con DS.
     if ds_n == 0:
         deseado = "primero"
-    elif ds_n >= tope:
-        deseado = "ignorar"      # no queda hueco para el integrado
+        if manual and prefs["ORDEN_INTEGRADO"] == "primero":
+            return prefs, ""
+    elif prefs["ORDEN_INTEGRADO"] == "primero":
+        deseado = "ignorar" if ds_n >= tope else "ultimo"
+        prefs["INTEGRADO_MANUAL"] = "no"
+    elif manual:
+        return prefs, ""
     else:
-        deseado = "ultimo"
+        deseado = "ignorar" if ds_n >= tope else "ultimo"
+
     nota = ""
     if prefs["ORDEN_INTEGRADO"] != deseado:
         prefs["ORDEN_INTEGRADO"] = deseado
@@ -461,9 +470,16 @@ def _sincronizar_principal(prefs, ds):
     return prefs, nota
 
 
-def _marcar_principal(mandos, prefs):
+def _marcar_principal(mandos, prefs, integrado_jugador=None):
     """Marca cual es el mando principal (la estrella del panel)."""
     ds = [m for m in mandos if m["clase"] == "DualSense"]
+
+    # El integrado puede ser P1 y no estar en la lista de SDL (Steam Input lo
+    # expone solo al lanzar). En ese caso ningun DualSense lleva la estrella.
+    if integrado_jugador == 1:
+        for m in mandos:
+            m["es_principal"] = False
+        return
 
     if any(m["jugador"] == 1 for m in mandos):
         for m in mandos:
@@ -964,7 +980,7 @@ class Plugin:
             # el script puede repartir mas jugadores de los configurados
             m["jugador"] = jug if (jug is not None and jug <= limite) else None
 
-        _marcar_principal(mandos, prefs)
+        _marcar_principal(mandos, prefs, plan["integrado"])
 
         # Steam Input a veces repite la misma serie en varios pads: se avisa,
         # porque entonces no se pueden distinguir entre si.

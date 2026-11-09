@@ -647,7 +647,7 @@ function detalleIntegrado(modo, jugador, detectado, disponible) {
 }
 function TarjetaIntegrado(props) {
     const detalle = detalleIntegrado(props.modo, props.jugador, props.detectado, props.disponible);
-    return (SP_JSX.jsx(TarjetaAccion, { color: C.naranja, icono: props.icono, anim: "pop", titulo: "Integrado", detalle: detalle, onClick: props.onClick }));
+    return (SP_JSX.jsx(TarjetaAccion, { color: C.naranja, icono: props.icono, anim: "pop", titulo: "Integrado", detalle: detalle, principal: props.principal, onClick: props.onClick }));
 }
 function IconoTarjeta(props) {
     return (SP_JSX.jsx("span", { className: "ede-icono-tile", children: SP_JSX.jsx("span", { className: `ede-anim-${props.anim ?? "pop"}`, children: SP_JSX.jsx("span", { className: "ede-icono-caja", style: {
@@ -662,7 +662,7 @@ function IconoTarjeta(props) {
 }
 function TarjetaAccion(props) {
     const color = props.color ?? C.azul;
-    return (SP_JSX.jsx(BotonTarjeta, { onClick: props.onClick, children: SP_JSX.jsx("div", { className: "ede-tarjeta", style: {
+    return (SP_JSX.jsx(BotonTarjeta, { onClick: props.onClick, children: SP_JSX.jsxs("div", { className: "ede-tarjeta", style: {
                 ...estiloTarjeta(color),
                 display: "flex",
                 flexDirection: "column",
@@ -672,15 +672,22 @@ function TarjetaAccion(props) {
                 width: "100%",
                 padding: 0,
                 textAlign: "center",
-            }, children: SP_JSX.jsxs("div", { style: {
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "6px",
-                    padding: "10px 6px",
-                    width: "100%",
-                }, children: [SP_JSX.jsx(IconoTarjeta, { icono: props.icono, color: color, anim: props.anim }), SP_JSX.jsx("div", { style: { fontSize: "0.7em", fontWeight: 700, lineHeight: 1.15 }, children: props.titulo }), props.detalle ? (SP_JSX.jsx("div", { style: { fontSize: "0.62em", opacity: 0.7, lineHeight: 1.15 }, children: props.detalle })) : null] }) }) }));
+            }, children: [props.principal ? (SP_JSX.jsx(FaStar, { className: "ede-estrella", style: {
+                        position: "absolute",
+                        top: "4px",
+                        right: "6px",
+                        color: C.dorado,
+                        fontSize: "0.88em",
+                        filter: `drop-shadow(0 0 4px ${hexA(C.dorado, 0.9)})`,
+                    } })) : null, SP_JSX.jsxs("div", { style: {
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "6px",
+                        padding: "10px 6px",
+                        width: "100%",
+                    }, children: [SP_JSX.jsx(IconoTarjeta, { icono: props.icono, color: color, anim: props.anim }), SP_JSX.jsx("div", { style: { fontSize: "0.7em", fontWeight: 700, lineHeight: 1.15 }, children: props.titulo }), props.detalle ? (SP_JSX.jsx("div", { style: { fontSize: "0.62em", opacity: 0.7, lineHeight: 1.15 }, children: props.detalle })) : null] })] }) }));
 }
 // --- rejilla de 2 columnas -------------------------------------------------
 function Rejilla(props) {
@@ -1091,9 +1098,11 @@ function Content() {
         if (nuevo.aviso)
             avisar(nuevo.aviso);
     });
-    // la tarjeta cicla: Jugador 1 -> Ultimo jugador -> Apagado
+    // la tarjeta cicla: sin DS siempre P1; con DS, ultimo o desactivado
     const siguienteIntegrado = () => {
-        const orden = ["primero", "ultimo", "ignorar"];
+        const orden = (est?.ds_conectados ?? 0) === 0
+            ? ["primero"]
+            : ["ultimo", "ignorar"];
         const i = orden.indexOf(p.ORDEN_INTEGRADO);
         return orden[(i + 1) % orden.length];
     };
@@ -1204,7 +1213,7 @@ function Content() {
                                         minWidth: 0,
                                         maxWidth: "100%",
                                         borderRadius: "16px",
-                                    }, children: SP_JSX.jsx(TarjetaIntegrado, { icono: SP_JSX.jsx(IconoMaquina, { maquina: est.maquina, nombre: integradoNombre }), jugador: integradoJugador, modo: p.ORDEN_INTEGRADO, detectado: integradoDetectado, disponible: integradoDisponible, onClick: () => elegirIntegrado(siguienteIntegrado()) }) })) : null, externos.map((m) => (SP_JSX.jsx("div", { className: "ede-celda", style: {
+                                    }, children: SP_JSX.jsx(TarjetaIntegrado, { icono: SP_JSX.jsx(IconoMaquina, { maquina: est.maquina, nombre: integradoNombre }), jugador: integradoJugador, modo: p.ORDEN_INTEGRADO, detectado: integradoDetectado, disponible: integradoDisponible, principal: integradoJugador === 1, onClick: () => elegirIntegrado(siguienteIntegrado()) }) })) : null, externos.map((m) => (SP_JSX.jsx("div", { className: "ede-celda", style: {
                                         minWidth: 0,
                                         maxWidth: "100%",
                                         borderRadius: "16px",
