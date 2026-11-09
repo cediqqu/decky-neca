@@ -39,7 +39,11 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 - **Iconos de Switch y cupos en el botón Mandos.** Los cuatro huecos usan el
   icono de Nintendo Switch y el botón muestra `activos/cupo` (por ejemplo,
-  `3/4`) para distinguir los jugadores activos del tope configurado.
+  `3/4`) para distinguir los jugadores activos del tope configurado. Los huecos
+  se colorean hasta el último jugador activo, **incluido el integrado**.
+- **Interfaz más limpia.** Se quita el aviso «Se configuran A de B mandos» y los
+  subtítulos de las tarjetas de Ajustes; el chip de mandos detectados también
+  desaparece porque el botón **Mandos** ya muestra `activos/cupo`.
 - **Los filtros del log pasan abajo.** **Todo / Eden / Cemu** están en la fila
   inferior, junto a **Cerrar**; se quitan **▲ Subir** y **▼ Bajar**. El scroll
   sigue siendo con D-pad/stick.

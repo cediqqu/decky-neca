@@ -1712,6 +1712,10 @@ function Content() {
       .map((m) => m.jugador)
       .filter((n): n is number => n !== null),
   ).size;
+  const maxJugador = Math.max(
+    0,
+    ...est.mandos.map((m) => m.jugador ?? 0),
+  );
 
   return (
     <div
@@ -1802,13 +1806,6 @@ function Content() {
               />
             ) : null}
             <ChipEstado
-              color={C.azul}
-              icono={<FaGamepad size={11} />}
-              texto={`${est.mandos.length} ${
-                est.mandos.length === 1 ? "mando" : "mandos"
-              }`}
-            />
-            <ChipEstado
               color={C.violeta}
               icono={<FaFileAlt size={11} />}
               texto={`v${est.version}`}
@@ -1861,7 +1858,7 @@ function Content() {
                 }}
               >
                 {[1, 2, 3, 4].map((n) => {
-                  const on = n <= Number(p.JUGADORES_MAX);
+                  const on = n <= maxJugador;
                   return (
                     <span
                       key={n}
@@ -1967,14 +1964,6 @@ function Content() {
             </Aviso>
           </PanelSectionRow>
         ) : null}
-        {est.ds_conectados > Number(p.JUGADORES_MAX) ? (
-          <PanelSectionRow>
-            <div style={{ fontSize: "0.68em", color: C.dorado }}>
-              Se configuran {p.JUGADORES_MAX} de {est.ds_conectados} mandos.
-              Cambialo en Ajustes → Mandos a configurar.
-            </div>
-          </PanelSectionRow>
-        ) : null}
         {est.mandos.length > 1 ? (
           <PanelSectionRow>
             <div
@@ -2006,7 +1995,6 @@ function Content() {
               icono={<FaCheck size={17} />}
               anim="pop"
               titulo="Aplicar"
-              detalle="Eden · Cemu"
               onClick={aplicar}
             />
           </div>
@@ -2016,7 +2004,6 @@ function Content() {
               icono={<FaUndo size={16} />}
               anim="giro"
               titulo="Restaurar"
-              detalle="Todo"
               onClick={restaurarTodo}
             />
           </div>
@@ -2026,7 +2013,6 @@ function Content() {
               icono={<FaFileAlt size={16} />}
               anim="barrido"
               titulo="Ver log"
-              detalle="log.txt"
               onClick={verLog}
             />
           </div>
