@@ -408,7 +408,7 @@ for din in $(lista_inputs_sysfs); do
         28de) VIRT=$((VIRT + 1)); continue ;;
     esac
     case "$nl" in
-        *rog*|*ally*|*asus*|*hid-asus*|*"microsoft x-box 360 pad"*)
+        *rog*|*ally*|*asus*|*hid-asus*)
             INTEGRADO=$((INTEGRADO + 1)); INTEGRADO_NOM="$nombre"; continue ;;
     esac
     case "$vend" in

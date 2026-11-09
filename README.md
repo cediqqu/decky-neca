@@ -1,24 +1,27 @@
 # N.E.C.A: Nintendo-EmuDeck Controller Autoconf
 
-Plugin de [Decky](https://decky.xyz/) que autoconfigura los mandos de los
-emuladores de Nintendo desde el menú rápido de Steam (QAM): **[Eden](https://eden-emu.dev/)**
-(Switch) y **Cemu** (Wii U). Fija el **Player 1**,
-elige **cuántos mandos** usar y **qué hacer con el integrado**, y lo aplica al
-lanzar el juego desde [ES-DE](https://es-de.org/). Sin root.
+Plugin de [Decky](https://decky.xyz/) que autoconfigura los **DualSense y el
+mando integrado** de los emuladores de Nintendo desde el menú rápido de Steam
+(QAM): **[Eden](https://eden-emu.dev/)** (Switch) y **Cemu** (Wii U). Fija el
+**Player 1**, elige **cuántos mandos** usar y **qué hacer con el integrado**, y
+lo aplica al lanzar el juego desde [ES-DE](https://es-de.org/). Sin root.
 
 [![Release](https://img.shields.io/github/v/release/CeDiqqu/decky-neca?label=release)](https://github.com/CeDiqqu/decky-neca/releases/latest)
 [![Licencia](https://img.shields.io/github/license/CeDiqqu/decky-neca)](https://github.com/CeDiqqu/decky-neca/blob/main/LICENSE)
 
 [English](https://github.com/CeDiqqu/decky-neca/blob/main/README.en.md) · **Español**
 
-> **Estado:** v2.0.0 (6 nov 2026). Primera versión de N.E.C.A; sustituye a
-> E.C.A 1.0.0. Probada en **ROG Xbox Ally X** con SteamOS y DualSense por
-> Bluetooth. Mantenida por [CeDiqqu](https://github.com/CeDiqqu), sin cadencia
-> fija.
+> **Estado:** estable (9 nov 2026). Probada en **ROG Xbox Ally X** con SteamOS y
+> DualSense por Bluetooth. Mantenida por [CeDiqqu](https://github.com/CeDiqqu),
+> sin cadencia fija.
 
 Cambios por versión: [CHANGELOG.md](https://github.com/CeDiqqu/decky-neca/blob/main/CHANGELOG.md).
 
 Pensado para PC de mano con SteamOS y ES-DE (EmuDeck), no para Windows.
+
+**Instalar:** descarga **[neca-decky.zip](https://github.com/CeDiqqu/decky-neca/releases/latest/download/neca-decky.zip)**
+y en la consola usa **Decky → Developer → Install Plugin from ZIP**. Los pasos
+completos están en [Instalación](#instalación).
 
 > **Dolphin (GameCube/Wii) se retiró temporalmente.** Esta versión solo cubre
 > Eden y Cemu. Los datos de Dolphin que hubiera en `~/eden-autoconfig` no se
@@ -26,8 +29,8 @@ Pensado para PC de mano con SteamOS y ES-DE (EmuDeck), no para Windows.
 
 ## Por qué N.E.C.A
 
-- **Dos emuladores, una sola configuración.** Eden y Cemu reciben el mando que
-  les toca al lanzar.
+- **Dos emuladores, una sola configuración.** Eden y Cemu reciben el DualSense
+  o el mando integrado que les toca al lanzar.
 - **Puedes fijar el Player 1 por MAC**, no por puerto. Steam puede renumerar los
   puertos entre sesiones; N.E.C.A fija el mando concreto.
 - **Cemu no rehace los bindings.** Conserva el mapeo que dejó EmuDeck; solo
@@ -43,8 +46,9 @@ Pensado para PC de mano con SteamOS y ES-DE (EmuDeck), no para Windows.
   confirmación al iniciar el juego.
 
 Cuándo **no** usarlo: si no lanzas los juegos desde ES-DE (el hook vive ahí), si
-tu handheld no es ASUS (el patrón del integrado puede necesitar ajuste) o si
-necesitas fijar más de un jugador por MAC.
+tu handheld no es una de las soportadas o el patrón del integrado necesita
+ajuste, o si necesitas asignar mandos que no sean DualSense en Eden. Probado en
+ROG Xbox Ally X; en otras handhelds el patrón del integrado puede cambiar.
 
 ## Requisitos
 
@@ -86,8 +90,8 @@ necesitas fijar más de un jugador por MAC.
    solos al cargar.
 4. En ES-DE: **Other settings → Enable custom event scripts**.
 
-Comprueba que los chips muestran **v2.0.0** y **hook OK**. También puedes
-comprobarlo por terminal:
+Comprueba que los chips muestran la versión esperada y **hook OK**. También
+puedes comprobarlo por terminal:
 
 ```bash
 ~/eden-autoconfig/eden-autoconfig.sh --status
@@ -104,8 +108,7 @@ vienes de E.C.A, desinstala primero el plugin viejo.
 
 1. Conecta los mandos y abre el panel. Si cambia el número de mandos, se
    refresca solo con un sondeo cada 5 s.
-2. Arriba tienes chips con la máquina, el número de mandos, la versión y el
-   estado del hook.
+2. Arriba tienes chips con la máquina, la versión y el estado del hook.
 3. El botón **Mandos** con cuatro huecos cicla el tope de jugadores (1 a 4) y
    muestra **activos/cupo** (por ejemplo, `3/4`).
 4. El botón **Integrado** ocupa todo el ancho, con un icono de estado a la
@@ -114,8 +117,8 @@ vienes de E.C.A, desinstala primero el plugin viejo.
    DualSense** es siempre P1. Sin elección manual, con DualSense pasa a último o
    desactivado según el cupo. Si eliges **Jugador 1** con mandos extra, estos
    corren un puesto y los que sobran se desactivan.
-5. Para fijar un mando concreto como Player 1, **dos toques seguidos** (menos de
-   1,5 s) sobre su tarjeta. La **★** marca el Player 1 actual.
+5. Para fijar un DualSense concreto como Player 1, **dos toques seguidos**
+   (menos de 1,5 s) sobre su tarjeta. La **★** marca el Player 1 actual.
 6. El icono de **Asignación** en la cabecera de **Mandos** abre el último plan de
    Cemu. **Comprobar ahora** lo recalcula sin escribir nada.
 7. En **Ajustes** están **Aplicar** (Eden y Cemu), **Restaurar** (los dos) y
@@ -125,7 +128,8 @@ vienes de E.C.A, desinstala primero el plugin viejo.
 Cada tarjeta muestra el **icono** de la familia (PlayStation, Xbox, Switch, Steam
 o integrado), la **conexión** (Bluetooth, USB, Interno o Virtual) y la **MAC
 completa** siempre que el mando la informe. Los mandos desconocidos muestran
-además su nombre.
+además su nombre. La asignación automática de Eden cubre DualSense y el mando
+integrado; otras familias se muestran y Cemu puede usarlas si no hay DualSense.
 
 Los avisos cortos se pintan dentro del panel y desaparecen a los 5 s. Los errores
 largos, como el diagnóstico de `hidraw`, se abren en una ventana para poder
@@ -219,9 +223,9 @@ backups y el `.conf`.
 
 ### Log y diagnóstico
 
-- **Ver log** abre `log.txt` en una ventana con scroll (D-pad, stick o dedo).
-  Cada aplicar deja la versión y el hash de los scripts, los `Device`/`uuid`
-  escritos y los avisos.
+- **Ver log** abre `log.txt` en una ventana con scroll (D-pad, stick o dedo) y
+  filtros **Todo / Eden / Cemu**. Cada aplicar deja la versión y el hash de los
+  scripts, los `Device`/`uuid` escritos y los avisos.
 - Si Eden o Cemu están abiertos, no se escribe y queda en el log
   (`en ejecucion, no aplico`). Ciérralos del todo y vuelve a lanzar.
 - Tras instalar o actualizar scripts, el panel avisa; cierra el juego y vuelve
@@ -233,21 +237,26 @@ backups y el `.conf`.
   juego desde ES-DE, o a mano con `--sistema wiiu`.
 - **Restaurar desde el panel afecta a los dos emuladores.** Para deshacer solo
   el último aplicar de Cemu, usa `--restore latest`.
-- Solo se puede fijar **un mando concreto como Player 1** (`P1_SERIE`). El resto
-  sigue el orden elegido (conexión o MAC).
-- Si un mando no informa de su serie (pasa con algunos pads virtuales), no se
+- Solo se puede fijar **un DualSense concreto como Player 1** (`P1_SERIE`). El
+  resto sigue el orden elegido (conexión o MAC).
+- Si un DualSense no informa de su serie (pasa con algunos pads virtuales), no se
   puede fijar; el panel te lo dice.
 - El **mando integrado** no se fija por serie. Se controla con la tarjeta
   **Integrado** y con `INTEGRADO_MANUAL`.
 - **`JUGADORES_MAX` es el total de jugadores (1 a 4)**, integrado incluido. Si
-  fuerzas el integrado como Player 1 con cuatro DualSense, uno de los DualSense
-  queda fuera. Si lo pones como **Último jugador**, el integrado reserva el
-  último hueco: ocupa P4 y el cuarto DualSense queda desactivado.
+  eliges el integrado como **Jugador 1** con cuatro DualSense, el integrado ocupa
+  P1 y el cuarto DualSense queda fuera; los demás corren un puesto. Si lo eliges
+  como **Último jugador**, reserva el último hueco: con cuatro DualSense y cupo
+  4, ocupa P4 y el cuarto DualSense queda desactivado.
 - El ajuste automático del integrado se recalcula al **abrir el panel** o al
   **Aplicar**. El hook usa el `.conf` guardado.
-- Con **Steam Input activado** para ES-DE, Eden ve pads virtuales de Valve. La
-  asignación exacta Player N = DualSense N solo es fiable con Steam Input
-  desactivado para ES-DE.
+- **Steam Input**: para que varios DualSense mantengan el orden, desactívalo en
+  ES-DE. El mando integrado sigue usando Steam Input y solo aparece dentro de
+  ES-DE; el panel muestra su puesto esperado y el hook aplica la detección real.
+  Si Steam Input no lo expone al lanzar, el log muestra el plan real.
+- **Eden asigna DualSense y el mando integrado.** Otros mandos se muestran en
+  las tarjetas, pero no reciben jugador en Eden; Cemu puede usarlos si no hay
+  DualSense.
 - **Cemu no crea bindings**: solo cambia el dispositivo. Si EmuDeck no dejó los
   bindings, no hay nada que asignar.
 - Probado en **ROG Xbox Ally X**. En otras handhelds, `INTEGRADO_PATRON` puede
@@ -262,7 +271,7 @@ bash build.sh             # sincroniza scripts/ + compila + genera el zip
 ```
 
 `build.sh` necesita Node 20+ y Python 3. El zip lleva una carpeta raíz
-`NecaAutoconfig/` y el bundle de scripts se marca como **2.0.0**.
+`NecaAutoconfig/` y el bundle de scripts se marca con la versión de `build.sh`.
 
 - `scripts/` es una **copia generada** desde `eden_controller/` (la fuente de
   verdad). No se edita ahí; los cambios van a `eden_controller/` y se copian con

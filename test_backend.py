@@ -552,6 +552,11 @@ async def main():
     check("Asus -> integrado",
           fams.get("Asus Rog Ally Controller") == "integrado", fams)
     check("pad virtual de Valve -> steam", fams.get("Generic Pad") == "steam", fams)
+    clases = {m["nombre"]: m["clase"] for m in est["mandos"]}
+    check("Xbox real no es el Integrado",
+          clases.get("Xbox Wireless Controller") == "Otro", clases)
+    check("Asus -> clase Integrado",
+          clases.get("Asus Rog Ally Controller") == "Integrado", clases)
 
     # ------------------------------------------------------------------ 21
     print("21) restaurar todo")

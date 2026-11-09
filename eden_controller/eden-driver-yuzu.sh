@@ -87,8 +87,8 @@ TIPO_CONTROLADOR="${TIPO_CONTROLADOR:-0}"       # 0 = Pro Controller (valor de p
 GUID_DUALSENSE="${GUID_DUALSENSE:-}"     # si no esta vacio, se fuerza ese guid en los jugadores DualSense
 GUID_INTEGRADO="${GUID_INTEGRADO:-}"     # si no esta vacio, se fuerza ese guid en el jugador integrado
 
-INTEGRADO_PATRON="${INTEGRADO_PATRON:-*ROG*|*Ally*|*ASUS*|*Asus*|*hid-asus*|*Microsoft X-Box 360 pad*}"
-DUALSENSE_PATRON="${DUALSENSE_PATRON:-*Wireless Controller*|*DualSense*}"
+INTEGRADO_PATRON="${INTEGRADO_PATRON:-*ROG*|*Ally*|*ASUS*|*Asus*|*hid-asus*}"
+DUALSENSE_PATRON="${DUALSENSE_PATRON:-*DualSense*|*DualShock*}"
 IGNORAR_PATRON="${IGNORAR_PATRON:-*Touchpad*|*Motion Sensors*|*Consumer Control*|*Keyboard*|*Mouse*|*Video Bus*|*Power Button*|*Sleep Button*|*PC Speaker*|*HD-Audio*|*Lid Switch*|*Sensors*}"
 
 EXIGIR_P1_MAC="${EXIGIR_P1_MAC:-}"       # si no esta vacio: MAC que deberia ser P1; si no coincide, avisa fuerte
@@ -345,7 +345,7 @@ clasificar() {
 
     # 5) mando integrado de la Ally (hid-asus / xpad / ASUS)
     case "$n" in
-        *rog*|*ally*|*asus*|*"hid-asus"*|*"microsoft x-box 360 pad"*)
+        *rog*|*ally*|*asus*|*"hid-asus"*)
             printf 'integrado'; return ;;
     esac
     [ "$vend" = "0b05" ] && { printf 'integrado'; return; }
@@ -440,7 +440,13 @@ clasificar_sdl() { # $1 = nombre Eden, $2 = guid
     local n
     n="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
     case "$n" in
-        *dualsense*|*"wireless controller"*|*dualshock*) printf 'dualsense'; return 0 ;;
+        *dualsense*|*dualshock*) printf 'dualsense'; return 0 ;;
+        *"wireless controller"*)
+            case "$n" in
+                *xbox*|*x-box*) ;;
+                *) printf 'dualsense'; return 0 ;;
+            esac
+            ;;
     esac
     case "$2" in *4c05*) printf 'dualsense'; return 0 ;; esac
     case "$n" in *asus*|*ally*|*rog*) printf 'integrado'; return 0 ;; esac

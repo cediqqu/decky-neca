@@ -773,9 +773,10 @@ def _conexion(guid):
 
 def _clase(nombre, guid, virtual):
     n = (nombre or "").lower()
-    if "dualsense" in n or "wireless controller" in n:
+    vendor = guid[8:12].lower() if len(guid) >= 12 else ""
+    if "dualsense" in n or "dualshock" in n or vendor == "4c05":
         return "DualSense"
-    if any(x in n for x in ("rog", "ally", "asus", "x-box", "xbox")):
+    if any(x in n for x in ("rog", "ally", "asus")) or vendor == "050b":
         return "Integrado"
     if virtual:
         return "Pad virtual"
@@ -790,11 +791,11 @@ def _familia(nombre, guid, virtual):
     n = (nombre or "").lower()
     vendor = guid[8:12].lower() if len(guid) >= 12 else ""
 
-    if "rog" in n or "ally" in n or "asus" in n:
+    if "rog" in n or "ally" in n or "asus" in n or vendor == "050b":
         return "integrado"
     if "xbox" in n or "x-box" in n:
         return "xbox"
-    if "dualsense" in n or "wireless controller" in n or vendor == "054c":
+    if "dualsense" in n or "wireless controller" in n or vendor == "4c05":
         return "playstation"
     if "switch" in n or "pro controller" in n or "joy-con" in n or "joycon" in n:
         return "switch"
@@ -821,11 +822,14 @@ def _parse_mandos(texto):
             conexion = "Interno"
         else:
             conexion = _conexion(guid)
+        familia = _familia(nombre if nombre else nombre_sdl, guid, virtual)
+        if clase == "Integrado":
+            familia = "integrado"
         mandos.append({
             "nombre": nombre,
             "sdl": nombre_sdl,
             "clase": clase,
-            "familia": _familia(nombre if nombre else nombre_sdl, guid, virtual),
+            "familia": familia,
             "conexion": conexion,
             "guid": guid,
             "puerto": puerto,

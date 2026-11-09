@@ -6,92 +6,96 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 ## [Unreleased]
 
-<!-- Añade aquí los cambios sin versión. Al publicar, crea ## [x.y.z] - YYYY-MM-DD. -->
+<!-- Al publicar: renombrar a [2.1.0] - 2026-11-09. Si la retirada de Dolphin se
+     considera incompatible, usar [3.0.0]. -->
+
+### Cambios incompatibles
+
+- **Dolphin (GameCube/Wii) se retira temporalmente.** N.E.C.A configura solo Eden
+  (Switch) y Cemu (Wii U). Si usabas Dolphin, quédate en 2.0.0 o configura sus
+  mandos a mano. Los datos de `~/eden-autoconfig` (plantillas, backups y
+  configuraciones) no se borran; simplemente dejan de aplicarse.
+
+### Añadido
+
+- **Botón Integrado de ancho completo.** El mando integrado deja de ser una
+  tarjeta cuadrada: ocupa todo el ancho, muestra un icono de estado a la
+  izquierda (estrella para P1, flecha para Último y prohibido para Desactivado)
+  y los mandos extra se colocan debajo. Los mandos desactivados se ven en gris.
+- **Cupos con el integrado.** El botón **Mandos** muestra `activos/cupo` y
+  colorea los huecos hasta el último jugador activo, integrado incluido.
+- **Filtros del log por emulador.** **Ver log** permite ver Todo, Eden o Cemu.
+  El de Eden muestra su último bloque y el de Cemu acepta las líneas `wiiu`.
+  Los bloques de `--who` del refresco se ocultan.
+- **Icono ASUS + Xbox.** La ROG Xbox Ally X usa el logo ASUS junto al de Xbox en
+  la tarjeta y el chip de la máquina; el resto de equipos ASUS mantienen ASUS.
+- **Un solo «Aplicar».** Escribe Eden y Cemu de una vez; se elimina el botón
+  suelto de Eden.
+- **Log con versión, hash y avisos.** Cada aplicar registra `version=`, `hash=`,
+  los `Device`/`uuid` escritos y los avisos. Si Eden o Cemu están abiertos, deja
+  `en ejecucion, no aplico`.
+- **Aviso de scripts recién instalados.** El panel pide cerrar el juego y
+  relanzarlo, o pulsar **Aplicar**, para usar la versión nueva.
+
+### Cambiado
+
+- **Eden y Cemu vuelven a la lógica de 2.0.0.** Se retira la renumeración de
+  puertos de los DualSense virtuales y los experimentos de Steam Input. Ambos
+  emuladores aplican como en la última versión estable.
+- **El integrado se puede fijar como P1 con mandos extra.** Al elegir Jugador 1,
+  los DualSense corren un puesto y los que sobran quedan desactivados según el
+  cupo. Sin elección manual, con 0 DualSense es P1; con DualSense pasa a Último
+  o Desactivado.
+- **Steam Input de ES-DE.** Para que varios DualSense mantengan el orden,
+  desactívalo en ES-DE. El mando integrado sigue usando Steam Input y solo
+  aparece dentro de ES-DE; el panel muestra su puesto esperado y el hook aplica
+  la detección real.
+- **La MAC se muestra completa.** Las tarjetas ya no recortan la MAC; si no
+  cabe en una línea, salta a la siguiente.
+- **Interfaz más limpia.** Se quita el aviso «Se configuran A de B mandos», los
+  subtítulos de las tarjetas de Ajustes y el chip de mandos detectados. El botón
+  **Mandos** ya muestra `activos/cupo`.
+- **Iconos de Switch en el botón Mandos.** Los cuatro huecos usan el icono de
+  Nintendo Switch.
+- **Restaurar Cemu usa el último backup.** El panel deshace el último aplicar de
+  Cemu con `--restore latest`; Eden vuelve a su `stock/`.
 
 ### Corregido
 
-- **La estrella del P1 sigue al jugador real.** Si el integrado es Player 1,
-  ningún DualSense conserva la estrella; la tarjeta del integrado la muestra.
-- **El integrado puede volver a ser P1 con mandos extra.** Al elegir
-  «Jugador 1», los DualSense corren un puesto y los que sobran quedan
-  desactivados según el cupo. Sin elección manual, con 0 DualSense es P1; con
-  DualSense pasa a Último o Desactivado.
-- **Sin integrado fantasma.** Si SDL no expone el mando de la consola, el plan
-  ya no añade `INTEGRADO [] (port )` ni roba el P1; los DualSense empiezan en P1.
-- **Plan esperado del integrado en consolas conocidas.** En una ROG Xbox Ally X,
-  Steam Deck, MSI Claw o Legion Go, el panel muestra el puesto que ocupará el
-  mando integrado aunque Steam Input solo lo exponga dentro de ES-DE. El
-  aplicar y el hook siguen usando la detección real.
-- **Icono ASUS + Xbox.** La tarjeta y el chip de la ROG Xbox Ally X usan el
-  logo ASUS junto al de Xbox; el resto de equipos ASUS mantienen el logo ASUS.
-- **El integrado virtual de Steam se reconoce como Integrado.** Cuando el mando
-  de la consola llega como un único `Steam Virtual Gamepad` (sin número de
-  serie), el panel lo clasificaba como «Pad virtual» y la tarjeta mostraba
-  siempre `No detectado`, aunque el plan sí le reservaba un puesto. Ahora se
-  promueve a Integrado, igual que hace el driver, y desaparece la tarjeta
-  duplicada. Además, el panel usa el nombre y el jugador de la línea
-  `INTEGRADO [...]` de `--who` aunque el mando no encaje por nombre; la tarjeta
-  muestra el puesto real o `Desactivado`, no `No detectado`.
-- **Animación de resaltado en los DualSense.** El icono de las tarjetas de
-  mando tiene el mismo pop, brillo y escala que el del integrado al enfocar.
-- **La MAC ya no se recorta.** Las tarjetas muestran la MAC completa; si no
-  cabe en una línea, salta a la siguiente.
-- **La tarjeta del integrado muestra el jugador real.** `Jugador 3 - Último`,
-  `Jugador 4 - Último`, `Jugador 1` o `Jugador 1 - Forzado` cuando no hay
-  DualSense. Si no se detecta, dice `No detectado`; ya no confunde el modo con
-  el puesto asignado.
-- **El DualSense que queda fuera muestra «Desactivado».** Con 4 DS y el
-  integrado como Último jugador, la tarjeta del cuarto DS queda marcada como
-  desactivada, no como un jugador más.
-- **Integrado como Último jugador con 4 DualSense.** Ahora reserva el último
-  hueco: el integrado pasa a P4 y el cuarto DualSense queda desactivado. Antes
-  los cuatro DS seguían activos y el integrado quedaba fuera.
 - **Cemu con Steam Input desactivado.** SDL3 marca el bus Bluetooth como `05` y
   Cemu (SDL2/HIDAPI) lo guarda como `03`. El `uuid` no coincidía y Cemu no
   conectaba ningún mando. El driver traduce solo ese byte y conserva el CRC
   real.
+- **Sin integrado fantasma.** Si SDL no expone el mando de la consola, el plan
+  ya no añade `INTEGRADO [] (port )` ni roba el P1; los DualSense empiezan en P1.
+- **La estrella del P1 sigue al jugador real.** Si el integrado es Player 1,
+  ningún DualSense conserva la estrella; la tarjeta del integrado la muestra.
+- **El integrado virtual de Steam se reconoce.** Cuando el mando de la consola
+  llega como un único `Steam Virtual Gamepad` sin número de serie, el panel lo
+  promueve a Integrado igual que el driver. Si el nombre no encaja, usa el
+  jugador de la línea `INTEGRADO [...]` de `--who`.
+- **El integrado Último reserva su hueco.** Con cuatro DualSense y cupo 4 ocupa
+  P4 y el cuarto DualSense queda desactivado; con menos mandos, ocupa el
+  siguiente puesto.
+- **El DualSense que queda fuera muestra «Desactivado».** No aparece como un
+  jugador más.
+- **La tarjeta del integrado muestra el puesto real.** Icono de estado y badge
+  `P1`/`P3`/`P4`; ya no confunde el modo con el puesto asignado.
+- **Las tarjetas desactivadas se ven en gris.** Fondo, icono, conexión y texto
+  atenuados.
+- **Animación de resaltado en los DualSense.** El icono de las tarjetas de mando
+  tiene el mismo pop, brillo y escala que el del integrado al enfocar.
 
-### Cambiado
+### Limitaciones conocidas
 
-- **Botón Integrado de ancho completo.** Ya no es una tarjeta cuadrada: ocupa
-  todo el ancho y los mandos extra se colocan debajo. A la izquierda muestra un
-  icono de estado: estrella para P1, flecha para Último y prohibido para
-  Desactivado. Las tarjetas de mandos desactivados se ven en gris.
-- **Iconos de Switch y cupos en el botón Mandos.** Los cuatro huecos usan el
-  icono de Nintendo Switch y el botón muestra `activos/cupo` (por ejemplo,
-  `3/4`) para distinguir los jugadores activos del tope configurado. Los huecos
-  se colorean hasta el último jugador activo, **incluido el integrado**.
-- **Interfaz más limpia.** Se quita el aviso «Se configuran A de B mandos» y los
-  subtítulos de las tarjetas de Ajustes; el chip de mandos detectados también
-  desaparece porque el botón **Mandos** ya muestra `activos/cupo`.
-- **Los filtros del log pasan abajo.** **Todo / Eden / Cemu** están en la fila
-  inferior, junto a **Cerrar**; se quitan **▲ Subir** y **▼ Bajar**. El scroll
-  sigue siendo con D-pad/stick.
-- **Eden y Cemu vuelven a la lógica de 2.0.0.** Se retira la renumeración de
-  puertos de los DualSense virtuales y los experimentos de Steam Input. Ambos
-  emuladores aplican como en la última versión estable.
-- **Un solo «Aplicar»** en el panel. Escribe Eden y Cemu de una vez, sin
-  depender del hook ni de lanzar un juego; se elimina el botón suelto de Eden.
-- **Log con scroll.** **Ver log** abre una ventana desplazable con D-pad, stick
-  o dedo. El texto mueve `scrollTop` a mano y devuelve hasta 800 líneas.
-- **Filtros del log por emulador.** **Ver log** permite ver **Todo**, **Eden** o
-  **Cemu**; el de Eden muestra su último bloque y el de Cemu acepta las líneas
-  `wiiu`. Los bloques de `--who` (ruido del refresco) se ocultan.
-- **Aviso de scripts recién instalados.** Si el plugin acaba de actualizar los
-  scripts, el panel avisa de que hay que cerrar el juego y relanzarlo (o pulsar
-  **Aplicar**). El aviso se limpia al aplicar.
-- **Versión y hash en el log.** Cada aplicar registra `version=`, `hash=`, los
-  `Device`/`uuid` escritos y los avisos.
-- **Aviso de emulador abierto en el log.** Si Eden o Cemu están en ejecución, el
-  log deja `en ejecucion, no aplico` en vez de fallar en silencio.
-
-### Eliminado
-
-- **Dolphin retirado temporalmente.** Se eliminan su driver, el hook de
-  GameCube/Wii, la tarjeta y el backend del panel, los tests y la documentación.
-  Los datos de Dolphin que hubiera en `~/eden-autoconfig` (plantillas, backups y
-  configuraciones) **no se borran**; simplemente dejan de aplicarse. Se valorará
-  recuperarlo en el futuro.
+- **Eden asigna DualSense y el mando integrado.** Otros mandos se muestran en las
+  tarjetas, pero no reciben jugador en Eden; Cemu puede usarlos si no hay
+  DualSense.
+- **El mando integrado de la ROG Ally X usa Steam Input.** Fuera de ES-DE no
+  aparece en SDL; el panel muestra el plan esperado y el hook usa la detección
+  real. Si Steam Input no lo expone al lanzar, el log muestra el plan real.
+- **La asignación exacta de varios DualSense requiere Steam Input desactivado
+  para ES-DE.**
 
 ## [2.0.0] - 2026-11-06
 

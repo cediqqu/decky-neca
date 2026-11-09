@@ -29,7 +29,7 @@ nucleo_prefs() {
     ORDEN_INTEGRADO="${ORDEN_INTEGRADO:-primero}"
     P1_SERIE="${P1_SERIE:-}"
     DUALSENSE_PATRON="${DUALSENSE_PATRON:-*wireless controller*|*dualsense*}"
-    INTEGRADO_PATRON="${INTEGRADO_PATRON:-*rog*|*ally*|*asus*|*hid-asus*|*microsoft x-box 360 pad*|*steam deck*|*deck controller*}"
+    INTEGRADO_PATRON="${INTEGRADO_PATRON:-*rog*|*ally*|*asus*|*hid-asus*|*steam deck*|*deck controller*}"
 }
 
 # Ruta al ayudante de SDL (junto a los scripts).

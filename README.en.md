@@ -1,25 +1,28 @@
 # N.E.C.A: Nintendo-EmuDeck Controller Autoconf
 
-A [Decky](https://decky.xyz/) plugin that autoconfigures the controllers of the
-Nintendo emulators from the Steam Quick Access Menu (QAM): **[Eden](https://eden-emu.dev/)**
-(Switch) and **Cemu** (Wii U). It sets **Player 1**,
-picks **how many controllers** to use and **what to do with the built-in
-controller**, and applies it when a game launches from [ES-DE](https://es-de.org/).
-No root.
+A [Decky](https://decky.xyz/) plugin that autoconfigures **DualSense controllers
+and the built-in controller** of the Nintendo emulators from the Steam Quick
+Access Menu (QAM): **[Eden](https://eden-emu.dev/)** (Switch) and **Cemu** (Wii
+U). It sets **Player 1**, picks **how many controllers** to use and **what to do
+with the built-in controller**, and applies it when a game launches from
+[ES-DE](https://es-de.org/). No root.
 
 [![Release](https://img.shields.io/github/v/release/CeDiqqu/decky-neca?label=release)](https://github.com/CeDiqqu/decky-neca/releases/latest)
 [![License](https://img.shields.io/github/license/CeDiqqu/decky-neca)](https://github.com/CeDiqqu/decky-neca/blob/main/LICENSE)
 
 [Español](https://github.com/CeDiqqu/decky-neca/blob/main/README.md) · **English**
 
-> **Status:** v2.0.0 (Nov 6, 2026). First N.E.C.A release; it replaces E.C.A
-> 1.0.0. Tested on **ROG Xbox Ally X** running SteamOS with a DualSense over
-> Bluetooth. Maintained by [CeDiqqu](https://github.com/CeDiqqu), with no fixed
-> release cadence.
+> **Status:** stable (Nov 9, 2026). Tested on **ROG Xbox Ally X** running SteamOS
+> with a DualSense over Bluetooth. Maintained by
+> [CeDiqqu](https://github.com/CeDiqqu), with no fixed release cadence.
 
 Changes by version: [CHANGELOG.md](https://github.com/CeDiqqu/decky-neca/blob/main/CHANGELOG.md) (in Spanish).
 
 Built for SteamOS handhelds with ES-DE (EmuDeck), not for Windows.
+
+**Install:** download **[neca-decky.zip](https://github.com/CeDiqqu/decky-neca/releases/latest/download/neca-decky.zip)**
+and on the handheld use **Decky → Developer → Install Plugin from ZIP**. Full
+steps are in [Installation](#installation).
 
 > **Dolphin (GameCube/Wii) was temporarily retired.** This release only covers
 > Eden and Cemu. Any Dolphin data already in `~/eden-autoconfig` is left
@@ -27,8 +30,8 @@ Built for SteamOS handhelds with ES-DE (EmuDeck), not for Windows.
 
 ## Why N.E.C.A
 
-- **Two emulators, one configuration.** Eden and Cemu get the right controller
-  when a game launches.
+- **Two emulators, one configuration.** Eden and Cemu get the right DualSense
+  or built-in controller when a game launches.
 - **Player 1 can be pinned by MAC**, not by port. Steam can renumber ports
   between sessions; N.E.C.A pins the exact controller.
 - **Cemu does not rebuild the bindings.** It keeps the mapping EmuDeck left in
@@ -44,8 +47,10 @@ Built for SteamOS handhelds with ES-DE (EmuDeck), not for Windows.
   for confirmation when the game starts.
 
 When **not** to use it: if you do not launch games from ES-DE (the hook lives
-there), if your handheld is not an ASUS model (the built-in pattern may need
-tuning), or if you need to pin more than one player by MAC.
+there), if your handheld is not one of the supported models or the built-in
+pattern needs tuning, or if you need to assign controllers other than DualSense
+in Eden. Tested on ROG Xbox Ally X; other handhelds may need a different
+built-in pattern.
 
 ## Requirements
 
@@ -91,8 +96,8 @@ tuning), or if you need to pin more than one player by MAC.
    incomplete, they are repaired on load.
 4. In ES-DE: **Other settings → Enable custom event scripts**.
 
-Check that the chips show **v2.0.0** and **hook OK**. You can also check from a
-terminal:
+Check that the chips show the expected version and **hook OK**. You can also
+check from a terminal:
 
 ```bash
 ~/eden-autoconfig/eden-autoconfig.sh --status
@@ -109,8 +114,7 @@ come from E.C.A, uninstall the old plugin first.
 
 1. Connect the controllers and open the panel. When the controller count
    changes, it refreshes on its own with a 5 s poll.
-2. The chips at the top show the machine, the number of controllers, the version
-   and the hook state.
+2. The chips at the top show the machine, the version and the hook state.
 3. The **Mandos** (Controllers) button with four slots cycles the player limit
    (1 to 4) and shows **active/slots** (for example, `3/4`).
 4. The **Integrado** (Built-in) button is full width, with a state icon on the
@@ -119,7 +123,7 @@ come from E.C.A, uninstall the old plugin first.
    is always P1. Without a manual choice, with DualSense it goes last or off
    depending on the player cap. If you choose **Player 1** with extra
    controllers, they shift one slot and the surplus ones are disabled.
-5. To pin a specific controller as Player 1, **double-tap** its card (less than
+5. To pin a specific DualSense as Player 1, **double-tap** its card (less than
    1.5 s apart). The **★** marks the current Player 1.
 6. The **Asignación** (Assignment) icon in the **Mandos** header shows the last
    Cemu plan. **Comprobar ahora** (Check now) recalculates it without writing
@@ -131,7 +135,8 @@ come from E.C.A, uninstall the old plugin first.
 Each card shows the family **icon** (PlayStation, Xbox, Switch, Steam or
 built-in), the **connection** (Bluetooth, USB, Internal or Virtual) and the full
 **MAC** whenever the controller reports it. Unknown controllers also show their
-name.
+name. Eden's automatic assignment covers DualSense and the built-in controller;
+other families are displayed and Cemu can use them when there is no DualSense.
 
 Short notices are drawn inside the panel and disappear after 5 s. Long errors,
 such as the `hidraw` diagnostic, open in a window so you can read or copy them.
@@ -228,8 +233,8 @@ templates, backups and `.conf` live there.
 ### Log and diagnostics
 
 - **Ver log** (View log) opens `log.txt` in a scrollable window (D-pad, stick
-  or touch). Each apply records the script version and hash, the written
-  `Device`/`uuid` lines and any warnings.
+  or touch) with **Todo / Eden / Cemu** filters. Each apply records the script
+  version and hash, the written `Device`/`uuid` lines and any warnings.
 - If Eden or Cemu is open, nothing is written and the log says so
   (`en ejecucion, no aplico`). Close it completely and launch again.
 - After installing or updating scripts, the panel shows a notice; close the
@@ -241,22 +246,28 @@ templates, backups and `.conf` live there.
   launches from ES-DE, or manually with `--sistema wiiu`.
 - **Restore from the panel affects both emulators.** To undo only the last Cemu
   apply, use `--restore latest`.
-- Only **one specific controller can be pinned as Player 1** (`P1_SERIE`). The
+- Only **one specific DualSense can be pinned as Player 1** (`P1_SERIE`). The
   rest follow the chosen order (connection or MAC).
-- If a controller does not report a serial (some virtual pads), it cannot be
+- If a DualSense does not report a serial (some virtual pads), it cannot be
   pinned; the panel tells you.
 - The **built-in controller** is not pinned by serial. It is controlled by the
   **Integrado** card and by `INTEGRADO_MANUAL`.
 - **`JUGADORES_MAX` is the total number of players (1 to 4)**, including the
-  built-in controller. If you force the built-in controller as Player 1 with four
-  DualSense controllers, one DualSense is left out. If you set it to **Last
-  player**, the built-in controller reserves the last slot: it takes P4 and the
-  fourth DualSense is disabled.
+  built-in controller. If you choose the built-in controller as **Player 1**
+  with four DualSense controllers, it takes P1 and the fourth DualSense is left
+  out; the others shift one slot. If you choose **Last player**, it reserves the
+  last slot: with four DualSense and a cap of 4 it takes P4 and the fourth
+  DualSense is disabled.
 - The automatic built-in adjustment is recalculated when the **panel opens** or
   when you **Apply**. The hook uses the saved `.conf`.
-- With **Steam Input enabled** for ES-DE, Eden sees Valve's virtual pads. The
-  exact Player N = DualSense N mapping is only reliable with Steam Input
-  disabled for ES-DE.
+- **Steam Input:** disable it for ES-DE so several DualSense keep a stable
+  order. The built-in controller still uses Steam Input and only appears inside
+  ES-DE; the panel shows its expected slot and the hook applies the real
+  detection. If Steam Input does not expose it at launch, the log shows the real
+  plan.
+- **Eden assigns DualSense and the built-in controller.** Other controllers are
+  displayed on the cards but do not get a player in Eden; Cemu can use them when
+  there is no DualSense.
 - **Cemu does not create bindings**: it only changes the device. If EmuDeck did
   not leave a controller configuration, there is nothing to assign.
 - Tested on **ROG Xbox Ally X**. On other handhelds, `INTEGRADO_PATRON` may need
@@ -271,7 +282,7 @@ bash build.sh             # sync scripts/ + build + package the zip
 ```
 
 `build.sh` requires Node 20+ and Python 3. The zip contains a single root folder,
-`NecaAutoconfig/`, and the script bundle is versioned **2.0.0**.
+`NecaAutoconfig/`, and the script bundle uses the version in `build.sh`.
 
 - `scripts/` is a **generated copy** of `eden_controller/` (the source of truth).
   Do not edit it there; change `eden_controller/` and copy with `build.sh`.
