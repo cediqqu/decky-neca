@@ -1058,7 +1058,8 @@ function VentanaTexto(props: {
 }) {
   const texto = (props.texto || "").replace(/\s+$/, "");
   const esLog = Boolean(props.recientePrimero);
-  const ref = useRef<HTMLTextAreaElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const cerrarRef = useRef<HTMLDivElement>(null);
 
   // El log abre por el final: lo mas reciente (el ultimo aplicar) se ve ya.
   useEffect(() => {
@@ -1067,23 +1068,30 @@ function VentanaTexto(props: {
     if (el) el.scrollTop = el.scrollHeight;
   }, [esLog, texto]);
 
-  // El Focusable es el unico elemento enfocable del log; mueve el textarea.
-  // El textarea tiene tabIndex=-1 para no robar el foco ni abrir el teclado.
+  // Mismo patron que el modal de Hooandee: el Focusable captura el D-pad y
+  // desplaza el div. En el borde superior deja navegar a los botones; en el
+  // inferior lleva el foco a Cerrar.
   const mover = (evt: GamepadEvent) => {
     const el = ref.current;
     if (!el) return;
-    const paso = Math.max(40, Math.floor(el.clientHeight * 0.75));
-    if (evt.detail?.button === GamepadButton.DIR_UP) {
-      if (el.scrollTop > 0) {
-        el.scrollTop -= paso;
-        evt.stopPropagation();
+    const dir =
+      evt.detail?.button === GamepadButton.DIR_UP
+        ? -1
+        : evt.detail?.button === GamepadButton.DIR_DOWN
+          ? 1
+          : 0;
+    if (!dir) return;
+    const arriba = el.scrollTop <= 0;
+    const abajo = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    if ((dir < 0 && arriba) || (dir > 0 && abajo)) {
+      if (dir > 0 && !esLog && cerrarRef.current) {
+        cerrarRef.current.focus();
       }
-    } else if (evt.detail?.button === GamepadButton.DIR_DOWN) {
-      if (el.scrollTop + el.clientHeight < el.scrollHeight - 1) {
-        el.scrollTop += paso;
-        evt.stopPropagation();
-      }
+      return;
     }
+    evt.preventDefault();
+    evt.stopPropagation();
+    el.scrollBy({ top: dir * el.clientHeight * 0.8 });
   };
 
   return (
@@ -1111,45 +1119,50 @@ function VentanaTexto(props: {
         ) : null}
         <Focusable
           preferredFocus
+          onActivate={() => {}}
           onGamepadDirection={mover}
+          noFocusRing
           style={{
             flex: 1,
             minHeight: 0,
             display: "flex",
             flexDirection: "column",
+            margin: "8px 12px",
           }}
         >
-          <textarea
+          <div
             ref={ref}
-            readOnly
-            tabIndex={-1}
-            rows={20}
-            value={texto || "(vacio)"}
-            wrap="soft"
-            spellCheck={false}
             style={{
-              width: "100%",
-              height: "50vh",
-              minHeight: "260px",
               flex: 1,
-              resize: "none",
+              minHeight: 0,
               overflowY: "auto",
-              margin: "8px 12px",
               padding: "8px 10px",
               border: "1px solid rgba(128,128,128,0.25)",
               borderRadius: "8px",
               background: "rgba(0,0,0,0.18)",
-              color: "inherit",
-              fontFamily: "monospace",
-              fontSize: "0.82em",
-              lineHeight: 1.35,
+              userSelect: "text",
             }}
-          />
+          >
+            <pre
+              style={{
+                margin: 0,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                fontFamily: "monospace",
+                fontSize: "0.82em",
+                lineHeight: 1.35,
+              }}
+            >
+              {texto || "(vacio)"}
+            </pre>
+          </div>
         </Focusable>
       </DialogBody>
       {esLog ? null : (
         <DialogFooter>
-          <DialogButtonPrimary onClick={props.onCerrar}>Cerrar</DialogButtonPrimary>
+          <DialogButtonPrimary ref={cerrarRef} onClick={props.onCerrar}>
+            Cerrar
+          </DialogButtonPrimary>
         </DialogFooter>
       )}
     </ModalRoot>
@@ -1160,7 +1173,8 @@ function VentanaLog(props: { onCerrar: () => void }) {
   const [filtro, setFiltro] = useState("todo");
   const [texto, setTexto] = useState("");
   const [cargando, setCargando] = useState(false);
-  const ref = useRef<HTMLTextAreaElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const cerrarRef = useRef<HTMLDivElement>(null);
 
   const cargar = async (f: string) => {
     setFiltro(f);
@@ -1184,11 +1198,33 @@ function VentanaLog(props: { onCerrar: () => void }) {
     if (el) el.scrollTop = el.scrollHeight;
   }, [texto]);
 
-  const mover = (dir: number) => {
+  const moverBoton = (dir: number) => {
     const el = ref.current;
     if (!el) return;
-    const paso = Math.max(40, Math.floor(el.clientHeight * 0.8));
-    el.scrollTop += dir * paso;
+    el.scrollBy({ top: dir * el.clientHeight * 0.8 });
+  };
+
+  // D-pad/stick sobre el propio bloque de log; al llegar abajo pasa el foco a
+  // Cerrar, y al llegar arriba deja que suba a los filtros.
+  const desplazar = (evt: GamepadEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const dir =
+      evt.detail?.button === GamepadButton.DIR_UP
+        ? -1
+        : evt.detail?.button === GamepadButton.DIR_DOWN
+          ? 1
+          : 0;
+    if (!dir) return;
+    const arriba = el.scrollTop <= 0;
+    const abajo = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    if ((dir < 0 && arriba) || (dir > 0 && abajo)) {
+      if (dir > 0 && cerrarRef.current) cerrarRef.current.focus();
+      return;
+    }
+    evt.preventDefault();
+    evt.stopPropagation();
+    el.scrollBy({ top: dir * el.clientHeight * 0.8 });
   };
 
   const filtros = [
@@ -1235,30 +1271,46 @@ function VentanaLog(props: { onCerrar: () => void }) {
             </DialogButton>
           ))}
         </div>
-        <textarea
-          ref={ref}
-          readOnly
-          tabIndex={-1}
-          rows={16}
-          value={texto || "(log vacio)"}
-          wrap="soft"
-          spellCheck={false}
+        <Focusable
+          preferredFocus
+          onActivate={() => {}}
+          onGamepadDirection={desplazar}
+          noFocusRing
           style={{
             flex: 1,
-            minHeight: "220px",
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
             margin: "4px 12px",
-            padding: "8px 10px",
-            resize: "none",
-            overflowY: "auto",
-            border: "1px solid rgba(128,128,128,0.25)",
-            borderRadius: "8px",
-            background: "rgba(0,0,0,0.18)",
-            color: "inherit",
-            fontFamily: "monospace",
-            fontSize: "0.8em",
-            lineHeight: 1.35,
           }}
-        />
+        >
+          <div
+            ref={ref}
+            style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              padding: "8px 10px",
+              border: "1px solid rgba(128,128,128,0.25)",
+              borderRadius: "8px",
+              background: "rgba(0,0,0,0.18)",
+              userSelect: "text",
+            }}
+          >
+            <pre
+              style={{
+                margin: 0,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                fontFamily: "monospace",
+                fontSize: "0.8em",
+                lineHeight: 1.35,
+              }}
+            >
+              {texto || "(log vacio)"}
+            </pre>
+          </div>
+        </Focusable>
         <div
           style={{
             display: "flex",
@@ -1266,9 +1318,9 @@ function VentanaLog(props: { onCerrar: () => void }) {
             padding: "4px 12px 8px",
           }}
         >
-          <DialogButton onClick={() => mover(-1)}>▲ Subir</DialogButton>
-          <DialogButton onClick={() => mover(1)}>▼ Bajar</DialogButton>
-          <DialogButtonPrimary onClick={props.onCerrar}>
+          <DialogButton onClick={() => moverBoton(-1)}>▲ Subir</DialogButton>
+          <DialogButton onClick={() => moverBoton(1)}>▼ Bajar</DialogButton>
+          <DialogButtonPrimary ref={cerrarRef} onClick={props.onCerrar}>
             Cerrar
           </DialogButtonPrimary>
         </div>

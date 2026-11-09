@@ -705,6 +705,7 @@ function VentanaTexto(props) {
     const texto = (props.texto || "").replace(/\s+$/, "");
     const esLog = Boolean(props.recientePrimero);
     const ref = SP_REACT.useRef(null);
+    const cerrarRef = SP_REACT.useRef(null);
     // El log abre por el final: lo mas reciente (el ultimo aplicar) se ve ya.
     SP_REACT.useEffect(() => {
         if (!esLog)
@@ -713,25 +714,31 @@ function VentanaTexto(props) {
         if (el)
             el.scrollTop = el.scrollHeight;
     }, [esLog, texto]);
-    // El Focusable es el unico elemento enfocable del log; mueve el textarea.
-    // El textarea tiene tabIndex=-1 para no robar el foco ni abrir el teclado.
+    // Mismo patron que el modal de Hooandee: el Focusable captura el D-pad y
+    // desplaza el div. En el borde superior deja navegar a los botones; en el
+    // inferior lleva el foco a Cerrar.
     const mover = (evt) => {
         const el = ref.current;
         if (!el)
             return;
-        const paso = Math.max(40, Math.floor(el.clientHeight * 0.75));
-        if (evt.detail?.button === DFL.GamepadButton.DIR_UP) {
-            if (el.scrollTop > 0) {
-                el.scrollTop -= paso;
-                evt.stopPropagation();
+        const dir = evt.detail?.button === DFL.GamepadButton.DIR_UP
+            ? -1
+            : evt.detail?.button === DFL.GamepadButton.DIR_DOWN
+                ? 1
+                : 0;
+        if (!dir)
+            return;
+        const arriba = el.scrollTop <= 0;
+        const abajo = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+        if ((dir < 0 && arriba) || (dir > 0 && abajo)) {
+            if (dir > 0 && !esLog && cerrarRef.current) {
+                cerrarRef.current.focus();
             }
+            return;
         }
-        else if (evt.detail?.button === DFL.GamepadButton.DIR_DOWN) {
-            if (el.scrollTop + el.clientHeight < el.scrollHeight - 1) {
-                el.scrollTop += paso;
-                evt.stopPropagation();
-            }
-        }
+        evt.preventDefault();
+        evt.stopPropagation();
+        el.scrollBy({ top: dir * el.clientHeight * 0.8 });
     };
     return (SP_JSX.jsxs(DFL.ModalRoot, { strTitle: props.titulo, bAllowFullSize: true, onCancel: props.onCerrar, children: [SP_JSX.jsxs(DFL.DialogBody, { style: {
                     height: "58vh",
@@ -744,34 +751,36 @@ function VentanaTexto(props) {
                             padding: "4px 12px 0",
                             fontSize: "0.7em",
                             opacity: 0.65,
-                        }, children: "D-pad / stick: desplazar \u00B7 B: cerrar" })) : null, SP_JSX.jsx(DFL.Focusable, { preferredFocus: true, onGamepadDirection: mover, style: {
+                        }, children: "D-pad / stick: desplazar \u00B7 B: cerrar" })) : null, SP_JSX.jsx(DFL.Focusable, { preferredFocus: true, onActivate: () => { }, onGamepadDirection: mover, noFocusRing: true, style: {
                             flex: 1,
                             minHeight: 0,
                             display: "flex",
                             flexDirection: "column",
-                        }, children: SP_JSX.jsx("textarea", { ref: ref, readOnly: true, tabIndex: -1, rows: 20, value: texto || "(vacio)", wrap: "soft", spellCheck: false, style: {
-                                width: "100%",
-                                height: "50vh",
-                                minHeight: "260px",
+                            margin: "8px 12px",
+                        }, children: SP_JSX.jsx("div", { ref: ref, style: {
                                 flex: 1,
-                                resize: "none",
+                                minHeight: 0,
                                 overflowY: "auto",
-                                margin: "8px 12px",
                                 padding: "8px 10px",
                                 border: "1px solid rgba(128,128,128,0.25)",
                                 borderRadius: "8px",
                                 background: "rgba(0,0,0,0.18)",
-                                color: "inherit",
-                                fontFamily: "monospace",
-                                fontSize: "0.82em",
-                                lineHeight: 1.35,
-                            } }) })] }), esLog ? null : (SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" }) }))] }));
+                                userSelect: "text",
+                            }, children: SP_JSX.jsx("pre", { style: {
+                                    margin: 0,
+                                    whiteSpace: "pre-wrap",
+                                    wordBreak: "break-word",
+                                    fontFamily: "monospace",
+                                    fontSize: "0.82em",
+                                    lineHeight: 1.35,
+                                }, children: texto || "(vacio)" }) }) })] }), esLog ? null : (SP_JSX.jsx(DFL.DialogFooter, { children: SP_JSX.jsx(DFL.DialogButtonPrimary, { ref: cerrarRef, onClick: props.onCerrar, children: "Cerrar" }) }))] }));
 }
 function VentanaLog(props) {
     const [filtro, setFiltro] = SP_REACT.useState("todo");
     const [texto, setTexto] = SP_REACT.useState("");
     const [cargando, setCargando] = SP_REACT.useState(false);
     const ref = SP_REACT.useRef(null);
+    const cerrarRef = SP_REACT.useRef(null);
     const cargar = async (f) => {
         setFiltro(f);
         setCargando(true);
@@ -794,12 +803,35 @@ function VentanaLog(props) {
         if (el)
             el.scrollTop = el.scrollHeight;
     }, [texto]);
-    const mover = (dir) => {
+    const moverBoton = (dir) => {
         const el = ref.current;
         if (!el)
             return;
-        const paso = Math.max(40, Math.floor(el.clientHeight * 0.8));
-        el.scrollTop += dir * paso;
+        el.scrollBy({ top: dir * el.clientHeight * 0.8 });
+    };
+    // D-pad/stick sobre el propio bloque de log; al llegar abajo pasa el foco a
+    // Cerrar, y al llegar arriba deja que suba a los filtros.
+    const desplazar = (evt) => {
+        const el = ref.current;
+        if (!el)
+            return;
+        const dir = evt.detail?.button === DFL.GamepadButton.DIR_UP
+            ? -1
+            : evt.detail?.button === DFL.GamepadButton.DIR_DOWN
+                ? 1
+                : 0;
+        if (!dir)
+            return;
+        const arriba = el.scrollTop <= 0;
+        const abajo = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+        if ((dir < 0 && arriba) || (dir > 0 && abajo)) {
+            if (dir > 0 && cerrarRef.current)
+                cerrarRef.current.focus();
+            return;
+        }
+        evt.preventDefault();
+        evt.stopPropagation();
+        el.scrollBy({ top: dir * el.clientHeight * 0.8 });
     };
     const filtros = [
         ["todo", "Todo"],
@@ -825,25 +857,33 @@ function VentanaLog(props) {
                             ...(filtro === clave
                                 ? { borderColor: C.azul, borderWidth: "2px" }
                                 : {}),
-                        }, children: etiqueta }, clave))) }), SP_JSX.jsx("textarea", { ref: ref, readOnly: true, tabIndex: -1, rows: 16, value: texto || "(log vacio)", wrap: "soft", spellCheck: false, style: {
+                        }, children: etiqueta }, clave))) }), SP_JSX.jsx(DFL.Focusable, { preferredFocus: true, onActivate: () => { }, onGamepadDirection: desplazar, noFocusRing: true, style: {
                         flex: 1,
-                        minHeight: "220px",
+                        minHeight: 0,
+                        display: "flex",
+                        flexDirection: "column",
                         margin: "4px 12px",
-                        padding: "8px 10px",
-                        resize: "none",
-                        overflowY: "auto",
-                        border: "1px solid rgba(128,128,128,0.25)",
-                        borderRadius: "8px",
-                        background: "rgba(0,0,0,0.18)",
-                        color: "inherit",
-                        fontFamily: "monospace",
-                        fontSize: "0.8em",
-                        lineHeight: 1.35,
-                    } }), SP_JSX.jsxs("div", { style: {
+                    }, children: SP_JSX.jsx("div", { ref: ref, style: {
+                            flex: 1,
+                            minHeight: 0,
+                            overflowY: "auto",
+                            padding: "8px 10px",
+                            border: "1px solid rgba(128,128,128,0.25)",
+                            borderRadius: "8px",
+                            background: "rgba(0,0,0,0.18)",
+                            userSelect: "text",
+                        }, children: SP_JSX.jsx("pre", { style: {
+                                margin: 0,
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                                fontFamily: "monospace",
+                                fontSize: "0.8em",
+                                lineHeight: 1.35,
+                            }, children: texto || "(log vacio)" }) }) }), SP_JSX.jsxs("div", { style: {
                         display: "flex",
                         gap: "6px",
                         padding: "4px 12px 8px",
-                    }, children: [SP_JSX.jsx(DFL.DialogButton, { onClick: () => mover(-1), children: "\u25B2 Subir" }), SP_JSX.jsx(DFL.DialogButton, { onClick: () => mover(1), children: "\u25BC Bajar" }), SP_JSX.jsx(DFL.DialogButtonPrimary, { onClick: props.onCerrar, children: "Cerrar" })] })] }) }));
+                    }, children: [SP_JSX.jsx(DFL.DialogButton, { onClick: () => moverBoton(-1), children: "\u25B2 Subir" }), SP_JSX.jsx(DFL.DialogButton, { onClick: () => moverBoton(1), children: "\u25BC Bajar" }), SP_JSX.jsx(DFL.DialogButtonPrimary, { ref: cerrarRef, onClick: props.onCerrar, children: "Cerrar" })] })] }) }));
 }
 function abrirVentana(titulo, texto, recientePrimero = false) {
     const cierre = { f: () => { } };
