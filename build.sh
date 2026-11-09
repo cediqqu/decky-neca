@@ -25,7 +25,7 @@ AQUI="$(cd -- "$(dirname -- "$0")" && pwd -P)"
 ORIGEN="${EDEN_SCRIPTS_DIR:-$AQUI/eden_controller}"
 DEST="$AQUI/scripts"
 ZIP="$AQUI/neca-decky.zip"
-VERSION_SCRIPTS="${SCRIPTS_VERSION:-2.0.0}"
+VERSION_SCRIPTS="${SCRIPTS_VERSION:-3.0.0}"
 
 NOMBRE_ZIP="neca-decky.zip"
 

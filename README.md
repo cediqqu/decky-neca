@@ -1,17 +1,17 @@
 # N.E.C.A: Nintendo-EmuDeck Controller Autoconf
 
-Plugin de [Decky](https://decky.xyz/) que autoconfigura los **DualSense y el
-mando integrado** de los emuladores de Nintendo desde el menú rápido de Steam
-(QAM): **[Eden](https://eden-emu.dev/)** (Switch) y **Cemu** (Wii U). Fija el
-**Player 1**, elige **cuántos mandos** usar y **qué hacer con el integrado**, y
-lo aplica al lanzar el juego desde [ES-DE](https://es-de.org/). Sin root.
+Plugin de [Decky](https://decky.xyz/) que autoconfigura los mandos de los
+emuladores de Nintendo desde el menú rápido de Steam (QAM):
+**[Eden](https://eden-emu.dev/)** (Switch) y **Cemu** (Wii U). Fija el **Player
+1**, elige **cuántos mandos** usar y **qué hacer con el integrado**, y lo aplica
+al lanzar el juego desde [ES-DE](https://es-de.org/). Sin root.
 
 [![Release](https://img.shields.io/github/v/release/CeDiqqu/decky-neca?label=release)](https://github.com/CeDiqqu/decky-neca/releases/latest)
 [![Licencia](https://img.shields.io/github/license/CeDiqqu/decky-neca)](https://github.com/CeDiqqu/decky-neca/blob/main/LICENSE)
 
 [English](https://github.com/CeDiqqu/decky-neca/blob/main/README.en.md) · **Español**
 
-> **Estado:** estable (9 nov 2026). Probada en **ROG Xbox Ally X** con SteamOS y
+> **Estado:** v3.0.0 (10 nov 2026). Probada en **ROG Xbox Ally X** con SteamOS y
 > DualSense por Bluetooth. Mantenida por [CeDiqqu](https://github.com/CeDiqqu),
 > sin cadencia fija.
 
@@ -25,12 +25,12 @@ completos están en [Instalación](#instalación).
 
 > **Dolphin (GameCube/Wii) se retiró temporalmente.** Esta versión solo cubre
 > Eden y Cemu. Los datos de Dolphin que hubiera en `~/eden-autoconfig` no se
-> tocan; el resto del plugin sigue igual.
+> borran; simplemente dejan de aplicarse.
 
 ## Por qué N.E.C.A
 
-- **Dos emuladores, una sola configuración.** Eden y Cemu reciben el DualSense
-  o el mando integrado que les toca al lanzar.
+- **Dos emuladores, una sola configuración.** Eden recibe los DualSense y el
+  mando integrado; Cemu acepta además otros mandos si no hay DualSense.
 - **Puedes fijar el Player 1 por MAC**, no por puerto. Steam puede renumerar los
   puertos entre sesiones; N.E.C.A fija el mando concreto.
 - **Cemu no rehace los bindings.** Conserva el mapeo que dejó EmuDeck; solo
@@ -184,8 +184,9 @@ RETENCION_BACKUPS=10
   `qt-config.ini` no se toca por borrar el bloque.
 - Los backups van a `~/eden-autoconfig/backups/`: `qt-config.ini.*` para Eden y
   `cemu/controllerN.xml.*` para Cemu. Se conservan las 10 copias más recientes
-  por fichero. El original de cada emulador vive aparte, en `stock/` (Eden en
-  `~/eden-autoconfig/stock/` y Cemu dentro de su carpeta de backups).
+  por fichero. Eden guarda además su original en
+  `~/eden-autoconfig/stock/qt-config.ini`; Cemu no tiene un `stock/` fijo y se
+  restaura desde sus backups.
 
 **Restaurar** en **Ajustes** devuelve Eden a su estado original y deshace el
 último aplicar de Cemu:
@@ -205,11 +206,13 @@ disponibles para casos concretos:
 
 ```bash
 ~/eden-autoconfig/eden-autoconfig.sh --sistema wiiu --restore latest
-~/eden-autoconfig/eden-autoconfig.sh --sistema wiiu --restore stock
+~/eden-autoconfig/eden-autoconfig.sh --sistema wiiu --restore 2
 ```
 
-`latest` deshace solo el último aplicar; `stock` vuelve al estado anterior a
-N.E.C.A.
+`latest` deshace solo el último aplicar de Cemu. `2` elige la segunda copia más
+reciente; `1` sería la última y `3` la anterior a esa. Cemu no tiene un `stock/`
+fijo; para volver más atrás, restaura el número de copia o copia el fichero
+desde `~/eden-autoconfig/backups/cemu/`.
 
 ### Desinstalar
 

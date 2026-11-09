@@ -6,8 +6,9 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 ## [Unreleased]
 
-<!-- Al publicar: renombrar a [2.1.0] - 2026-11-09. Si la retirada de Dolphin se
-     considera incompatible, usar [3.0.0]. -->
+<!-- Añade aquí los cambios sin versión. Al publicar, crea ## [x.y.z] - YYYY-MM-DD. -->
+
+## [3.0.0] - 2026-11-10
 
 ### Cambios incompatibles
 
@@ -214,6 +215,7 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
   scripts, el panel solo escribe el bloque gestionado del `.conf` y su estado en
   `~/.config/eden-autoconfig-decky/`.
 
-[Unreleased]: https://github.com/CeDiqqu/decky-neca/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/CeDiqqu/decky-neca/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/CeDiqqu/decky-neca/releases/tag/v3.0.0
 [2.0.0]: https://github.com/CeDiqqu/decky-neca/releases/tag/v2.0.0
 [1.0.0]: https://github.com/CeDiqqu/decky-neca/releases/tag/v1.0.0

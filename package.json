@@ -1,6 +1,6 @@
 {
   "name": "neca-decky",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "N.E.C.A (Nintendo-EmuDeck Controller Autoconf): plugin de Decky para autoconfigurar los mandos de Eden y Cemu.",
   "type": "module",
   "scripts": {
