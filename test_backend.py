@@ -318,7 +318,7 @@ async def main():
           est["prefs"])
 
     # ------------------------------------------------------------------ 13
-    print("13) 4 DualSense: el integrado cede su sitio")
+    print("13) 4 DualSense: el integrado reserva P4")
     cuatro = os.path.join(tmp, "cuatro.txt")
     with open(cuatro, "w", encoding="utf-8") as fh:
         for i in range(4):
@@ -336,10 +336,19 @@ async def main():
     check("la eleccion no se toca",
           est["prefs"]["ORDEN_INTEGRADO"] == "ultimo", est["prefs"])
     ds = [m for m in est["mandos"] if m["clase"] == "DualSense"]
-    check("los 4 son P1..P4", [m["jugador"] for m in ds] == [1, 2, 3, 4],
+    ds_on = [m for m in ds if m["jugador"] is not None]
+    check("3 DS P1..P3 y el de P4 fuera",
+          [m["jugador"] for m in ds_on] == [1, 2, 3]
+          and [m["puerto"] for m in ds_on] == ["0", "1", "2"]
+          and len([m for m in ds if m["jugador"] is None]) == 1,
+          [(m["puerto"], m["jugador"]) for m in ds])
+    ds_off = [m for m in ds if m["jugador"] is None]
+    check("el DS de P4 es el que se cae",
+          len(ds_off) == 1 and ds_off[0]["puerto"] == "3",
           [(m["puerto"], m["jugador"]) for m in ds])
     integ = [m for m in est["mandos"] if m["clase"] == "Integrado"]
-    check("integrado fuera del plan", integ and integ[0]["jugador"] is None)
+    check("el integrado ocupa P4", integ and integ[0]["jugador"] == 4,
+          [(m["clase"], m["jugador"]) for m in est["mandos"]])
 
     # vuelven a quedar 2: el integrado recupera su hueco solo
     os.environ["EDEN_FAKE_SDL"] = plan
@@ -817,6 +826,98 @@ async def main():
               ("uuid         = %s030057564c050000e60c000000006800" % u) in out,
               out[-600:])
     check("Cemu no escribe el bus 05", "050057564c05" not in out, out[-600:])
+
+    # Integrado como Ultimo jugador con 4 DS y tope 4: reserva P4 y deja fuera
+    # el DS que seria P4 (no los cuatro activos).
+    prefs = mod._leer_prefs()
+    prefs["JUGADORES_MAX"] = "4"
+    prefs["ORDEN_INTEGRADO"] = "ultimo"
+    prefs["INTEGRADO_MANUAL"] = "si"
+    prefs["P1_SERIE"] = ""
+    mod._escribir_prefs(prefs)
+    os.environ["EDEN_FAKE_SDL"] = cuatro
+    est = await mod.Plugin().estado()
+    por_nombre = {m["nombre"]: m for m in est["mandos"]}
+    check("integrado ultimo: P4",
+          por_nombre.get("Asus Rog Ally Controller", {}).get("jugador") == 4,
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+    ds_jug = sorted(m["jugador"] for m in est["mandos"]
+                    if m["clase"] == "DualSense" and m["jugador"] is not None)
+    check("integrado ultimo: 3 DS activos", ds_jug == [1, 2, 3], ds_jug)
+    check("integrado ultimo: DS4 fuera",
+          por_nombre.get("DualSense Wireless Controller 4",
+                         {}).get("jugador") is None,
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+
+    env_u["EDEN_FAKE_SDL"] = cuatro
+    r = subprocess.run(["bash", script, "--sistema", "wiiu", "--dry-run"],
+                       env=env_u, capture_output=True, text=True)
+    out = r.stdout + r.stderr
+    check("Cemu integrado ultimo ok", r.returncode == 0, out)
+    check("Cemu integrado ultimo P4",
+          "uuid         = 1_03000000de280000ff11000001000000" in out
+          and "display_name = Asus Rog Ally Controller" in out, out[-800:])
+    for u in ("0_", "2_", "3_"):
+        check("Cemu integrado ultimo DS %s" % u,
+              ("uuid         = %s03000000de280000ff11000001000000" % u) in out,
+              out[-800:])
+    check("Cemu integrado ultimo DS4 fuera",
+          "4_03000000de28" not in out, out[-800:])
+
+    # Con 3 DS + integrado ultimo y tope 4 no se cae ningun DS.
+    tres = os.path.join(tmp, "sdl_3virtual.txt")
+    with open(tres, "w", encoding="utf-8") as fh:
+        fh.write(
+            "DualSense Wireless Controller 1|03000000de280000ff11000001000000"
+            "|0|6|1|DualSense Wireless Controller 1||0\n"
+            "Asus Rog Ally Controller|03000000bd1200001501000011010000"
+            "|1|1|1|Asus Rog Ally Controller||1\n"
+            "DualSense Wireless Controller 2|03000000de280000ff11000001000000"
+            "|2|6|1|DualSense Wireless Controller 2||2\n"
+            "DualSense Wireless Controller 3|03000000de280000ff11000001000000"
+            "|3|6|1|DualSense Wireless Controller 3||3\n"
+        )
+    os.environ["EDEN_FAKE_SDL"] = tres
+    est = await mod.Plugin().estado()
+    por_nombre = {m["nombre"]: m for m in est["mandos"]}
+    check("3 DS + integrado ultimo: todos entran",
+          sorted(m["jugador"] for m in est["mandos"]
+                 if m["clase"] == "DualSense") == [1, 2, 3]
+          and por_nombre.get("Asus Rog Ally Controller", {}).get("jugador") == 4,
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+
+    # P1_SERIE: el DS fijado sigue P1 y se cae el ultimo de la lista.
+    cuatro_serie = os.path.join(tmp, "sdl_4virtual_serie.txt")
+    with open(cuatro_serie, "w", encoding="utf-8") as fh:
+        for n, mac in enumerate(("aa:aa", "bb:bb", "cc:cc", "dd:dd")):
+            fh.write(
+                "DualSense Wireless Controller %d|"
+                "03000000de280000ff11000001000000|%d|6|1|"
+                "DualSense Wireless Controller %d|%s|%d\n"
+                % (n + 1, n, n + 1, mac, n))
+        fh.write(
+            "Asus Rog Ally Controller|03000000bd1200001501000011010000"
+            "|4|1|1|Asus Rog Ally Controller||4\n")
+    prefs = mod._leer_prefs()
+    prefs["P1_SERIE"] = "dd:dd"
+    mod._escribir_prefs(prefs)
+    os.environ["EDEN_FAKE_SDL"] = cuatro_serie
+    est = await mod.Plugin().estado()
+    por_nombre = {m["nombre"]: m for m in est["mandos"]}
+    check("P1_SERIE ultimo: DS4 sigue P1",
+          por_nombre.get("DualSense Wireless Controller 4",
+                         {}).get("jugador") == 1,
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+    check("P1_SERIE ultimo: se cae el DS3",
+          por_nombre.get("DualSense Wireless Controller 3",
+                         {}).get("jugador") is None,
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+    check("P1_SERIE ultimo: integrado P4",
+          por_nombre.get("Asus Rog Ally Controller", {}).get("jugador") == 4,
+          [(m["nombre"], m["jugador"]) for m in est["mandos"]])
+    prefs = mod._leer_prefs()
+    prefs["P1_SERIE"] = ""
+    mod._escribir_prefs(prefs)
 
     # El log del panel filtra por emulador y quita los bloques de --who
     with open(os.path.join(base, "log.txt"), "w", encoding="utf-8") as fh:

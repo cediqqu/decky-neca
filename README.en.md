@@ -247,7 +247,9 @@ templates, backups and `.conf` live there.
   **Integrado** card and by `INTEGRADO_MANUAL`.
 - **`JUGADORES_MAX` is the total number of players (1 to 4)**, including the
   built-in controller. If you force the built-in controller as Player 1 with four
-  DualSense controllers, one DualSense is left out.
+  DualSense controllers, one DualSense is left out. If you set it to **Last
+  player**, the built-in controller reserves the last slot: it takes P4 and the
+  fourth DualSense is disabled.
 - The automatic built-in adjustment is recalculated when the **panel opens** or
   when you **Apply**. The hook uses the saved `.conf`.
 - With **Steam Input enabled** for ES-DE, Eden sees Valve's virtual pads. The

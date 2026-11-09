@@ -237,7 +237,8 @@ backups y el `.conf`.
   **Integrado** y con `INTEGRADO_MANUAL`.
 - **`JUGADORES_MAX` es el total de jugadores (1 a 4)**, integrado incluido. Si
   fuerzas el integrado como Player 1 con cuatro DualSense, uno de los DualSense
-  queda fuera.
+  queda fuera. Si lo pones como **Último jugador**, el integrado reserva el
+  último hueco: ocupa P4 y el cuarto DualSense queda desactivado.
 - El ajuste automático del integrado se recalcula al **abrir el panel** o al
   **Aplicar**. El hook usa el `.conf` guardado.
 - Con **Steam Input activado** para ES-DE, Eden ve pads virtuales de Valve. La

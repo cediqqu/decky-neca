@@ -134,8 +134,8 @@ En `~/eden-autoconfig/eden-autoconfig.conf`:
 
 | Variable | Por defecto | Qué hace |
 |---|---|---|
-| `ORDEN_INTEGRADO` | `ignorar` | `ignorar` / `primero` / `ultimo`. Con `primero` el mando integrado es siempre P1 y los DualSense van detrás → **P1 estable y siempre identificable**. Con `ultimo`, el integrado es un jugador extra al final. |
-| `JUGADORES_MAX` | `4` | máximo de DualSense a asignar |
+| `ORDEN_INTEGRADO` | `ignorar` | `ignorar` / `primero` / `ultimo`. Con `primero` el mando integrado es siempre P1 y los DualSense van detrás → **P1 estable y siempre identificable**. Con `ultimo`, el integrado es un jugador extra al final y reserva el último hueco: si hay más DualSense que huecos, se cae el último DS (el candidato a P4). |
+| `JUGADORES_MAX` | `4` | total de jugadores (1 a 4), integrado incluido |
 | `PERFIL` | `emudeck` | perfil de Eden que se clona |
 | `TIPO_CONTROLADOR` | `0` | 0 = Pro Controller |
 | `GUID_DUALSENSE` / `GUID_INTEGRADO` | vacío | forzar un guid concreto (normalmente no hace falta) |

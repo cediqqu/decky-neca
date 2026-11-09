@@ -203,6 +203,10 @@ nucleo_planificar() { # $1 = eden|cemu
         otros=("${ordenada[@]}")
     fi
 
+    local tope="${JUGADORES_MAX:-4}" i
+    [ "$tope" -gt 8 ] 2>/dev/null && tope=8
+    [ "$tope" -lt 1 ] 2>/dev/null && tope=1
+
     if [ "${#duales[@]}" -gt 0 ]; then
         if [ "$incluir_int" -eq 1 ] && [ "$orden_int" = "primero" ]; then
             [ "${#integrados[@]}" -gt 0 ] && lista+=("${integrados[0]}")
@@ -233,9 +237,20 @@ nucleo_planificar() { # $1 = eden|cemu
         [ "${#out[@]}" -gt 0 ] && lista=("${out[@]}" "${lista[@]}")
     fi
 
-    local tope="${JUGADORES_MAX:-4}" i
-    [ "$tope" -gt 8 ] 2>/dev/null && tope=8
-    [ "$tope" -lt 1 ] 2>/dev/null && tope=1
+    # Si el integrado entra y no cabe, se caen los ultimos DualSense (el
+    # candidato a P4) para reservarle el ultimo hueco.
+    if [ "$incluir_int" -eq 1 ] && [ "${#integrados[@]}" -gt 0 ]; then
+        while [ "${#lista[@]}" -gt "$tope" ]; do
+            local ultimo_ds=-1 j
+            for j in "${!lista[@]}"; do
+                IFS='|' read -r _n _s _se _i clase _u <<<"${lista[$j]}"
+                [ "$clase" = "dual" ] && ultimo_ds=$j
+            done
+            [ "$ultimo_ds" -ge 0 ] || break
+            unset 'lista[$ultimo_ds]'
+            lista=("${lista[@]}")
+        done
+    fi
 
     for i in "${!lista[@]}"; do
         [ "$i" -lt "$tope" ] || break

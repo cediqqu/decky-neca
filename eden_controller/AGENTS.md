@@ -167,6 +167,10 @@ Orden de llamada: despachador (según `--sistema`) → driver → `main` → `lo
   como `05` en el primer byte del GUID; Cemu (SDL2/HIDAPI) lo guarda como `03`.
   `nucleo_mandos` traduce `05 -> 03` solo en modo `cemu` y conserva el CRC real.
   Sin esa traducción el `uuid` no coincide y Cemu no conecta ningún mando.
+- **Cupo y integrado.** `JUGADORES_MAX` cuenta el integrado. Si
+  `ORDEN_INTEGRADO=ultimo` y hay más DualSense que huecos, el plan reserva el
+  último para el integrado y se cae el último DS (el candidato a P4). Eden lo
+  hace en `planificar_sdl`; Cemu en `nucleo_planificar`.
 - El **plan de Cemu** vive en `eden-nucleo.sh`
   (`nucleo_mandos` + `nucleo_planificar`): clasifica `dual|integrado|otro`,
   respeta `ORDEN_INTEGRADO`, `P1_SERIE` y `JUGADORES_MAX`. Eden mantiene su

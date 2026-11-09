@@ -10,6 +10,9 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 ### Corregido
 
+- **Integrado como Último jugador con 4 DualSense.** Ahora reserva el último
+  hueco: el integrado pasa a P4 y el cuarto DualSense queda desactivado. Antes
+  los cuatro DS seguían activos y el integrado quedaba fuera.
 - **Cemu con Steam Input desactivado.** SDL3 marca el bus Bluetooth como `05` y
   Cemu (SDL2/HIDAPI) lo guarda como `03`. El `uuid` no coincidía y Cemu no
   conectaba ningún mando. El driver traduce solo ese byte y conserva el CRC

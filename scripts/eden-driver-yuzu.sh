@@ -1093,12 +1093,23 @@ planificar_sdl() {
         i=1
     fi
 
+    # Si el integrado entra al final, reservarle el ultimo hueco: con 4
+    # DualSense y tope 4 se cae el ultimo DS (el candidato a P4).
+    local tope="${JUGADORES_MAX:-4}" limite_ds
+    [ "$tope" -gt "$N_TOTALES" ] 2>/dev/null && tope="$N_TOTALES"
+    limite_ds="$tope"
+    if [ "$primero_int" -eq 0 ] && [ "$INCLUIR_INT" -eq 1 ] \
+       && [ -n "${SDL_INT_PAR:-}" ]; then
+        limite_ds=$((tope - 1))
+        [ "$limite_ds" -lt 0 ] && limite_ds=0
+    fi
+
     # P1..PN = los DualSense, con SUS puertos reales (ordenados por puerto)
     k=0
     for t in ${SDL_DS_LISTA:-}; do
         [ "$k" -lt "${DS_N:-0}" ] || break
         [ "$i" -lt "$N_TOTALES" ] || break
-        [ "$i" -lt "$JUGADORES_MAX" ] || break
+        [ "$i" -lt "$limite_ds" ] || break
         par="${t%%:*}"; pg="${t#*:}"
         PLAN_JUGADORES="$PLAN_JUGADORES dual:$i:$par:$pg"
         resumen="$resumen
@@ -1107,7 +1118,7 @@ planificar_sdl() {
     done
 
     if [ "$primero_int" -eq 0 ] && [ "$INCLUIR_INT" -eq 1 ] \
-       && [ "$i" -lt "$N_TOTALES" ] && [ "$i" -lt "$JUGADORES_MAX" ]; then
+       && [ "$i" -lt "$tope" ]; then
         par="${SDL_INT_PAR%%:*}"; pg="${SDL_INT_PAR#*:}"
         PLAN_JUGADORES="$PLAN_JUGADORES integrado:$i:$par:$pg"
         resumen="$resumen
