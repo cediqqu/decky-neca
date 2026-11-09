@@ -16,6 +16,7 @@ import {
   staticClasses,
 } from "@decky/ui";
 import { call, definePlugin } from "@decky/api";
+import { BsNintendoSwitch } from "react-icons/bs";
 import { SiAsus, SiLenovo, SiMsi, SiSteamdeck } from "react-icons/si";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -30,7 +31,6 @@ import {
   FaGamepad,
   FaInfoCircle,
   FaMicrochip,
-  FaMinus,
   FaPlaystation,
   FaSlidersH,
   FaStar,
@@ -178,6 +178,7 @@ function IconoFamilia(props: { familia: string; size: number }) {
     case "steam":
       return <FaSteam size={props.size} />;
     case "switch":
+      return <BsNintendoSwitch size={props.size} />;
     case "integrado":
       return <FaGamepad size={props.size} />;
     default:
@@ -192,12 +193,8 @@ function colorConexion(conexion: string): string {
   return C.gris;
 }
 
-function macCorta(serie: string): string {
-  const partes = (serie || "").split(":");
-  if (partes.length >= 2) {
-    return `…${partes[partes.length - 2]}:${partes[partes.length - 1]}`;
-  }
-  return serie;
+function macCompleta(serie: string): string {
+  return (serie || "").trim();
 }
 
 const ESTILOS = `
@@ -478,7 +475,7 @@ function Badge(props: { m: Mando }) {
 
   return (
     <div style={{ ...estiloBadge(C.gris), width: "18px", padding: 0 }}>
-      {m.clase === "Integrado" ? <FaBan size={8} /> : <FaMinus size={8} />}
+      <FaBan size={8} />
     </div>
   );
 }
@@ -558,10 +555,11 @@ function MandoCuadrado(props: {
           {!m.jugador ? (
             <div
               style={{
-                fontSize: "0.55em",
+                fontSize: "0.58em",
+                fontWeight: 700,
                 color: C.gris,
-                opacity: 0.85,
-                lineHeight: 1,
+                opacity: 0.95,
+                lineHeight: 1.1,
               }}
             >
               Desactivado
@@ -569,14 +567,18 @@ function MandoCuadrado(props: {
           ) : null}
           {mostrarMac && m.serie ? (
             <div
+              title={m.serie}
               style={{
-                fontSize: "0.53em",
+                fontSize: "0.5em",
                 color: C.texto2,
-                opacity: 0.5,
-                lineHeight: 1,
+                opacity: 0.55,
+                lineHeight: 1.1,
+                maxWidth: "100%",
+                textAlign: "center",
+                wordBreak: "break-all",
               }}
             >
-              {macCorta(m.serie)}
+              {macCompleta(m.serie)}
             </div>
           ) : null}
         </div>
@@ -1832,7 +1834,7 @@ function Content() {
                       }`}
                       style={on ? { color: COLOR_JUGADOR[n - 1] } : undefined}
                     >
-                      <FaGamepad size={15} />
+                      <BsNintendoSwitch size={15} />
                     </span>
                   );
                 })}

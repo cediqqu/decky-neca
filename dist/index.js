@@ -78,6 +78,11 @@ function IconBase(props) {
 }
 
 // THIS FILE IS AUTO GENERATED
+function BsNintendoSwitch (props) {
+  return GenIcon({"attr":{"fill":"currentColor","viewBox":"0 0 16 16"},"child":[{"tag":"path","attr":{"d":"M9.34 8.005c0-4.38.01-7.972.023-7.982C9.373.01 10.036 0 10.831 0c1.153 0 1.51.01 1.743.05 1.73.298 3.045 1.6 3.373 3.326.046.242.053.809.053 4.61 0 4.06.005 4.537-.123 4.976-.022.076-.048.15-.08.242a4.14 4.14 0 0 1-3.426 2.767c-.317.033-2.889.046-2.978.013-.05-.02-.053-.752-.053-7.979m4.675.269a1.62 1.62 0 0 0-1.113-1.034 1.61 1.61 0 0 0-1.938 1.073 1.9 1.9 0 0 0-.014.935 1.63 1.63 0 0 0 1.952 1.107c.51-.136.908-.504 1.11-1.028.11-.285.113-.742.003-1.053M3.71 3.317c-.208.04-.526.199-.695.348-.348.301-.52.729-.494 1.232.013.262.03.332.136.544.155.321.39.556.712.715.222.11.278.123.567.133.261.01.354 0 .53-.06.719-.242 1.153-.94 1.03-1.656-.142-.852-.95-1.422-1.786-1.256"},"child":[]},{"tag":"path","attr":{"d":"M3.425.053a4.14 4.14 0 0 0-3.28 3.015C0 3.628-.01 3.956.005 8.3c.01 3.99.014 4.082.08 4.39.368 1.66 1.548 2.844 3.224 3.235.22.05.497.06 2.29.07 1.856.012 2.048.009 2.097-.04.05-.05.053-.69.053-7.94 0-5.374-.01-7.906-.033-7.952-.033-.06-.09-.063-2.03-.06-1.578.004-2.052.014-2.26.05Zm3 14.665-1.35-.016c-1.242-.013-1.375-.02-1.623-.083a2.81 2.81 0 0 1-2.08-2.167c-.074-.335-.074-8.579-.004-8.907a2.85 2.85 0 0 1 1.716-2.05c.438-.176.64-.196 2.058-.2l1.282-.003v13.426Z"},"child":[]}]})(props);
+}
+
+// THIS FILE IS AUTO GENERATED
 function SiSteamdeck (props) {
   return GenIcon({"attr":{"role":"img","viewBox":"0 0 24 24"},"child":[{"tag":"path","attr":{"d":"M8.999 0v4.309c4.242 0 7.694 3.45 7.694 7.691s-3.452 7.691-7.694 7.691V24c6.617 0 12-5.383 12-12s-5.383-12-12-12Zm0 6.011c-3.313 0-6 2.687-5.998 6a5.999 5.999 0 1 0 5.998-6z"},"child":[]}]})(props);
 }function SiMsi (props) {
@@ -109,8 +114,6 @@ function FaXbox (props) {
   return GenIcon({"attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M496 384H160v-16c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v16H16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h80v16c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16v-16h336c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16zm0-160h-80v-16c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v16H16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h336v16c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16v-16h80c8.8 0 16-7.2 16-16v-32c0-8.8-7.2-16-16-16zm0-160H288V48c0-8.8-7.2-16-16-16h-32c-8.8 0-16 7.2-16 16v16H16C7.2 64 0 71.2 0 80v32c0 8.8 7.2 16 16 16h208v16c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16v-16h208c8.8 0 16-7.2 16-16V80c0-8.8-7.2-16-16-16z"},"child":[]}]})(props);
 }function FaQuestion (props) {
   return GenIcon({"attr":{"viewBox":"0 0 384 512"},"child":[{"tag":"path","attr":{"d":"M202.021 0C122.202 0 70.503 32.703 29.914 91.026c-7.363 10.58-5.093 25.086 5.178 32.874l43.138 32.709c10.373 7.865 25.132 6.026 33.253-4.148 25.049-31.381 43.63-49.449 82.757-49.449 30.764 0 68.816 19.799 68.816 49.631 0 22.552-18.617 34.134-48.993 51.164-35.423 19.86-82.299 44.576-82.299 106.405V320c0 13.255 10.745 24 24 24h72.471c13.255 0 24-10.745 24-24v-5.773c0-42.86 125.268-44.645 125.268-160.627C377.504 66.256 286.902 0 202.021 0zM192 373.459c-38.196 0-69.271 31.075-69.271 69.271 0 38.195 31.075 69.27 69.271 69.27s69.271-31.075 69.271-69.271-31.075-69.27-69.271-69.27z"},"child":[]}]})(props);
-}function FaMinus (props) {
-  return GenIcon({"attr":{"viewBox":"0 0 448 512"},"child":[{"tag":"path","attr":{"d":"M416 208H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h384c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"},"child":[]}]})(props);
 }function FaMicrochip (props) {
   return GenIcon({"attr":{"viewBox":"0 0 512 512"},"child":[{"tag":"path","attr":{"d":"M416 48v416c0 26.51-21.49 48-48 48H144c-26.51 0-48-21.49-48-48V48c0-26.51 21.49-48 48-48h224c26.51 0 48 21.49 48 48zm96 58v12a6 6 0 0 1-6 6h-18v6a6 6 0 0 1-6 6h-42V88h42a6 6 0 0 1 6 6v6h18a6 6 0 0 1 6 6zm0 96v12a6 6 0 0 1-6 6h-18v6a6 6 0 0 1-6 6h-42v-48h42a6 6 0 0 1 6 6v6h18a6 6 0 0 1 6 6zm0 96v12a6 6 0 0 1-6 6h-18v6a6 6 0 0 1-6 6h-42v-48h42a6 6 0 0 1 6 6v6h18a6 6 0 0 1 6 6zm0 96v12a6 6 0 0 1-6 6h-18v6a6 6 0 0 1-6 6h-42v-48h42a6 6 0 0 1 6 6v6h18a6 6 0 0 1 6 6zM30 376h42v48H30a6 6 0 0 1-6-6v-6H6a6 6 0 0 1-6-6v-12a6 6 0 0 1 6-6h18v-6a6 6 0 0 1 6-6zm0-96h42v48H30a6 6 0 0 1-6-6v-6H6a6 6 0 0 1-6-6v-12a6 6 0 0 1 6-6h18v-6a6 6 0 0 1 6-6zm0-96h42v48H30a6 6 0 0 1-6-6v-6H6a6 6 0 0 1-6-6v-12a6 6 0 0 1 6-6h18v-6a6 6 0 0 1 6-6zm0-96h42v48H30a6 6 0 0 1-6-6v-6H6a6 6 0 0 1-6-6v-12a6 6 0 0 1 6-6h18v-6a6 6 0 0 1 6-6z"},"child":[]}]})(props);
 }function FaInfoCircle (props) {
@@ -194,6 +197,7 @@ function IconoFamilia(props) {
         case "steam":
             return SP_JSX.jsx(FaSteam, { size: props.size });
         case "switch":
+            return SP_JSX.jsx(BsNintendoSwitch, { size: props.size });
         case "integrado":
             return SP_JSX.jsx(FaGamepad, { size: props.size });
         default:
@@ -209,12 +213,8 @@ function colorConexion(conexion) {
         return C.violeta;
     return C.gris;
 }
-function macCorta(serie) {
-    const partes = (serie || "").split(":");
-    if (partes.length >= 2) {
-        return `…${partes[partes.length - 2]}:${partes[partes.length - 1]}`;
-    }
-    return serie;
+function macCompleta(serie) {
+    return (serie || "").trim();
 }
 const ESTILOS = `
 @keyframes ede-latido {
@@ -438,7 +438,7 @@ function Badge(props) {
     if (m.jugador) {
         return SP_JSX.jsx("div", { style: estiloBadge(C.azul), children: m.jugador });
     }
-    return (SP_JSX.jsx("div", { style: { ...estiloBadge(C.gris), width: "18px", padding: 0 }, children: m.clase === "Integrado" ? SP_JSX.jsx(FaBan, { size: 8 }) : SP_JSX.jsx(FaMinus, { size: 8 }) }));
+    return (SP_JSX.jsx("div", { style: { ...estiloBadge(C.gris), width: "18px", padding: 0 }, children: SP_JSX.jsx(FaBan, { size: 8 }) }));
 }
 function estiloTarjeta(color) {
     return {
@@ -489,16 +489,20 @@ function MandoCuadrado(props) {
                                 fontSize: "0.6em",
                                 color: colorConexion(m.conexion),
                             }, children: [SP_JSX.jsx(IconoConexion, { conexion: m.conexion, size: 8 }), m.conexion] }), !m.jugador ? (SP_JSX.jsx("div", { style: {
-                                fontSize: "0.55em",
+                                fontSize: "0.58em",
+                                fontWeight: 700,
                                 color: C.gris,
-                                opacity: 0.85,
-                                lineHeight: 1,
-                            }, children: "Desactivado" })) : null, mostrarMac && m.serie ? (SP_JSX.jsx("div", { style: {
-                                fontSize: "0.53em",
+                                opacity: 0.95,
+                                lineHeight: 1.1,
+                            }, children: "Desactivado" })) : null, mostrarMac && m.serie ? (SP_JSX.jsx("div", { title: m.serie, style: {
+                                fontSize: "0.5em",
                                 color: C.texto2,
-                                opacity: 0.5,
-                                lineHeight: 1,
-                            }, children: macCorta(m.serie) })) : null] }), m.familia === "desconocido" ? (SP_JSX.jsx("div", { style: {
+                                opacity: 0.55,
+                                lineHeight: 1.1,
+                                maxWidth: "100%",
+                                textAlign: "center",
+                                wordBreak: "break-all",
+                            }, children: macCompleta(m.serie) })) : null] }), m.familia === "desconocido" ? (SP_JSX.jsx("div", { style: {
                         padding: "3px 5px",
                         background: "rgba(0,0,0,0.38)",
                         borderTop: `1px solid ${hexA(color, 0.3)}`,
@@ -1147,7 +1151,7 @@ function Content() {
                                         gap: "7px",
                                     }, children: [1, 2, 3, 4].map((n) => {
                                         const on = n <= Number(p.JUGADORES_MAX);
-                                        return (SP_JSX.jsx("span", { className: `ede-slot ${on ? "on" : "off"}${pulsoMando === n ? " pulso" : ""}`, style: on ? { color: COLOR_JUGADOR[n - 1] } : undefined, children: SP_JSX.jsx(FaGamepad, { size: 15 }) }, n));
+                                        return (SP_JSX.jsx("span", { className: `ede-slot ${on ? "on" : "off"}${pulsoMando === n ? " pulso" : ""}`, style: on ? { color: COLOR_JUGADOR[n - 1] } : undefined, children: SP_JSX.jsx(BsNintendoSwitch, { size: 15 }) }, n));
                                     }) })] }) }) }) }), SP_JSX.jsxs(Seccion, { titulo: "Mandos", color: acento, icono: SP_JSX.jsx(FaGamepad, { size: 13 }), abierta: true, accion: SP_JSX.jsxs("span", { style: { display: "flex", alignItems: "center", gap: "6px" }, children: [SP_JSX.jsx(BotonIcono, { titulo: "Asignaci\u00F3n", icono: SP_JSX.jsx(FaFileAlt, { size: 12 }), onClick: () => abrirAsignacion(est.planes, setEst) }), SP_JSX.jsx(BotonIcono, { titulo: "Recargar mandos", icono: SP_JSX.jsx(FaSyncAlt, { size: 12 }), onClick: () => conBloqueo(refrescar) })] }), children: [!mostrarIntegrado && externos.length === 0 ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("div", { style: { opacity: 0.8 }, children: "No se detecta ningun mando. Enciende el mando y pulsa Recargar." }) })) : (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
                                 display: "grid",
                                 gridTemplateColumns: "repeat(2, minmax(0, 1fr))",

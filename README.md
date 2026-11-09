@@ -119,9 +119,9 @@ vienes de E.C.A, desinstala primero el plugin viejo.
    puedes usar `--sistema wiiu`.
 
 Cada tarjeta muestra el **icono** de la familia (PlayStation, Xbox, Switch, Steam
-o integrado), la **conexión** (Bluetooth, USB, Interno o Virtual) y la **MAC**
-corta siempre que el mando la informe. Los mandos desconocidos muestran además
-su nombre.
+o integrado), la **conexión** (Bluetooth, USB, Interno o Virtual) y la **MAC
+completa** siempre que el mando la informe. Los mandos desconocidos muestran
+además su nombre.
 
 Los avisos cortos se pintan dentro del panel y desaparecen a los 5 s. Los errores
 largos, como el diagnóstico de `hidraw`, se abren en una ventana para poder

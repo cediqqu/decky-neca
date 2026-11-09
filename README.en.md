@@ -127,7 +127,7 @@ come from E.C.A, uninstall the old plugin first.
    applies on game launch; manually use `--sistema wiiu`.
 
 Each card shows the family **icon** (PlayStation, Xbox, Switch, Steam or
-built-in), the **connection** (Bluetooth, USB, Internal or Virtual) and the short
+built-in), the **connection** (Bluetooth, USB, Internal or Virtual) and the full
 **MAC** whenever the controller reports it. Unknown controllers also show their
 name.
 
