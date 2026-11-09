@@ -919,6 +919,67 @@ async def main():
     prefs["P1_SERIE"] = ""
     mod._escribir_prefs(prefs)
 
+    # Matriz completa de tarjetas: 5 cantidades de DS x 3 modos x 4 cupos.
+    # Comprueba quien tiene jugador y quien queda desactivado.
+    errores = []
+    for d in range(5):
+        matriz = os.path.join(tmp, "matriz_%d.txt" % d)
+        with open(matriz, "w", encoding="utf-8") as fh:
+            for k in range(d):
+                fh.write(
+                    "DualSense %d|050057564c050000e60c000000006800"
+                    "|%d|6|1|DualSense %d|4c:b9:9b:e9:bc:%02x|%d\n"
+                    % (k + 1, k, k + 1, k, k)
+                )
+            fh.write(
+                "Asus Rog Ally Controller|03000000bd1200001501000011010000"
+                "|0|1|1|Asus Rog Ally Controller||0\n"
+            )
+        os.environ["EDEN_FAKE_SDL"] = matriz
+        for modo in ("ignorar", "primero", "ultimo"):
+            for cupo in range(1, 5):
+                prefs = mod._leer_prefs()
+                prefs["JUGADORES_MAX"] = str(cupo)
+                prefs["ORDEN_INTEGRADO"] = modo
+                prefs["INTEGRADO_MANUAL"] = "si"
+                prefs["P1_SERIE"] = ""
+                mod._escribir_prefs(prefs)
+                est = await mod.Plugin().estado()
+                got = {}
+                for m in est["mandos"]:
+                    if m["clase"] == "DualSense":
+                        got["D%d" % (int(m["puerto"]) + 1)] = m["jugador"]
+                    elif m["clase"] == "Integrado":
+                        got["I"] = m["jugador"]
+                exp = {"D%d" % (k + 1): None for k in range(d)}
+                exp["I"] = None
+                if d == 0:
+                    exp["I"] = 1
+                elif modo == "ignorar":
+                    for k in range(min(d, cupo)):
+                        exp["D%d" % (k + 1)] = k + 1
+                elif modo == "primero":
+                    exp["I"] = 1
+                    for k in range(min(d, cupo - 1)):
+                        exp["D%d" % (k + 1)] = k + 2
+                else:
+                    n = min(d, cupo - 1)
+                    for k in range(n):
+                        exp["D%d" % (k + 1)] = k + 1
+                    exp["I"] = n + 1
+                if got != exp:
+                    errores.append((d, modo, cupo, exp, got))
+    check("matriz 60 escenarios: jugadores y desactivados",
+          not errores, errores[:3])
+
+    prefs = mod._leer_prefs()
+    prefs["JUGADORES_MAX"] = "4"
+    prefs["ORDEN_INTEGRADO"] = "ignorar"
+    prefs["INTEGRADO_MANUAL"] = "si"
+    prefs["P1_SERIE"] = ""
+    mod._escribir_prefs(prefs)
+    os.environ["EDEN_FAKE_SDL"] = cuatro
+
     # El log del panel filtra por emulador y quita los bloques de --who
     with open(os.path.join(base, "log.txt"), "w", encoding="utf-8") as fh:
         fh.write("2026-01-01 10:00:00 [INFO] [1] === eden-autoconfig.sh v2 modo=who args='--who' ===\n")

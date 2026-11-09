@@ -106,10 +106,12 @@ vienes de E.C.A, desinstala primero el plugin viejo.
    refresca solo con un sondeo cada 5 s.
 2. Arriba tienes chips con la máquina, el número de mandos, la versión y el
    estado del hook.
-3. El botón **Mandos** con cuatro huecos cicla el tope de jugadores (1 a 4).
-4. La tarjeta **Integrado** cicla **Jugador 1 → Último jugador → Desactivado**.
-   Sin elección manual, el integrado es Player 1 si no hay externos, va al final
-   si hay alguno y se desactiva si no queda hueco.
+3. El botón **Mandos** con cuatro huecos cicla el tope de jugadores (1 a 4) y
+   muestra **activos/cupo** (por ejemplo, `3/4`).
+4. La tarjeta **Integrado** cicla **Jugador 1 → Último jugador → Desactivado** y
+   muestra el jugador real que ocupa (`Jugador 3 - Último`). Sin elección manual,
+   el integrado es Player 1 si no hay externos, va al final si hay alguno y se
+   desactiva si no queda hueco. Con **0 DualSense** entra siempre como P1.
 5. Para fijar un mando concreto como Player 1, **dos toques seguidos** (menos de
    1,5 s) sobre su tarjeta. La **★** marca el Player 1 actual.
 6. El icono de **Asignación** en la cabecera de **Mandos** abre el último plan de

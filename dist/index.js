@@ -622,12 +622,19 @@ function ChipEstado(props) {
                 }, children: props.texto })] }));
 }
 // --- tarjeta del mando integrado -------------------------------------------
+function detalleIntegrado(modo, jugador, detectado) {
+    if (!detectado)
+        return "No detectado";
+    if (!jugador)
+        return "Desactivado";
+    if (modo === "ultimo")
+        return `Jugador ${jugador} - Último`;
+    if (modo === "primero")
+        return "Jugador 1";
+    return `Jugador ${jugador} - Forzado`;
+}
 function TarjetaIntegrado(props) {
-    const detalle = props.modo === "ignorar" || (props.detectado && !props.jugador)
-        ? "Desactivado"
-        : props.modo === "primero"
-            ? "Jugador 1"
-            : "Último jugador";
+    const detalle = detalleIntegrado(props.modo, props.jugador, props.detectado);
     return (SP_JSX.jsx(TarjetaAccion, { color: C.naranja, icono: props.icono, anim: "pop", titulo: "Integrado", detalle: detalle, onClick: props.onClick }));
 }
 function IconoTarjeta(props) {
@@ -1117,6 +1124,10 @@ function Content() {
     const maquinaNombre = nombreMaquina(est.maquina);
     const mostrarIntegrado = Boolean(integrado) || Boolean(maquinaNombre);
     const acento = C.azul;
+    const cupo = Number(p.JUGADORES_MAX);
+    const activos = new Set(est.mandos
+        .map((m) => m.jugador)
+        .filter((n) => n !== null)).size;
     return (SP_JSX.jsxs("div", { className: "ede-panel", style: {
             "--ede-acento": acento,
             "--ede-acento-halo": hexA(acento, 0.45),
@@ -1144,7 +1155,11 @@ function Content() {
                                 gap: "10px",
                                 width: "100%",
                                 padding: "11px 12px",
-                            }, children: [SP_JSX.jsx("span", { style: { fontWeight: 700, fontSize: "0.82em" }, children: "Mandos" }), SP_JSX.jsx("div", { style: {
+                            }, children: [SP_JSX.jsxs("span", { style: {
+                                        display: "flex",
+                                        alignItems: "baseline",
+                                        gap: "5px",
+                                    }, children: [SP_JSX.jsx("span", { style: { fontWeight: 700, fontSize: "0.82em" }, children: "Mandos" }), SP_JSX.jsxs("span", { style: { fontSize: "0.7em", opacity: 0.65 }, children: [activos, "/", cupo] })] }), SP_JSX.jsx("div", { style: {
                                         marginLeft: "auto",
                                         display: "flex",
                                         alignItems: "center",
@@ -1152,7 +1167,7 @@ function Content() {
                                     }, children: [1, 2, 3, 4].map((n) => {
                                         const on = n <= Number(p.JUGADORES_MAX);
                                         return (SP_JSX.jsx("span", { className: `ede-slot ${on ? "on" : "off"}${pulsoMando === n ? " pulso" : ""}`, style: on ? { color: COLOR_JUGADOR[n - 1] } : undefined, children: SP_JSX.jsx(BsNintendoSwitch, { size: 15 }) }, n));
-                                    }) })] }) }) }) }), SP_JSX.jsxs(Seccion, { titulo: "Mandos", color: acento, icono: SP_JSX.jsx(FaGamepad, { size: 13 }), abierta: true, accion: SP_JSX.jsxs("span", { style: { display: "flex", alignItems: "center", gap: "6px" }, children: [SP_JSX.jsx(BotonIcono, { titulo: "Asignaci\u00F3n", icono: SP_JSX.jsx(FaFileAlt, { size: 12 }), onClick: () => abrirAsignacion(est.planes, setEst) }), SP_JSX.jsx(BotonIcono, { titulo: "Recargar mandos", icono: SP_JSX.jsx(FaSyncAlt, { size: 12 }), onClick: () => conBloqueo(refrescar) })] }), children: [!mostrarIntegrado && externos.length === 0 ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("div", { style: { opacity: 0.8 }, children: "No se detecta ningun mando. Enciende el mando y pulsa Recargar." }) })) : (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
+                                    }) })] }) }) }) }), SP_JSX.jsxs(Seccion, { titulo: "Mandos", color: acento, icono: SP_JSX.jsx(BsNintendoSwitch, { size: 13 }), abierta: true, accion: SP_JSX.jsxs("span", { style: { display: "flex", alignItems: "center", gap: "6px" }, children: [SP_JSX.jsx(BotonIcono, { titulo: "Asignaci\u00F3n", icono: SP_JSX.jsx(FaFileAlt, { size: 12 }), onClick: () => abrirAsignacion(est.planes, setEst) }), SP_JSX.jsx(BotonIcono, { titulo: "Recargar mandos", icono: SP_JSX.jsx(FaSyncAlt, { size: 12 }), onClick: () => conBloqueo(refrescar) })] }), children: [!mostrarIntegrado && externos.length === 0 ? (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("div", { style: { opacity: 0.8 }, children: "No se detecta ningun mando. Enciende el mando y pulsa Recargar." }) })) : (SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("div", { style: {
                                 display: "grid",
                                 gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
                                 gap: "6px",

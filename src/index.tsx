@@ -827,6 +827,18 @@ function ChipEstado(props: { icono: ReactNode; texto: string; color: string }) {
 }
 
 // --- tarjeta del mando integrado -------------------------------------------
+function detalleIntegrado(
+  modo: string,
+  jugador: number | null,
+  detectado: boolean,
+): string {
+  if (!detectado) return "No detectado";
+  if (!jugador) return "Desactivado";
+  if (modo === "ultimo") return `Jugador ${jugador} - Último`;
+  if (modo === "primero") return "Jugador 1";
+  return `Jugador ${jugador} - Forzado`;
+}
+
 function TarjetaIntegrado(props: {
   icono: ReactNode;
   jugador: number | null;
@@ -834,12 +846,11 @@ function TarjetaIntegrado(props: {
   detectado: boolean;
   onClick: () => void;
 }) {
-  const detalle =
-    props.modo === "ignorar" || (props.detectado && !props.jugador)
-      ? "Desactivado"
-      : props.modo === "primero"
-        ? "Jugador 1"
-        : "Último jugador";
+  const detalle = detalleIntegrado(
+    props.modo,
+    props.jugador,
+    props.detectado,
+  );
   return (
     <TarjetaAccion
       color={C.naranja}
@@ -1687,6 +1698,12 @@ function Content() {
   const maquinaNombre = nombreMaquina(est.maquina);
   const mostrarIntegrado = Boolean(integrado) || Boolean(maquinaNombre);
   const acento = C.azul;
+  const cupo = Number(p.JUGADORES_MAX);
+  const activos = new Set(
+    est.mandos
+      .map((m) => m.jugador)
+      .filter((n): n is number => n !== null),
+  ).size;
 
   return (
     <div
@@ -1813,8 +1830,19 @@ function Content() {
                 padding: "11px 12px",
               }}
             >
-              <span style={{ fontWeight: 700, fontSize: "0.82em" }}>
-                Mandos
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: "5px",
+                }}
+              >
+                <span style={{ fontWeight: 700, fontSize: "0.82em" }}>
+                  Mandos
+                </span>
+                <span style={{ fontSize: "0.7em", opacity: 0.65 }}>
+                  {activos}/{cupo}
+                </span>
               </span>
               <div
                 style={{
@@ -1847,7 +1875,7 @@ function Content() {
       <Seccion
         titulo="Mandos"
         color={acento}
-        icono={<FaGamepad size={13} />}
+        icono={<BsNintendoSwitch size={13} />}
         abierta={true}
         accion={
           <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>

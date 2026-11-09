@@ -12,6 +12,10 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 - **La MAC ya no se recorta.** Las tarjetas muestran la MAC completa; si no
   cabe en una línea, salta a la siguiente.
+- **La tarjeta del integrado muestra el jugador real.** `Jugador 3 - Último`,
+  `Jugador 4 - Último`, `Jugador 1` o `Jugador 1 - Forzado` cuando no hay
+  DualSense. Si no se detecta, dice `No detectado`; ya no confunde el modo con
+  el puesto asignado.
 - **El DualSense que queda fuera muestra «Desactivado».** Con 4 DS y el
   integrado como Último jugador, la tarjeta del cuarto DS queda marcada como
   desactivada, no como un jugador más.
@@ -25,8 +29,9 @@ Todos los cambios relevantes de N.E.C.A se documentan aquí. El formato sigue
 
 ### Cambiado
 
-- **Iconos de Switch en el botón Mandos.** Los cuatro huecos que se colorean al
-  subir el cupo usan el icono de Nintendo Switch en vez del mando genérico.
+- **Iconos de Switch y cupos en el botón Mandos.** Los cuatro huecos usan el
+  icono de Nintendo Switch y el botón muestra `activos/cupo` (por ejemplo,
+  `3/4`) para distinguir los jugadores activos del tope configurado.
 - **Los filtros del log pasan abajo.** **Todo / Eden / Cemu** están en la fila
   inferior, junto a **Cerrar**; se quitan **▲ Subir** y **▼ Bajar**. El scroll
   sigue siendo con D-pad/stick.
